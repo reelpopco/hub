@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타로 챗봇 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0a14;
+    --card: #161220;
+    --card2: #1e1828;
+    --border: #2a2040;
+    --text: #f0eeff;
+    --muted: #7a6e99;
+    --accent: #c084fc;
+    --accent2: #f0abfc;
+    --gold: #fbbf24;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nanum Gothic', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+    background-image: radial-gradient(ellipse at top, #1a0a2e 0%, #0d0a14 60%);
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { font-family: 'Black Han Sans', sans-serif; font-size: 26px; color: var(--accent); letter-spacing: 1px; }
+  header .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .add-btn {
+    background: var(--accent); color: #fff; border: none; padding: 9px 18px;
+    border-radius: 8px; font-family: 'Nanum Gothic', sans-serif; font-weight: 800;
+    font-size: 13px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .add-btn:hover { opacity: 0.85; }
+  .search-input {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 16px; color: var(--text);
+    font-family: 'Nanum Gothic', sans-serif; font-size: 13px; outline: none;
+    transition: border-color 0.2s; margin-bottom: 16px;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .fchip {
+    padding: 5px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: 1px solid var(--border); background: var(--card);
+    color: var(--muted); transition: all 0.15s;
+  }
+  .fchip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .bot-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; transition: all 0.18s;
+  }
+  .bot-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 24px rgba(192,132,252,0.1); }
+  .bot-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .bot-icon {
+    width: 42px; height: 42px; border-radius: 10px; background: var(--card2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; border: 1px solid var(--border);
+  }
+  .bot-info { flex: 1; min-width: 0; }
+  .bot-name { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+  .bot-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 700; background: rgba(192,132,252,0.15); color: var(--accent); }
+  .bot-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+  .bot-btns { display: flex; gap: 8px; }
+  .btn-open {
+    flex: 1; background: rgba(192,132,252,0.15); border: 1px solid rgba(192,132,252,0.3);
+    color: var(--accent2); padding: 8px; border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-decoration: none; display: flex; align-items: center;
+    justify-content: center; gap: 4px; transition: all 0.15s;
+  }
+  .btn-open:hover { background: rgba(192,132,252,0.25); }
+  .btn-copy {
+    background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+    padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-copy:hover { color: var(--gold); border-color: var(--gold); }
+  .btn-copy.copied { color: var(--green); border-color: var(--green); }
+  .btn-delete {
+    background: none; border: none; color: var(--muted); padding: 8px;
+    border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.15s;
+  }
+  .btn-delete:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); grid-column: 1/-1; }
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  .count-badge { font-size: 11px; color: var(--muted); margin-bottom: 16px; font-family: monospace; }
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal { background: #1a1428; border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 400px; }
+  .modal h2 { font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); font-family: 'Nanum Gothic', sans-serif;
+    font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .form-row textarea { height: 70px; resize: vertical; }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-save { flex: 1; background: var(--accent); color: #fff; border: none; padding: 11px; border-radius: 8px; font-family: 'Nanum Gothic', sans-serif; font-weight: 800; font-size: 13px; cursor: pointer; }
+  .btn-cancel { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 11px 18px; border-radius: 8px; font-family: 'Nanum Gothic', sans-serif; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔮 타로 챗봇 모음</h1>
+    <div class="sub">타로쌤 챗봇 링크 컬렉션</div>
+  </div>
+  <button class="add-btn" onclick="openModal()">+ 챗봇 추가</button>
+</header>
+
+<input class="search-input" type="text" id="searchInput" placeholder="챗봇 이름이나 설명 검색..." oninput="renderCards()">
+<div class="filter-chips" id="filterChips"></div>
+<div class="count-badge" id="countBadge"></div>
+<div class="cards-grid" id="cardsGrid"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>🔮 챗봇 추가</h2>
+    <div class="form-row">
+      <label>챗봇 이름 *</label>
+      <input id="inp-name" type="text" placeholder="예: 연애운 타로">
+    </div>
+    <div class="form-row">
+      <label>URL *</label>
+      <input id="inp-url" type="text" placeholder="https://...">
+    </div>
+    <div class="form-row">
+      <label>설명</label>
+      <textarea id="inp-desc" placeholder="어떤 챗봇인지 간단히..."></textarea>
+    </div>
+    <div class="form-row">
+      <label>아이콘 이모지</label>
+      <input id="inp-icon" type="text" placeholder="🔮" maxlength="2">
+    </div>
+    <div class="form-row">
+      <label>태그</label>
+      <select id="inp-tag">
+        <option value="종합">종합</option>
+        <option value="연애">연애</option>
+        <option value="직업">직업</option>
+        <option value="재물">재물</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="saveBot()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_BOTS = [
+  { id: 'tarot_ella', name: '엘라쌤 타로챗봇', url: 'https://ai-tarot-flow.lovable.app/settings', desc: '엘라쌤 타로 AI 챗봇', icon: '🔮', tag: '종합' }
+];
+const ALL_TAGS = ['전체', '연애', '직업', '재물', '종합', '기타'];
+let activeTag = '전체';
+
+function loadBots() {
+  try { const s = localStorage.getItem('tarotBots'); return s ? JSON.parse(s) : DEFAULT_BOTS; }
+  catch { return DEFAULT_BOTS; }
+}
+function saveBots(b) { localStorage.setItem('tarotBots', JSON.stringify(b)); }
+let bots = loadBots();
+
+function initFilters() {
+  const wrap = document.getElementById('filterChips');
+  wrap.innerHTML = '';
+  ALL_TAGS.forEach(tag => {
+    const chip = document.createElement('div');
+    chip.className = 'fchip' + (activeTag === tag ? ' active' : '');
+    chip.textContent = tag;
+    chip.onclick = () => { activeTag = tag; initFilters(); renderCards(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = bots.filter(b => {
+    const matchTag = activeTag === '전체' || b.tag === activeTag;
+    const matchSearch = !q || b.name.toLowerCase().includes(q) || (b.desc||'').toLowerCase().includes(q);
+    return matchTag && matchSearch;
+  });
+  document.getElementById('countBadge').textContent = '총 ' + filtered.length + '개';
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="emoji">🔮</div><p>챗봇이 없어요. + 버튼으로 추가해보세요!</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(bot => `
+    <div class="bot-card">
+      <div class="bot-top">
+        <div class="bot-icon">${bot.icon||'🔮'}</div>
+        <div class="bot-info">
+          <div class="bot-name">${bot.name}</div>
+          ${bot.tag ? '<span class="bot-tag">'+bot.tag+'</span>' : ''}
+        </div>
+      </div>
+      ${bot.desc ? '<div class="bot-desc">'+bot.desc+'</div>' : ''}
+      <div class="bot-btns">
+        <a class="btn-open" href="${bot.url}" target="_blank">🚀 열기</a>
+        <button class="btn-copy" onclick="copyUrl('${bot.id}', this)" title="URL 복사">🔗</button>
+        <button class="btn-delete" onclick="deleteBot('${bot.id}')" title="삭제">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyUrl(id, btn) {
+  const bot = bots.find(b => b.id === id);
+  if (!bot) return;
+  navigator.clipboard.writeText(bot.url).then(() => {
+    btn.textContent = '✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '🔗'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function deleteBot(id) {
+  if (confirm('이 챗봇을 삭제할까요?')) {
+    bots = bots.filter(b => b.id !== id);
+    saveBots(bots); renderCards();
+  }
+}
+
+function openModal() { document.getElementById('modalBg').classList.add('open'); document.getElementById('inp-name').focus(); }
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  ['inp-name','inp-url','inp-desc','inp-icon'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+function saveBot() {
+  const name = document.getElementById('inp-name').value.trim();
+  const url = document.getElementById('inp-url').value.trim();
+  if (!name || !url) { alert('이름과 URL은 필수예요!'); return; }
+  bots.push({ id: 'bot_' + Date.now(), name, url, desc: document.getElementById('inp-desc').value.trim(), icon: document.getElementById('inp-icon').value.trim() || '🔮', tag: document.getElementById('inp-tag').value });
+  saveBots(bots); renderCards(); closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+initFilters(); renderCards();
+</script>
+</body>
+</html>
