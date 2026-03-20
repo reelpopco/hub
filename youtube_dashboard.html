@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채널 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic:wght@400;700;800&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #141414;
+    --card2: #1e1e1e;
+    --border: #252525;
+    --text: #f0f0f0;
+    --muted: #666;
+    --accent: #ff4444;
+    --accent2: #ffaa00;
+    --green: #44ff88;
+    --blue: #4488ff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nanum Gothic', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .refresh-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .refresh-btn:hover { opacity: 0.8; }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* API 설정 */
+  .api-setup {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .api-setup h2 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent2);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  .api-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .api-row label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .api-row input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .api-row input:focus { border-color: var(--accent2); }
+
+  /* 채널 필터 */
+  .filter-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .filter-title {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 12px;
+    font-weight: 700;
+    user-select: none;
+  }
+  .chip.active { border-color: currentColor; }
+  .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip-all {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-size: 11px;
+  }
+
+  /* 요약 */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .summary-label { font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  .summary-value { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent2); }
+  .summary-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* 채널 카드 */
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  .ch-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .ch-card:hover { border-color: #333; }
+  .ch-card.monetized { border-color: var(--accent2); }
+
+  .ch-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ch-dot-large {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ch-name-wrap { flex: 1; min-width: 0; }
+  .ch-name {
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ch-account { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .ch-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .badge-monetized { background: rgba(255,170,0,0.15); color: var(--accent2); }
+  .badge-growing { background: rgba(68,255,136,0.1); color: var(--green); }
+  .badge-new { background: rgba(68,136,255,0.1); color: var(--blue); }
+
+  .ch-card-body { padding: 14px 16px; }
+
+  /* 구독자 진행률 */
+  .progress-section { margin-bottom: 14px; }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .progress-label { font-size: 11px; color: var(--muted); }
+  .progress-nums {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+  .progress-nums .current { color: var(--text); font-weight: 700; }
+  .progress-nums .target { color: var(--muted); }
+
+  .bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bar-fill.done { background: var(--accent2); }
+  .bar-fill.near { background: var(--green); }
+  .bar-fill.mid { background: var(--blue); }
+  .bar-fill.low { background: var(--accent); }
+
+  .progress-remain {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .progress-remain.done { color: var(--accent2); }
+
+  /* 통계 */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-box {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .stat-label { font-size: 9px; color: var(--muted); margin-bottom: 3px; letter-spacing: 0.5px; }
+  .stat-value { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; }
+
+  /* 댓글 */
+  .comment-section {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .comment-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .comment-item {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .comment-author { color: var(--accent2); font-weight: 700; margin-bottom: 2px; }
+  .comment-text { color: #ccc; }
+  .comment-link {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--blue);
+    text-decoration: none;
+  }
+  .comment-link:hover { text-decoration: underline; }
+  .no-comments { font-size: 11px; color: var(--muted); font-style: italic; }
+
+  /* 로딩 */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .last-updated {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📺 채널 대시보드</h1>
+    <div class="last-updated" id="lastUpdated">마지막 업데이트: -</div>
+  </div>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadAll()">🔄 새로고침</button>
+  </div>
+</header>
+
+<!-- API 키 설정 -->
+<div class="api-setup">
+  <h2>🔑 API 키 설정</h2>
+  <div class="api-grid">
+    <div class="api-row">
+      <label>shoney222222 (음악카세·쏭터뷰)</label>
+      <input type="password" id="key_shoney" placeholder="API 키 입력..." oninput="saveKeys()">
+    </div>
+    <div class="api-row">
+      <label>smpl.window (무비카세)</label>
+      <input type="password" id="key_smpl" placeholder="API 키 입력..." oninput="saveKeys()">
+    </div>
+    <div class="api-row">
+      <label>movieletter.co (디어무비)</label>
+      <input type="password" id="key_movie" placeholder="API 키 입력..." oninput="saveKeys()">
+    </div>
+    <div class="api-row">
+      <label>sori1004mail (은혜·든든·달빛)</label>
+      <input type="password" id="key_sori" placeholder="API 키 입력..." oninput="saveKeys()">
+    </div>
+    <div class="api-row">
+      <label>reelpop.co (딜팝·무비하인드·쏭스키친·골든키)</label>
+      <input type="password" id="key_reel" placeholder="API 키 입력..." oninput="saveKeys()">
+    </div>
+  </div>
+</div>
+
+<!-- 채널 필터 -->
+<div class="filter-wrap">
+  <div class="filter-title">채널 선택</div>
+  <div class="filter-chips" id="filterChips"></div>
+</div>
+
+<!-- 요약 -->
+<div class="summary-grid" id="summaryGrid"></div>
+
+<!-- 채널 카드 -->
+<div class="channels-grid" id="channelsGrid">
+  <div class="loading">API 키를 입력하고 새로고침을 눌러주세요 😊</div>
+</div>
+
+<script>
+const CHANNELS = [
+  { id: 'moviecaset', name: '무비카세', channelId: 'UCbzKzG-LPzDccqVSAEK2ChQ', apiKey: 'smpl', color: '#ff4444' },
+  { id: 'dearmovie', name: '디어무비', channelId: 'UCV8oovQ2hUosBi_YbaP6xAg', apiKey: 'movie', color: '#ff88aa' },
+  { id: 'musicase', name: '음악카세', channelId: 'UC-kP6g0AiUuXFNGsGpp_1vg', apiKey: 'shoney', color: '#c8f542' },
+  { id: 'songterview', name: '쏭터뷰', channelId: 'UCM_KvFMfB5ieGYn_BT40Y-g', apiKey: 'shoney', color: '#ffaa44' },
+  { id: 'dundum', name: '든든백세', channelId: 'UCilcBVgvN2g83hDp8U-dAMQ', apiKey: 'sori', color: '#4488ff' },
+  { id: 'eunhye', name: '은혜여사', channelId: 'UCIcMm6AH-hyZeDu-jM6HbUQ', apiKey: 'sori', color: '#ff88ff' },
+  { id: 'dalbit', name: '달빛역사관', channelId: 'UCGNSFNe9atBR5w5ic9oOkng', apiKey: 'sori', color: '#88aaff' },
+  { id: 'dealpop', name: '딜팝', channelId: 'UClTCaR3KMMSx0bSf9KHRsTQ', apiKey: 'reel', color: '#44ffdd' },
+  { id: 'moviehind', name: '무비하인드', channelId: 'UC4f4jRiPzBdQpI4uZUuY4PA', apiKey: 'reel', color: '#ff6644' },
+  { id: 'songskitchen', name: '쏭스키친', channelId: 'UCFxAHsOL3mg7MD013KzbKmA', apiKey: 'reel', color: '#ffcc44' },
+  { id: 'goldenkey', name: '인생골든키', channelId: 'UCmJot5DCQ33Igbxa-JImLIw', apiKey: 'reel', color: '#ffaa00' },
+];
+
+let activeChannels = new Set(CHANNELS.map(c => c.id));
+let channelData = {};
+
+// 키 저장/로드
+function saveKeys() {
+  const keys = {
+    shoney: document.getElementById('key_shoney').value,
+    smpl: document.getElementById('key_smpl').value,
+    movie: document.getElementById('key_movie').value,
+    sori: document.getElementById('key_sori').value,
+    reel: document.getElementById('key_reel').value,
+  };
+  localStorage.setItem('yt_api_keys', JSON.stringify(keys));
+}
+
+function loadKeys() {
+  try {
+    const keys = JSON.parse(localStorage.getItem('yt_api_keys') || '{}');
+    if (keys.shoney) document.getElementById('key_shoney').value = keys.shoney;
+    if (keys.smpl) document.getElementById('key_smpl').value = keys.smpl;
+    if (keys.movie) document.getElementById('key_movie').value = keys.movie;
+    if (keys.sori) document.getElementById('key_sori').value = keys.sori;
+    if (keys.reel) document.getElementById('key_reel').value = keys.reel;
+  } catch {}
+}
+
+function getKey(apiKey) {
+  return document.getElementById(`key_${apiKey}`)?.value?.trim() || '';
+}
+
+// 필터 초기화
+function initFilters() {
+  const wrap = document.getElementById('filterChips');
+  wrap.innerHTML = '';
+
+  const allChip = document.createElement('div');
+  allChip.className = 'chip chip-all';
+  allChip.textContent = '전체';
+  allChip.onclick = () => {
+    if (activeChannels.size === CHANNELS.length) {
+      activeChannels.clear();
+    } else {
+      CHANNELS.forEach(c => activeChannels.add(c.id));
+    }
+    renderFilters();
+    renderChannels();
+  };
+  wrap.appendChild(allChip);
+
+  CHANNELS.forEach(ch => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (activeChannels.has(ch.id) ? ' active' : '');
+    chip.style.color = ch.color;
+    chip.innerHTML = `<span class="chip-dot" style="background:${ch.color}"></span>${ch.name}`;
+    chip.onclick = () => {
+      if (activeChannels.has(ch.id)) activeChannels.delete(ch.id);
+      else activeChannels.add(ch.id);
+      renderFilters();
+      renderChannels();
+    };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderFilters() {
+  const chips = document.querySelectorAll('.chip:not(.chip-all)');
+  chips.forEach((chip, i) => {
+    chip.className = 'chip' + (activeChannels.has(CHANNELS[i].id) ? ' active' : '');
+    chip.style.color = CHANNELS[i].color;
+  });
+}
+
+// 숫자 포맷
+function fmt(n) {
+  if (!n && n !== 0) return '-';
+  if (n >= 10000) return (n/10000).toFixed(1) + '만';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+  return n.toLocaleString();
+}
+
+// 바 색상
+function barClass(pct) {
+  if (pct >= 100) return 'done';
+  if (pct >= 70) return 'near';
+  if (pct >= 30) return 'mid';
+  return 'low';
+}
+
+// API 호출
+async function fetchChannel(ch) {
+  const key = getKey(ch.apiKey);
+  if (!key) return null;
+
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${ch.channelId}&key=${key}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const item = data.items?.[0];
+    if (!item) return null;
+    return {
+      title: item.snippet.title,
+      subscribers: parseInt(item.statistics.subscriberCount || 0),
+      views: parseInt(item.statistics.viewCount || 0),
+      videoCount: parseInt(item.statistics.videoCount || 0),
+    };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+async function fetchComments(ch) {
+  const key = getKey(ch.apiKey);
+  if (!key) return [];
+
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&allThreadsRelatedToChannelId=${ch.channelId}&maxResults=3&order=time&key=${key}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) return [];
+    return (data.items || []).map(item => ({
+      author: item.snippet.topLevelComment.snippet.authorDisplayName,
+      text: item.snippet.topLevelComment.snippet.textDisplay,
+      videoId: item.snippet.topLevelComment.snippet.videoId,
+      commentId: item.snippet.topLevelComment.id,
+    }));
+  } catch { return []; }
+}
+
+async function loadAll() {
+  const btn = document.querySelector('.refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 로딩중...';
+
+  const grid = document.getElementById('channelsGrid');
+  grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>채널 데이터 불러오는 중...</div>';
+
+  const promises = CHANNELS.map(async ch => {
+    const [info, comments] = await Promise.all([fetchChannel(ch), fetchComments(ch)]);
+    channelData[ch.id] = { info, comments };
+  });
+
+  await Promise.all(promises);
+
+  renderSummary();
+  renderChannels();
+
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent = `마지막 업데이트: ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  btn.disabled = false;
+  btn.textContent = '🔄 새로고침';
+}
+
+function renderSummary() {
+  const visible = CHANNELS.filter(c => activeChannels.has(c.id));
+  let totalSubs = 0, totalViews = 0, monetized = 0, loaded = 0;
+
+  visible.forEach(ch => {
+    const d = channelData[ch.id];
+    if (d?.info && !d.info.error) {
+      totalSubs += d.info.subscribers;
+      totalViews += d.info.views;
+      if (d.info.subscribers >= 1000) monetized++;
+      loaded++;
+    }
+  });
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label">전체 구독자</div>
+      <div class="summary-value">${fmt(totalSubs)}</div>
+      <div class="summary-sub">${loaded}개 채널 합산</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">전체 조회수</div>
+      <div class="summary-value">${fmt(totalViews)}</div>
+      <div class="summary-sub">누적 합산</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">수익화 완료</div>
+      <div class="summary-value" style="color:var(--accent2)">${monetized}개</div>
+      <div class="summary-sub">구독자 1000명 이상</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">수익화 진행중</div>
+      <div class="summary-value" style="color:var(--green)">${loaded - monetized}개</div>
+      <div class="summary-sub">1000명 미달</div>
+    </div>
+  `;
+}
+
+function renderChannels() {
+  const grid = document.getElementById('channelsGrid');
+  const visible = CHANNELS.filter(c => activeChannels.has(c.id));
+
+  if (visible.length === 0) {
+    grid.innerHTML = '<div class="loading">채널을 선택해주세요</div>';
+    return;
+  }
+
+  if (Object.keys(channelData).length === 0) {
+    grid.innerHTML = '<div class="loading">API 키를 입력하고 새로고침을 눌러주세요 😊</div>';
+    return;
+  }
+
+  grid.innerHTML = visible.map(ch => {
+    const d = channelData[ch.id];
+    if (!d) return '';
+
+    const info = d.info;
+    const comments = d.comments || [];
+
+    if (!info) {
+      return `<div class="ch-card">
+        <div class="ch-card-header">
+          <div class="ch-dot-large" style="background:${ch.color}"></div>
+          <div class="ch-name-wrap"><div class="ch-name" style="color:${ch.color}">${ch.name}</div></div>
+        </div>
+        <div class="ch-card-body"><div class="error-msg">API 키 없음</div></div>
+      </div>`;
+    }
+
+    if (info.error) {
+      return `<div class="ch-card">
+        <div class="ch-card-header">
+          <div class="ch-dot-large" style="background:${ch.color}"></div>
+          <div class="ch-name-wrap"><div class="ch-name" style="color:${ch.color}">${ch.name}</div></div>
+        </div>
+        <div class="ch-card-body"><div class="error-msg">⚠️ ${info.error}</div></div>
+      </div>`;
+    }
+
+    const subs = info.subscribers;
+    const target = 1000;
+    const pct = Math.min(100, Math.round((subs / target) * 100));
+    const remain = Math.max(0, target - subs);
+    const isMonetized = subs >= target;
+
+    const badge = isMonetized
+      ? '<span class="ch-badge badge-monetized">💰 수익화</span>'
+      : subs >= 500
+        ? '<span class="ch-badge badge-growing">📈 성장중</span>'
+        : '<span class="ch-badge badge-new">🌱 초기</span>';
+
+    const commentsHTML = comments.length === 0
+      ? '<div class="no-comments">최근 댓글 없음</div>'
+      : comments.map(c => `
+        <div class="comment-item">
+          <div class="comment-author">${c.author}</div>
+          <div class="comment-text">${c.text.substring(0, 60)}${c.text.length > 60 ? '...' : ''}</div>
+          <a class="comment-link" href="https://www.youtube.com/watch?v=${c.videoId}&lc=${c.commentId}" target="_blank">답글 달기 →</a>
+        </div>
+      `).join('');
+
+    return `
+      <div class="ch-card ${isMonetized ? 'monetized' : ''}">
+        <div class="ch-card-header">
+          <div class="ch-dot-large" style="background:${ch.color}"></div>
+          <div class="ch-name-wrap">
+            <div class="ch-name" style="color:${ch.color}">${ch.name}</div>
+            <div class="ch-account">${info.title}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="ch-card-body">
+          <div class="progress-section">
+            <div class="progress-top">
+              <span class="progress-label">구독자 1,000명까지</span>
+              <span class="progress-nums">
+                <span class="current">${subs.toLocaleString()}</span>
+                <span class="target"> / 1,000</span>
+              </span>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill ${barClass(pct)}" style="width:${pct}%"></div>
+            </div>
+            <div class="progress-remain ${isMonetized ? 'done' : ''}">
+              ${isMonetized ? '✅ 수익화 달성!' : `${remain.toLocaleString()}명 남음 (${pct}%)`}
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-label">구독자</div>
+              <div class="stat-value" style="color:${ch.color}">${fmt(subs)}</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">총 조회수</div>
+              <div class="stat-value">${fmt(info.views)}</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">영상 수</div>
+              <div class="stat-value">${info.videoCount}</div>
+            </div>
+          </div>
+
+          <div class="comment-section">
+            <div class="comment-label">💬 최근 댓글</div>
+            ${commentsHTML}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderSummary();
+}
+
+// 초기화
+loadKeys();
+initFilters();
+renderSummary();
+</script>
+</body>
+</html>
