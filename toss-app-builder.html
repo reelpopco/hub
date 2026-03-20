@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>앱인토스 러버블 빌더 v3</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 24px 16px; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  .header { margin-bottom: 24px; }
+  .header h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #888; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #e8f0fe; color: #1a56db; margin-right: 6px; }
+  .progress { display: flex; gap: 4px; margin-bottom: 20px; }
+  .prog-dot { flex: 1; height: 4px; border-radius: 2px; background: #e0e0e0; transition: background .3s; }
+  .prog-dot.done { background: #1a56db; }
+  .prog-dot.active { background: #888; }
+  .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 12px; border: 1px solid #f0f0f0; }
+  .card-fixed { background: #f8f9ff; border-radius: 16px; padding: 16px 20px; margin-bottom: 12px; border: 1px solid #e8eeff; }
+  .step-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .step-sub { font-size: 12px; color: #888; margin-bottom: 16px; line-height: 1.6; }
+  .tds-note { font-size: 11px; padding: 8px 12px; border-radius: 8px; background: #e8f0fe; color: #1a56db; margin-bottom: 16px; line-height: 1.6; }
+  .warn-note { font-size: 11px; padding: 8px 12px; border-radius: 8px; background: #fff8e1; color: #b45309; margin-top: 8px; line-height: 1.6; }
+  .field { margin-bottom: 18px; }
+  .field-label { font-size: 11px; color: #888; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 8px; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 7px 14px; border-radius: 20px; border: 1px solid #e0e0e0; font-size: 13px; cursor: pointer; background: #fff; color: #333; transition: all .15s; user-select: none; }
+  .chip:hover { border-color: #aaa; background: #f8f8f8; }
+  .chip.on { background: #e8f0fe; color: #1a56db; border-color: #93c5fd; }
+  .inp { width: 100%; padding: 9px 12px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 13px; font-family: inherit; color: #1a1a1a; background: #fff; outline: none; }
+  .inp:focus { border-color: #888; }
+  textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .color-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .15s; }
+  .swatch.on { transform: scale(1.3); border-color: #333; }
+  .swatch.blocked { opacity: .3; cursor: not-allowed; position: relative; }
+  .color-label { font-size: 12px; color: #666; margin-left: 4px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
+  .nav-btn { padding: 9px 20px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; font-size: 13px; cursor: pointer; color: #555; font-family: inherit; font-weight: 500; }
+  .nav-btn:hover { background: #f5f5f5; }
+  .nav-btn.primary { background: #e8f0fe; color: #1a56db; border-color: #93c5fd; }
+  .step-counter { font-size: 12px; color: #aaa; }
+  .output { margin-top: 20px; display: none; }
+  .output-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .output-title { font-size: 14px; font-weight: 600; }
+  .output-btns { display: flex; gap: 8px; }
+  .out-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 12px; cursor: pointer; color: #555; font-family: inherit; }
+  .out-btn:hover { background: #f5f5f5; }
+  .out-btn.blue { color: #1a56db; border-color: #93c5fd; }
+  .prompt-box { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px; font-size: 12px; line-height: 1.8; color: #1a1a1a; white-space: pre-wrap; font-family: 'Courier New', monospace; max-height: 420px; overflow-y: auto; }
+  .hint { font-size: 11px; color: #aaa; margin-top: 8px; }
+  .fixed-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #eef; font-size: 12px; }
+  .fixed-row:last-child { border-bottom: none; }
+  .fixed-key { color: #888; min-width: 80px; }
+  .fixed-val { color: #333; font-weight: 500; text-align: right; flex: 1; line-height: 1.5; }
+  .mini-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 8px; background: #d1fae5; color: #065f46; margin-left: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>앱인토스 러버블 빌더</h1>
+    <p>
+      <span class="badge">TDS 고정</span>
+      <span class="badge">SDK 전체</span>
+      <span class="badge">v3</span>
+    </p>
+  </div>
+  <div class="progress" id="prog"></div>
+  <div id="step"></div>
+  <div class="nav">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)">← 이전</button>
+    <span class="step-counter" id="counter"></span>
+    <button class="nav-btn" id="btn-next" onclick="go(1)">다음 →</button>
+  </div>
+  <div class="output" id="output">
+    <div class="output-head">
+      <div>
+        <span class="output-title">완성된 러버블 프롬프트</span>
+        <span class="mini-badge">TDS 적용</span>
+        <span id="model-badge" class="mini-badge" style="background:#dbeafe;color:#1e40af;"></span>
+      </div>
+      <div class="output-btns">
+        <button class="out-btn" onclick="copyPrompt()">복사</button>
+      </div>
+    </div>
+    <div class="prompt-box" id="prompt-out"></div>
+    <p class="hint">✓ 복사 후 Lovable.dev에 붙여넣기하세요.</p>
+  </div>
+</div>
+
+<script>
+const FIXED = {
+  tds: ['Pretendard 폰트 전 화면 통일','버튼 full-width rounded-xl 높이 52px','카드 radius 16px / shadow 0 2px 8px rgba(0,0,0,0.06)','텍스트: 제목 20px/700 · 본문 16px/400 · 보조 14px/400','결제창: 토스 바텀시트 패턴 고정','메인컬러 #3182F6 사용 금지'],
+  sdk: ['토스 로그인','공유 리워드 (바이럴)','포인트 프로모션','토스 알림 (재방문)'],
+  tech: ['React + Tailwind','모바일 전용 max-width 430px','Framer Motion 애니메이션','Supabase 연동','한/영 다국어 지원'],
+};
+
+const data = {};
+let cur = 0;
+
+const isAd = () => (data.revenueModel||'').includes('광고형');
+
+const ALL_STEPS = [
+  {
+    id:'topic', title:'앱 주제 & 수익 모델',
+    sub:'어떤 앱인지, 어떻게 수익을 낼지 설정하세요.',
+    fields:[
+      {key:'appTopic',type:'text',label:'앱 주제',ph:'예: 사주 풀이, 명상 트래커, 와인 추천'},
+      {key:'category',type:'chips',label:'카테고리',multi:false,opts:['라이프스타일','건강/웰니스','교육/학습','엔터테인먼트','재무/금융','생산성','음식/요리','여행','소셜','AI 도구']},
+      {key:'revenueModel',type:'chips',label:'수익 모델',multi:false,
+        opts:['결제형 (유료 분석)','광고형 (무료+광고)','혼합형 (무료+프리미엄)'],
+        note:{'결제형 (유료 분석)':'토스페이 인앱결제 연동 · 사업자 등록 필수','광고형 (무료+광고)':'구글 애드몹 · 포인트 프로모션으로 혜택탭 노출 가능','혼합형 (무료+프리미엄)':'전환율 가장 높은 모델 · 토스페이 연동 필요'}},
+      {key:'targetUser',type:'chips',label:'주요 타겟',multi:true,opts:['20~30대 여성','20~30대 남성','중장년층','학생','직장인','창업자/프리랜서','부모']},
+    ]
+  },
+  {
+    id:'naming', title:'앱 네이밍 방향',
+    sub:'매력적인 이름을 위한 키워드와 톤을 설정하세요.',
+    fields:[
+      {key:'nameKeywords',type:'text',label:'연상 키워드 (쉼표로 구분)',ph:'예: 따뜻한, 직관적, 동양적, 별자리'},
+      {key:'nameTone',type:'chips',label:'네이밍 톤',multi:false,opts:['감성적·시적','실용적·직관적','영어·글로벌','한국어·친근','조합어·신조어','의성어·의태어']},
+      {key:'nameLength',type:'chips',label:'이름 길이',multi:false,opts:['1~2글자','3~4글자','5글자 이상','영어 1단어','영어 2단어 조합']},
+    ]
+  },
+  {
+    id:'design', title:'디자인 컨셉 & 컬러',
+    sub:'TDS 위에 브랜드 개성을 입힙니다.',
+    tdsNote:'Pretendard · 버튼 규격 · 카드 스타일은 TDS 고정값',
+    fields:[
+      {key:'designStyle',type:'chips',label:'브랜드 무드',multi:false,opts:['미니멀·클린','다크&럭셔리','파스텔·소프트','비비드·팝아트','자연·오가닉','레트로·빈티지']},
+      {key:'colorPalette',type:'color',label:'메인 브랜드 컬러 (토스 블루 제외)',colors:[
+        {n:'딥 네이비',h:'#1B2A4A',ok:true},{n:'세이지 그린',h:'#7A9E7E',ok:true},
+        {n:'로즈 골드',h:'#C9868E',ok:true},{n:'선셋 코럴',h:'#E8714A',ok:true},
+        {n:'라벤더',h:'#8B7EC8',ok:true},{n:'미드나잇',h:'#1A1A2E',ok:true},
+        {n:'버터크림',h:'#F5E6C3',ok:true},{n:'틸 블루',h:'#2A9D8F',ok:true},
+        {n:'토스 블루',h:'#3182F6',ok:false},
+      ]},
+      {key:'imageStyle',type:'chips',label:'이미지/일러스트 스타일',multi:false,opts:['3D 렌더링·하이리얼리즘','플랫 일러스트','수채화·아트','미니멀 아이콘','사진 기반','픽셀아트']},
+      {key:'darkMode',type:'chips',label:'다크모드',multi:false,opts:['라이트 전용','다크모드 지원','시스템 설정 따름']},
+    ]
+  },
+  {
+    id:'payment', title:'앱 구조 & 결제 플로우',
+    sub:'사용자 여정과 결제 단계를 설계합니다.',
+    tdsNote:'토스페이 결제창은 TDS 바텀시트 패턴 고정',
+    paymentOnly: true,
+    fields:[
+      {key:'questionCount',type:'chips',label:'입력 질문 수',multi:false,opts:['1~2개 (초간단)','3~5개 (스탠다드)','6~10개 (상세분석)','10개 이상 (심층)']},
+      {key:'questionType',type:'chips',label:'질문 유형',multi:true,opts:['객관식 선택','슬라이더/척도','날짜/생년월일 입력','텍스트 자유입력','이미지 선택','순위 매기기']},
+      {key:'paymentTiming',type:'chips',label:'결제 시점',multi:false,opts:['질문 전 선결제','결과 미리보기 후 결제','일부 무료 → 풀결과 유료','첫 결과 무료 → 추가분석 유료']},
+      {key:'firstPrice',type:'price',label:'첫 결제 금액 (₩)',ph:'예: 4900'},
+    ]
+  },
+  {
+    id:'ad', title:'앱 구조 & 광고 설정',
+    sub:'무료 콘텐츠 범위와 광고 노출 방식을 설정합니다.',
+    adOnly: true,
+    fields:[
+      {key:'questionCount',type:'chips',label:'입력 질문 수',multi:false,opts:['1~2개 (초간단)','3~5개 (스탠다드)','6~10개 (상세분석)','10개 이상 (심층)']},
+      {key:'questionType',type:'chips',label:'질문 유형',multi:true,opts:['객관식 선택','슬라이더/척도','날짜/생년월일 입력','텍스트 자유입력','이미지 선택','순위 매기기']},
+      {key:'freeScope',type:'chips',label:'무료 콘텐츠 범위',multi:false,opts:['전체 무료','기본 분석 무료 · 상세 유료','요약 무료 · 전체 (광고 시청 후)']},
+      {key:'adFormat',type:'chips',label:'광고 포맷',multi:true,
+        opts:['배너 (하단 고정)','전면 광고 (결과 전)','보상형 (광고 보면 추가 콘텐츠)','네이티브 (결과 내 삽입)'],
+        note:{'보상형 (광고 보면 추가 콘텐츠)':'전환율 가장 높음 · 유저 경험도 좋음','전면 광고 (결과 전)':'수익 높지만 이탈률 주의'}},
+      {key:'adPosition',type:'chips',label:'광고 노출 위치',multi:true,opts:['결과 화면 상단','결과 화면 하단','로딩 전 전면','카드 사이 삽입']},
+    ]
+  },
+  {
+    id:'result', title:'결과 & 로딩 경험',
+    sub:'분석 중 메시지와 결과 화면을 설계합니다.',
+    fields:[
+      {key:'loadingStyle',type:'chips',label:'로딩 멘트 톤',multi:false,opts:['신비로운·AI 분석 중','따뜻한·당신을 위해 준비 중','유머러스·재미있게','전문적·데이터 처리 중','드라마틱·운명을 분석 중']},
+      {key:'loadingCount',type:'chips',label:'로딩 문구 수',multi:false,opts:['1개 (심플)','2~3개 (스텝형)','4~5개 (스토리형)']},
+      {key:'resultFormat',type:'chips',label:'결과물 형식',multi:true,opts:['텍스트 분석 리포트','카드 슬라이드형','인포그래픽','타임라인','점수/등급 표시','공유용 이미지 생성']},
+      {key:'resultTone',type:'chips',label:'결과 텍스트 톤',multi:false,opts:['공감적·위로형','직설적·분석형','응원·동기부여형','미스터리·신비형','유머·가벼운형']},
+    ]
+  },
+  {
+    id:'upsell', title:'재방문 & 마무리 버튼',
+    sub:'결과 확인 후 유저를 붙잡는 구조를 설계합니다.',
+    fields:[
+      {key:'endOptions',type:'chips',label:'결과 화면 끝 버튼',multi:true,opts:['다시 분석하기','친구에게 공유','처음으로 돌아가기','구독 플랜 보기','카카오톡 공유']},
+      {key:'retentionHook',type:'chips',label:'재방문 유도 장치',multi:true,opts:['토스 알림 등록','오늘의 운세 구독','결과 저장 (토스 로그인)','친구 초대 리워드','이메일 뉴스레터']},
+      {key:'socialShare',type:'chips',label:'소셜 공유 형식',multi:true,opts:['결과 이미지 자동 생성','인스타그램 스토리 형식','카카오톡 공유','링크 공유']},
+    ]
+  },
+  {
+    id:'upsell2', title:'추가 결제 유도',
+    sub:'첫 결과 후 추가 전환을 만드는 구조입니다.',
+    paymentOnly: true,
+    fields:[
+      {key:'upsellTrigger',type:'chips',label:'추가결제 유도 타이밍',multi:false,opts:['결과 중간 블러 처리','결과 하단 CTA','팝업 오버레이','별도 언락 페이지']},
+      {key:'upsellContent',type:'chips',label:'추가 결제 콘텐츠',multi:true,opts:['더 상세한 분석','맞춤 솔루션/조언','PDF 다운로드','이메일 발송','상성/궁합 분석','월간 리포트 구독']},
+      {key:'secondPrice',type:'price',label:'추가 결제 금액 (₩)',ph:'예: 9900'},
+    ]
+  },
+  {
+    id:'free', title:'추가 입력 (선택)',
+    sub:'러버블 프롬프트에 직접 추가할 내용을 자유롭게 입력하세요.',
+    fields:[
+      {key:'freeText',type:'textarea',label:'추가 요청사항 · 특이사항 · 레퍼런스 등',ph:'예: 결과 화면에서 사용자 이름을 불러줘 · 레퍼런스: 머니버스, 세계수 · 온보딩은 3단계 스와이프로'},
+    ]
+  },
+];
+
+function steps() {
+  return ALL_STEPS.filter(s => {
+    if (s.paymentOnly && isAd()) return false;
+    if (s.adOnly && !isAd()) return false;
+    return true;
+  });
+}
+
+function render() {
+  const ss = steps();
+  const s = ss[cur];
+  // progress
+  const prog = document.getElementById('prog');
+  prog.innerHTML = '';
+  ss.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'prog-dot' + (i < cur ? ' done' : i === cur ? ' active' : '');
+    prog.appendChild(d);
+  });
+  // counter
+  document.getElementById('counter').textContent = `${cur+1} / ${ss.length}`;
+  // prev btn
+  document.getElementById('btn-prev').style.visibility = cur === 0 ? 'hidden' : 'visible';
+  // next btn
+  const nb = document.getElementById('btn-next');
+  if (cur === ss.length - 1) {
+    nb.textContent = '🎯 프롬프트 생성';
+    nb.className = 'nav-btn primary';
+  } else {
+    nb.textContent = '다음 →';
+    nb.className = 'nav-btn';
+  }
+
+  const el = document.getElementById('step');
+  el.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  let h = `<div class="step-title">${s.title}</div><div class="step-sub">${s.sub}</div>`;
+  if (s.tdsNote) h += `<div class="tds-note">🔒 TDS 고정: ${s.tdsNote}</div>`;
+  card.innerHTML = h;
+
+  s.fields.forEach(f => {
+    const w = document.createElement('div');
+    w.className = 'field';
+    w.innerHTML = `<div class="field-label">${f.label}</div>`;
+
+    if (f.type === 'text') {
+      const inp = document.createElement('input');
+      inp.className = 'inp'; inp.placeholder = f.ph || ''; inp.value = data[f.key] || '';
+      inp.oninput = () => data[f.key] = inp.value;
+      w.appendChild(inp);
+
+    } else if (f.type === 'textarea') {
+      const ta = document.createElement('textarea');
+      ta.className = 'inp'; ta.placeholder = f.ph || ''; ta.value = data[f.key] || '';
+      ta.oninput = () => data[f.key] = ta.value;
+      w.appendChild(ta);
+
+    } else if (f.type === 'price') {
+      const inp = document.createElement('input');
+      inp.className = 'inp'; inp.type = 'number'; inp.placeholder = f.ph || '';
+      inp.value = data[f.key] || ''; inp.style.width = '160px';
+      inp.oninput = () => data[f.key] = inp.value;
+      w.appendChild(inp);
+
+    } else if (f.type === 'chips') {
+      const g = document.createElement('div'); g.className = 'chip-group';
+      const sel = data[f.key] || (f.multi ? [] : '');
+      f.opts.forEach(o => {
+        const c = document.createElement('span');
+        c.className = 'chip' + ((f.multi ? sel.includes(o) : sel === o) ? ' on' : '');
+        c.textContent = o;
+        c.onclick = () => {
+          if (f.multi) {
+            const a = data[f.key] || [];
+            const i = a.indexOf(o);
+            if (i >= 0) a.splice(i,1); else a.push(o);
+            data[f.key] = [...a];
+          } else { data[f.key] = o; }
+          render();
+        };
+        g.appendChild(c);
+      });
+      w.appendChild(g);
+      if (f.note) {
+        const s2 = data[f.key];
+        const nd = document.createElement('div'); nd.className = 'tds-note'; nd.style.marginTop = '8px';
+        if (f.multi) {
+          const a = data[f.key] || [];
+          const notes = a.filter(k=>f.note[k]).map(k=>`• ${f.note[k]}`).join('\n');
+          if (notes) { nd.style.whiteSpace='pre-line'; nd.textContent=notes; w.appendChild(nd); }
+        } else if (s2 && f.note[s2]) { nd.textContent=f.note[s2]; w.appendChild(nd); }
+      }
+
+    } else if (f.type === 'color') {
+      const g = document.createElement('div'); g.className = 'color-row';
+      f.colors.forEach(c => {
+        const wrap = document.createElement('div'); wrap.style.position = 'relative';
+        const sw = document.createElement('div');
+        sw.className = 'swatch' + (data[f.key]===c.h?' on':'') + (c.ok===false?' blocked':'');
+        sw.style.background = c.h; sw.title = c.ok===false ? `${c.n} — 토스 블루 사용 불가` : c.n;
+        if (c.ok !== false) sw.onclick = () => { data[f.key]=c.h; data[f.key+'N']=c.n; render(); };
+        wrap.appendChild(sw);
+        if (c.ok === false) {
+          const x = document.createElement('div');
+          x.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;color:#fff;font-weight:700;pointer-events:none;';
+          x.textContent = '✕'; wrap.appendChild(x);
+        }
+        g.appendChild(wrap);
+      });
+      if (data[f.key]) {
+        const lbl = document.createElement('span');
+        lbl.className = 'color-label';
+        lbl.textContent = `${data[f.key+'N']} ${data[f.key]}`;
+        g.appendChild(lbl);
+      }
+      w.appendChild(g);
+      const wn = document.createElement('div'); wn.className = 'warn-note';
+      wn.textContent = '⚠ 토스 블루 #3182F6 사용 불가 — 심사 거절 위험';
+      w.appendChild(wn);
+    }
+    card.appendChild(w);
+  });
+  el.appendChild(card);
+
+  // 마지막 단계: 고정값 카드
+  if (s.id === 'free') {
+    const fc = document.createElement('div'); fc.className = 'card-fixed';
+    fc.innerHTML = `<div class="field-label" style="margin-bottom:10px;">고정 적용값 확인</div>
+      <div class="fixed-row"><span class="fixed-key">TDS</span><span class="fixed-val">${FIXED.tds.length}개 항목 자동 적용 <span class="mini-badge">고정</span></span></div>
+      <div class="fixed-row"><span class="fixed-key">토스 SDK</span><span class="fixed-val">${FIXED.sdk.join(' · ')} <span class="mini-badge">고정</span></span></div>
+      <div class="fixed-row"><span class="fixed-key">기술 스택</span><span class="fixed-val">${FIXED.tech.join(' · ')} <span class="mini-badge">고정</span></span></div>`;
+    el.appendChild(fc);
+  }
+}
+
+function go(dir) {
+  const ss = steps();
+  if (dir === 1 && cur === ss.length - 1) { generate(); return; }
+  cur = Math.max(0, Math.min(ss.length-1, cur+dir));
+  render();
+  document.getElementById('output').style.display = 'none';
+}
+
+function generate() {
+  const d = data;
+  const ad = isAd();
+  const color = d.colorPalette ? `${d.colorPaletteN} (${d.colorPalette})` : '미선택';
+
+  const txt = `# 앱인토스 미니앱 — Lovable 개발 프롬프트
+# 수익모델: ${d.revenueModel||'미선택'} | TDS + SDK + 다국어 전체 고정
+
+## 앱 개요
+- 주제: ${d.appTopic||'(미입력)'}
+- 카테고리: ${d.category||'(미입력)'}
+- 수익 모델: ${d.revenueModel||'(미입력)'}
+- 타겟 유저: ${(d.targetUser||[]).join(', ')||'(미입력)'}
+
+## 네이밍 가이드
+- 연상 키워드: ${d.nameKeywords||'(미입력)'}
+- 톤: ${d.nameTone||'(미선택)'}
+- 길이: ${d.nameLength||'(미선택)'}
+→ 위 조건에 맞는 앱 이름 3가지를 제안해주세요.
+
+## TDS 고정값 — 전 화면 필수 준수
+${FIXED.tds.map(t=>`- ${t}`).join('\n')}
+
+## 브랜드 디자인
+- 무드: ${d.designStyle||'(미선택)'}
+- 메인 컬러: ${color}
+- 이미지 스타일: ${d.imageStyle||'(미선택)'}
+- 다크모드: ${d.darkMode||'라이트 전용'}
+
+### 이미지 에셋
+- 메인 이미지: 정사각 1:1 (512×512px) — 아이콘/썸네일
+- 소셜 이미지: 가로 1.91:1 (1200×628px) — 카카오/인스타 공유
+
+## 앱 구조 & 화면 플로우
+- 질문 수: ${d.questionCount||'(미선택)'}
+- 질문 유형: ${(d.questionType||[]).join(', ')||'(미선택)'}
+
+${ad ? `### 광고 설정
+- 무료 콘텐츠 범위: ${d.freeScope||'(미선택)'}
+- 광고 포맷: ${(d.adFormat||[]).join(', ')||'(미선택)'}
+- 광고 노출 위치: ${(d.adPosition||[]).join(', ')||'(미선택)'}
+- 광고 연동: 구글 애드몹 SDK (실시간 입찰)` :
+`### 결제 설정
+- 결제 시점: ${d.paymentTiming||'(미선택)'}
+- 첫 결제 금액: ₩${d.firstPrice||'(미입력)'}
+- 결제 UI: 토스 TDS 바텀시트 패턴
+- 이용약관 동의 체크박스 필수 포함
+- 환불 정책 안내 문구 포함
+
+### 추가 결제
+- 유도 타이밍: ${d.upsellTrigger||'(미선택)'}
+- 추가 콘텐츠: ${(d.upsellContent||[]).join(', ')||'(미선택)'}
+- 추가 결제 금액: ₩${d.secondPrice||'(미입력)'}`}
+
+### 화면 순서
+1. 온보딩/랜딩 → 2. 질문 입력 → 3. ${ad?'광고 노출':'결제'} → 4. 로딩/분석 → 5. 결과 → 6. 재방문 훅
+
+## 결과 & 로딩 경험
+- 로딩 멘트 톤: ${d.loadingStyle||'(미선택)'}
+- 로딩 문구 수: ${d.loadingCount||'(미선택)'}
+- 결과 형식: ${(d.resultFormat||[]).join(', ')||'(미선택)'}
+- 결과 텍스트 톤: ${d.resultTone||'(미선택)'}
+
+## 재방문 & 공유
+- 결과 화면 버튼: ${(d.endOptions||[]).join(', ')||'(미선택)'}
+- 재방문 장치: ${(d.retentionHook||[]).join(', ')||'(미선택)'}
+- 소셜 공유: ${(d.socialShare||[]).join(', ')||'(미선택)'}
+
+## 토스 SDK (전체 활성화)
+${FIXED.sdk.map(s=>`- ${s}`).join('\n')}
+
+## 기술 스택 (고정)
+${FIXED.tech.map(t=>`- ${t}`).join('\n')}${d.freeText?`\n\n## 추가 요청사항\n${d.freeText}`:''}
+
+## 빌드 지시사항
+위 스펙으로 앱인토스 미니앱 배포용 React 앱을 생성해주세요.
+- TDS 고정값 전 화면 100% 준수
+- 브랜드 컬러 ${color} 기반 팔레트 생성
+- 모바일 전용 (max-width 430px, 세로 스크롤)
+- Framer Motion 화면 전환 + 결과 카드 애니메이션
+- Supabase 결과 저장 구조 포함
+- 한/영 다국어 (기본 한국어)
+- ${ad?'구글 애드몹 광고 슬롯 UI 구현 (실제 SDK 연동 제외)':'토스페이 바텀시트 결제 흐름 UI 구현 (실제 SDK 연동 제외)'}`;
+
+  document.getElementById('prompt-out').textContent = txt;
+  document.getElementById('model-badge').textContent = isAd() ? '광고형' : '결제형';
+  const out = document.getElementById('output');
+  out.style.display = 'block';
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyPrompt() {
+  const txt = document.getElementById('prompt-out').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const b = document.querySelector('.out-btn');
+    b.textContent = '복사됨 ✓';
+    setTimeout(() => b.textContent = '복사', 1500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
