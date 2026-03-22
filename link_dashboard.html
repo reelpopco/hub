@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reel's Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111;
+    --card: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #666;
+    --accent: #e8ff47;
+    --accent2: #47ffe0;
+    --red: #ff4757;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nanum Gothic', sans-serif;
+    min-height: 100vh;
+    padding: 28px 20px 80px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  header .sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+  }
+  .add-btn {
+    background: var(--accent);
+    color: #111;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* 카테고리 섹션 */
+  .category {
+    margin-bottom: 28px;
+  }
+  .cat-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+
+  .link-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.18s;
+    position: relative;
+    group: true;
+  }
+  .link-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(232,255,71,0.08);
+  }
+
+  .link-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .link-info { flex: 1; min-width: 0; }
+  .link-name {
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .link-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .link-card:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { color: var(--red); background: rgba(255,71,87,0.1); }
+
+  /* 모달 */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #1e1e1e;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .modal h2 {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--accent);
+  }
+  .form-row { margin-bottom: 14px; }
+  .form-row label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .form-row input, .form-row select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-row input:focus, .form-row select:focus {
+    border-color: var(--accent);
+  }
+  .form-row select option { background: #1e1e1e; }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: #111;
+    border: none;
+    padding: 11px;
+    border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background: var(--card);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .empty-cat {
+    font-size: 12px;
+    color: #333;
+    padding: 10px 2px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>REEL'S HUB</h1>
+    <div class="sub" id="dateStr"></div>
+  </div>
+  <button class="add-btn" onclick="openModal()">+ 링크 추가</button>
+</header>
+
+<div id="dashboard"></div>
+
+<!-- 추가 모달 -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>🔗 링크 추가</h2>
+    <div class="form-row">
+      <label>이름</label>
+      <input id="inp-name" type="text" placeholder="예: 유튜브 체크리스트">
+    </div>
+    <div class="form-row">
+      <label>URL</label>
+      <input id="inp-url" type="text" placeholder="https:// 또는 file:///...">
+    </div>
+    <div class="form-row">
+      <label>설명 (선택)</label>
+      <input id="inp-desc" type="text" placeholder="짧은 설명">
+    </div>
+    <div class="form-row">
+      <label>아이콘 이모지</label>
+      <input id="inp-icon" type="text" placeholder="🔗" maxlength="2">
+    </div>
+    <div class="form-row">
+      <label>카테고리</label>
+      <select id="inp-cat">
+        <option value="작업툴">작업툴</option>
+        <option value="앱·서비스">앱·서비스</option>
+        <option value="구글">구글</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>카드 색상</label>
+      <select id="inp-color">
+        <option value="#2a2a1a">노랑</option>
+        <option value="#1a2a2a">민트</option>
+        <option value="#1a1a2a">블루</option>
+        <option value="#2a1a2a">퍼플</option>
+        <option value="#2a1a1a">레드</option>
+        <option value="#1c1c1c">기본</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="saveLink()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_LINKS = [
+
+  {
+    id: 'checklist',
+    name: '유튜브 주간 체크리스트',
+    url: 'youtube_checklist.html',
+    desc: '주간 콘텐츠 작업 체크',
+    icon: '📋',
+    cat: '작업툴',
+    color: '#2a2a1a'
+  },
+  {
+    id: 'dashboard',
+    name: '채널 대시보드',
+    url: 'youtube_dashboard.html',
+    desc: '구독자·댓글·수익화 현황',
+    icon: '📺',
+    cat: '작업툴',
+    color: '#2a1a1a'
+  },
+
+  {
+    id: 'scouter',
+    name: '유튜브 채널 스카우터',
+    url: 'youtube-video-scout.html',
+    desc: '채널 분석 & 발굴 툴',
+    icon: '🔍',
+    cat: '작업툴',
+    color: '#1a2a2a'
+  },
+  {
+    id: 'gcloud',
+    name: '구글 클라우드 콘솔',
+    url: 'https://console.cloud.google.com',
+    desc: 'YouTube Data API v3 키 확인',
+    icon: '🔑',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gcal',
+    name: '구글 캘린더',
+    url: 'https://calendar.google.com',
+    desc: '일정 관리',
+    icon: '📅',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gdrive',
+    name: '구글 드라이브',
+    url: 'https://drive.google.com',
+    desc: '파일 & 문서 저장소',
+    icon: '💾',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'tarot',
+    name: '타로챗봇 (엘라쌤)',
+    url: 'https://ai-tarot-flow.lovable.app/settings',
+    desc: '타로 AI 챗봇',
+    icon: '🔮',
+    cat: '앱·서비스',
+    color: '#2a1a2a'
+  },
+  {
+    id: 'tarot_collection',
+    name: '타로 챗봇 모음',
+    url: 'tarot_bots.html',
+    desc: '타로쌤 챗봇 링크 컬렉션',
+    icon: '✨',
+    cat: '앱·서비스',
+    color: '#2a1a2a'
+  },
+  {
+    id: 'toss',
+    name: '앱인토스 콘솔',
+    url: 'https://toss.im/apps-in-toss',
+    desc: '토스 미니앱 관리',
+    icon: '💙',
+    cat: '앱·서비스',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'lovable',
+    name: 'Lovable (러버블)',
+    url: 'https://lovable.dev',
+    desc: '노코드 앱 빌더',
+    icon: '🛠',
+    cat: '앱·서비스',
+    color: '#2a1a1a'
+  },
+  {
+    id: 'notebooklm',
+    name: 'NotebookLM',
+    url: 'https://notebooklm.google.com',
+    desc: '구글 AI 노트 & 리서치',
+    icon: '📓',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+
+  {
+    id: 'blogger',
+    name: '팁콕 블로그 (Blogger)',
+    url: 'https://www.blogger.com/blog/posts/4444661722135110066',
+    desc: 'tipkok.blogspot.com 관리',
+    icon: '✍️',
+    cat: '구글',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'youtube_studio',
+    name: 'YouTube Studio',
+    url: 'https://studio.youtube.com',
+    desc: '채널 관리 & 분석',
+    icon: '🎬',
+    cat: '작업툴',
+    color: '#2a1a1a'
+  },
+  {
+    id: 'kakao_channel',
+    name: '카카오 채널 관리자',
+    url: 'https://business.kakao.com/dashboard',
+    desc: '카카오 채널 운영 & 관리',
+    icon: '💬',
+    cat: '앱·서비스',
+    color: '#2a2a1a'
+  },
+  {
+    id: 'kakao_bot',
+    name: '카카오 챗봇 관리',
+    url: 'https://chatbot.kakao.com',
+    desc: '카카오 챗봇 빌더',
+    icon: '🤖',
+    cat: '앱·서비스',
+    color: '#2a2a1a'
+  },
+  {
+    id: 'naver',
+    name: '네이버',
+    url: 'https://www.naver.com',
+    desc: '네이버 메인',
+    icon: '🟢',
+    cat: '앱·서비스',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'tumblbug',
+    name: '텀블벅',
+    url: 'https://tumblbug.com',
+    desc: '크라우드펀딩',
+    icon: '🎯',
+    cat: '앱·서비스',
+    color: '#2a1a1a'
+  },
+  {
+    id: 'naver_blog',
+    name: '네이버 블로그',
+    url: 'https://blog.naver.com/reelpop',
+    desc: '네이버 블로그 보기',
+    icon: '📝',
+    cat: '앱·서비스',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'naver_admin',
+    name: '네이버 블로그 관리',
+    url: 'https://admin.blog.naver.com',
+    desc: '블로그 통계 & 설정',
+    icon: '📊',
+    cat: '앱·서비스',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'miricanvas',
+    name: '미리캔버스',
+    url: 'https://www.miricanvas.com',
+    desc: '디자인 툴',
+    icon: '🎨',
+    cat: '작업툴',
+    color: '#2a1a2a'
+  },
+  {
+    id: 'canva',
+    name: 'Canva',
+    url: 'https://www.canva.com',
+    desc: '디자인 툴',
+    icon: '✏️',
+    cat: '작업툴',
+    color: '#1a2a2a'
+  },
+  {
+    id: 'google_search',
+    name: '구글 검색',
+    url: 'https://www.google.com',
+    desc: 'Google 검색',
+    icon: '🔍',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gmail_reel',
+    name: 'Gmail (릴팝)',
+    url: 'https://mail.google.com/mail/u/0/#inbox',
+    desc: 'reelpop.co@gmail.com',
+    icon: '📧',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gmail_shoney',
+    name: 'Gmail (쇼니)',
+    url: 'https://mail.google.com/mail/u/?authuser=shoney222222@gmail.com',
+    desc: 'shoney222222@gmail.com',
+    icon: '📧',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gmail_smpl',
+    name: 'Gmail (smpl)',
+    url: 'https://mail.google.com/mail/u/?authuser=smpl.window@gmail.com',
+    desc: 'smpl.window@gmail.com',
+    icon: '📧',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gmail_movie',
+    name: 'Gmail (무비)',
+    url: 'https://mail.google.com/mail/u/?authuser=movieletter.co@gmail.com',
+    desc: 'movieletter.co@gmail.com',
+    icon: '📧',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gmail_sori',
+    name: 'Gmail (소리)',
+    url: 'https://mail.google.com/mail/u/?authuser=sori1004mail@gmail.com',
+    desc: 'sori1004mail@gmail.com',
+    icon: '📧',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'claude',
+    name: 'Claude',
+    url: 'https://claude.ai',
+    desc: 'Anthropic AI 어시스턴트',
+    icon: '🤖',
+    cat: 'AI툴',
+    color: '#1a2a2a'
+  },
+  {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    url: 'https://chat.openai.com',
+    desc: 'OpenAI AI 어시스턴트',
+    icon: '💬',
+    cat: 'AI툴',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini',
+    url: 'https://gemini.google.com',
+    desc: '구글 AI 어시스턴트',
+    icon: '✨',
+    cat: 'AI툴',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'grok',
+    name: 'Grok',
+    url: 'https://grok.com',
+    desc: 'xAI 어시스턴트',
+    icon: '⚡',
+    cat: 'AI툴',
+    color: '#2a1a2a'
+  },
+  {
+    id: 'genspark',
+    name: 'Genspark',
+    url: 'https://www.genspark.ai',
+    desc: 'AI 리서치 & 검색',
+    icon: '🔥',
+    cat: 'AI툴',
+    color: '#2a1a1a'
+  },
+  {
+    id: 'broo',
+    name: '브루 (Broo)',
+    url: 'https://broo.kr',
+    desc: '자동 나레이션 & 자막',
+    icon: '🎙',
+    cat: '작업툴',
+    color: '#1a2a2a'
+  },
+  {
+    id: 'suno',
+    name: 'Suno',
+    url: 'https://suno.com',
+    desc: 'AI 음악 생성',
+    icon: '🎵',
+    cat: '작업툴',
+    color: '#2a1a2a'
+  },
+  {
+    id: 'gdocs',
+    name: '구글 문서',
+    url: 'https://docs.google.com',
+    desc: '구글 독스',
+    icon: '📄',
+    cat: '구글',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'gsheets',
+    name: '구글 스프레드시트',
+    url: 'https://sheets.google.com',
+    desc: '구글 시트',
+    icon: '📊',
+    cat: '구글',
+    color: '#1a2a1a'
+  },
+  {
+    id: 'toss_builder',
+    name: '토스 앱빌더',
+    url: 'https://app-builder.toss.im',
+    desc: '앱인토스 앱 빌더',
+    icon: '🔨',
+    cat: '작업툴',
+    color: '#1a1a2a'
+  },
+  {
+    id: 'pinterest',
+    name: 'Pinterest',
+    url: 'https://pinterest.com',
+    desc: '이미지 & 아이디어 수집',
+    icon: '📌',
+    cat: '앱·서비스',
+    color: '#2a1a1a'
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    url: 'https://github.com/reelpopco',
+    desc: '코드 & 파일 저장소',
+    icon: '🐙',
+    cat: '작업툴',
+    color: '#1a1a1a'
+  }
+];
+
+const CAT_ORDER = ['작업툴', 'AI툴', '구글', '앱·서비스', '기타'];
+
+function loadLinks() {
+  try {
+    const saved = localStorage.getItem('reelLinks');
+    return saved ? JSON.parse(saved) : DEFAULT_LINKS;
+  } catch { return DEFAULT_LINKS; }
+}
+
+function saveLinks(links) {
+  localStorage.setItem('reelLinks', JSON.stringify(links));
+}
+
+let links = loadLinks();
+
+function render() {
+  const dash = document.getElementById('dashboard');
+  dash.innerHTML = '';
+
+  CAT_ORDER.forEach(cat => {
+    const catLinks = links.filter(l => l.cat === cat);
+
+    const sec = document.createElement('div');
+    sec.className = 'category';
+    sec.innerHTML = `<div class="cat-title">${cat}</div>`;
+
+    const grid = document.createElement('div');
+    grid.className = 'links-grid';
+
+    if (catLinks.length === 0) {
+      grid.innerHTML = `<div class="empty-cat">링크 없음</div>`;
+    } else {
+      catLinks.forEach(link => {
+        const card = document.createElement('a');
+        card.href = link.url;
+        card.target = link.url.startsWith('file://') ? '_self' : '_blank';
+        card.className = 'link-card';
+        card.style.background = link.color || '#1c1c1c';
+        card.innerHTML = `
+          <div class="link-icon" style="background:rgba(255,255,255,0.05)">${link.icon || '🔗'}</div>
+          <div class="link-info">
+            <div class="link-name">${link.name}</div>
+            <div class="link-desc">${link.desc || ''}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteLink(event, '${link.id}')">✕</button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    sec.appendChild(grid);
+    dash.appendChild(sec);
+  });
+}
+
+function deleteLink(e, id) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (confirm('이 링크를 삭제할까요?')) {
+    links = links.filter(l => l.id !== id);
+    saveLinks(links);
+    render();
+  }
+}
+
+function openModal() {
+  document.getElementById('modalBg').classList.add('open');
+  document.getElementById('inp-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  ['inp-name','inp-url','inp-desc','inp-icon'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function saveLink() {
+  const name = document.getElementById('inp-name').value.trim();
+  const url = document.getElementById('inp-url').value.trim();
+  if (!name || !url) { alert('이름과 URL은 필수예요!'); return; }
+
+  const colorMap = {
+    '#2a2a1a': '#2a2a1a',
+    '#1a2a2a': '#1a2a2a',
+    '#1a1a2a': '#1a1a2a',
+    '#2a1a2a': '#2a1a2a',
+    '#2a1a1a': '#2a1a1a',
+    '#1c1c1c': '#1c1c1c',
+  };
+
+  const newLink = {
+    id: 'link_' + Date.now(),
+    name,
+    url,
+    desc: document.getElementById('inp-desc').value.trim(),
+    icon: document.getElementById('inp-icon').value.trim() || '🔗',
+    cat: document.getElementById('inp-cat').value,
+    color: document.getElementById('inp-color').value,
+  };
+
+  links.push(newLink);
+  saveLinks(links);
+  render();
+  closeModal();
+}
+
+// 날짜 표시
+const now = new Date();
+document.getElementById('dateStr').textContent =
+  `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+
+// 엔터키로 저장
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+render();
+</script>
+</body>
+</html>
