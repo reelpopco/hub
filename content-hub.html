@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>콘텐츠 허브</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:      #0f0f12;
+  --panel:   #15151a;
+  --card:    #1c1c23;
+  --card2:   #21212a;
+  --border:  #2c2c38;
+  --border2: #3a3a4a;
+  --text:    #e0e0ea;
+  --text2:   #8888a0;
+  --text3:   #4a4a60;
+  --mono:    'DM Mono', monospace;
+
+  --dundum:        #3dd68c;
+  --dundum-bg:     #0c2018;
+  --dundum-soft:   rgba(61,214,140,.1);
+  --eunhye:        #ff7eb3;
+  --eunhye-bg:     #20090e;
+  --eunhye-soft:   rgba(255,126,179,.1);
+  --movie:         #4db8ff;
+  --movie-bg:      #091820;
+  --movie-soft:    rgba(77,184,255,.1);
+  --musicase:      #b06bff;
+  --musicase-bg:   #12091e;
+  --musicase-soft: rgba(176,107,255,.1);
+  --all:           #6c63ff;
+  --all-soft:      rgba(108,99,255,.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; display: flex; flex-direction: column; }
+
+/* HEADER */
+header {
+  height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; padding: 0 20px; gap: 12px;
+  background: var(--panel); border-bottom: 1px solid var(--border); z-index: 100;
+}
+.logo { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--all); text-transform: uppercase; white-space: nowrap; }
+.hd-sep { width: 1px; height: 16px; background: var(--border2); }
+.hd-total { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.hd-gap { flex: 1; }
+.btn-add {
+  padding: 7px 18px; background: var(--all); color: #fff; border: none;
+  border-radius: 8px; font-family: 'Noto Sans KR', sans-serif; font-size: 12px;
+  font-weight: 700; cursor: pointer; transition: background .15s; white-space: nowrap;
+}
+.btn-add:hover { background: #5750d8; }
+
+/* TABS */
+.tabs-bar {
+  flex-shrink: 0; display: flex; align-items: stretch;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 20px; height: 42px; font-size: 12px; font-weight: 600;
+  color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: all .15s; flex-shrink: 0;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--tc); border-bottom-color: var(--tc); }
+.tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tc); opacity: .4; transition: opacity .15s; }
+.tab.active .tab-dot { opacity: 1; }
+.tab-badge {
+  font-family: var(--mono); font-size: 9px; padding: 1px 5px;
+  border-radius: 4px; background: var(--tb); color: var(--tc); opacity: .6;
+}
+.tab.active .tab-badge { opacity: 1; }
+
+.tab[data-ch="all"]      { --tc: var(--all);      --tb: rgba(108,99,255,.15); }
+.tab[data-ch="dundum"]   { --tc: var(--dundum);   --tb: var(--dundum-bg); }
+.tab[data-ch="eunhye"]   { --tc: var(--eunhye);   --tb: var(--eunhye-bg); }
+.tab[data-ch="movie"]    { --tc: var(--movie);    --tb: var(--movie-bg); }
+.tab[data-ch="musicase"] { --tc: var(--musicase); --tb: var(--musicase-bg); }
+
+/* BODY */
+.body { display: flex; flex: 1; overflow: hidden; }
+
+/* LEFT LIST */
+.clist {
+  width: 256px; flex-shrink: 0;
+  background: var(--panel); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.clist-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.clist-search input {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px; color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px; outline: none;
+  transition: border-color .15s;
+}
+.clist-search input:focus { border-color: var(--all); }
+.clist-search input::placeholder { color: var(--text3); }
+.clist-items {
+  flex: 1; overflow-y: auto; padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.clist-items::-webkit-scrollbar { width: 3px; }
+.clist-items::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.ci {
+  padding: 10px 11px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; transition: all .12s; position: relative;
+}
+.ci:hover { background: var(--card); }
+.ci.active { background: var(--cs); border-color: var(--cc); }
+.ci[data-ch="dundum"]   { --cc: var(--dundum);   --cs: var(--dundum-soft); }
+.ci[data-ch="eunhye"]   { --cc: var(--eunhye);   --cs: var(--eunhye-soft); }
+.ci[data-ch="movie"]    { --cc: var(--movie);    --cs: var(--movie-soft); }
+.ci[data-ch="musicase"] { --cc: var(--musicase); --cs: var(--musicase-soft); }
+.ci[data-ch="other"]    { --cc: var(--text2);    --cs: rgba(136,136,160,.08); }
+.ci-title { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 22px; margin-bottom: 5px; }
+.ci-sub { display: flex; align-items: center; gap: 6px; }
+.ci-ch { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: var(--cs); color: var(--cc); letter-spacing: .3px; }
+.ci-date { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.ci-n { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.ci-del {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text3); font-size: 11px;
+  cursor: pointer; padding: 3px 4px; border-radius: 4px;
+  opacity: 0; transition: all .12s;
+}
+.ci:hover .ci-del { opacity: 1; }
+.ci-del:hover { color: #ff5f7e; background: rgba(255,95,126,.1); }
+.clist-empty { padding: 32px 16px; text-align: center; color: var(--text3); font-size: 11px; line-height: 1.9; }
+
+/* RIGHT */
+.detail-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+/* PASTE PANEL */
+.paste-panel {
+  position: absolute; inset: 0; background: var(--bg); z-index: 50;
+  display: flex; flex-direction: column; padding: 28px 32px; gap: 16px; overflow-y: auto;
+}
+.paste-panel.hidden { display: none; }
+.paste-hd { font-size: 16px; font-weight: 900; }
+.paste-sub { font-size: 12px; color: var(--text2); line-height: 1.8; margin-top: 4px; }
+.paste-ta {
+  flex: 1; min-height: 300px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text); font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; line-height: 1.9; padding: 18px;
+  resize: none; outline: none; transition: border-color .15s;
+}
+.paste-ta:focus { border-color: var(--all); }
+.paste-ta::placeholder { color: var(--text3); font-size: 12px; line-height: 2.1; }
+.paste-btns { display: flex; gap: 10px; }
+.btn-analyze {
+  flex: 1; padding: 14px; background: var(--all); color: #fff; border: none;
+  border-radius: 10px; font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s;
+}
+.btn-analyze:hover { background: #5750d8; }
+.btn-analyze:disabled { opacity: .5; cursor: not-allowed; }
+.btn-cancel {
+  padding: 14px 22px; background: var(--card); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all .15s;
+}
+.btn-cancel:hover { border-color: var(--border2); color: var(--text); }
+
+/* DETAIL SCROLL */
+.detail-scroll { flex: 1; overflow-y: auto; padding: 26px 28px 60px; }
+.detail-scroll::-webkit-scrollbar { width: 4px; }
+.detail-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.detail-empty {
+  height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; color: var(--text3);
+}
+.detail-empty-ico { font-size: 40px; opacity: .18; }
+.detail-empty h3 { font-size: 14px; color: var(--text2); }
+.detail-empty p { font-size: 12px; max-width: 210px; text-align: center; line-height: 1.7; }
+
+.detail-hd { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.detail-title { font-size: 20px; font-weight: 900; line-height: 1.35; }
+.detail-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.detail-ch { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: .5px; }
+.detail-date { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+/* DRAWERS */
+.drawers { display: flex; flex-direction: column; gap: 8px; }
+.drawer { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .15s; }
+.drawer:hover { border-color: var(--border2); }
+.drawer-top { display: flex; align-items: center; padding: 12px 16px; gap: 10px; background: var(--card2); }
+.drawer-ico { font-size: 15px; }
+.drawer-name { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; flex: 1; }
+.btn-edit-d {
+  background: none; border: none; color: var(--text3); font-size: 12px;
+  cursor: pointer; padding: 5px 7px; border-radius: 6px; transition: all .12s;
+}
+.btn-edit-d:hover { color: var(--text2); background: var(--card); }
+.btn-edit-d.on { color: #f5c542; }
+.btn-copy-d {
+  padding: 6px 16px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text2); font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-copy-d:hover { border-color: var(--dcolor); color: var(--dcolor); }
+.btn-copy-d.copied { border-color: var(--dundum); color: var(--dundum); background: var(--dundum-soft); }
+.drawer-body { padding: 14px 16px; border-top: 1px solid var(--border); }
+.drawer-content {
+  font-size: 13px; line-height: 1.9; color: var(--text);
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 360px; overflow-y: auto;
+}
+.drawer-content::-webkit-scrollbar { width: 3px; }
+.drawer-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.drawer-content[contenteditable="true"] { outline: 1px dashed #f5c542; border-radius: 4px; padding: 2px; cursor: text; }
+
+/* LOADING / TOAST */
+.loading-bar {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--all), var(--musicase));
+  width: 0%; transition: width .5s ease; z-index: 9999;
+}
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 10px 22px; font-size: 13px; color: var(--text);
+  opacity: 0; pointer-events: none; z-index: 9999; transition: all .25s; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loadingBar"></div>
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="logo">CONTENT HUB</div>
+  <div class="hd-sep"></div>
+  <div class="hd-total" id="hdTotal">0개</div>
+  <div class="hd-gap"></div>
+  <button class="btn-add" onclick="openPaste()">+ 새 콘텐츠</button>
+</header>
+
+<div class="tabs-bar">
+  <div class="tab active" data-ch="all"      onclick="switchTab('all')">      <div class="tab-dot"></div>전체<span class="tab-badge" id="b-all">0</span></div>
+  <div class="tab"        data-ch="dundum"   onclick="switchTab('dundum')">   <div class="tab-dot"></div>든든백세<span class="tab-badge" id="b-dundum">0</span></div>
+  <div class="tab"        data-ch="eunhye"   onclick="switchTab('eunhye')">   <div class="tab-dot"></div>은혜여사<span class="tab-badge" id="b-eunhye">0</span></div>
+  <div class="tab"        data-ch="movie"    onclick="switchTab('movie')">    <div class="tab-dot"></div>디어무비/무비카세<span class="tab-badge" id="b-movie">0</span></div>
+  <div class="tab"        data-ch="musicase" onclick="switchTab('musicase')"> <div class="tab-dot"></div>MUSICASE<span class="tab-badge" id="b-musicase">0</span></div>
+</div>
+
+<div class="body">
+  <div class="clist">
+    <div class="clist-search">
+      <input id="searchInput" type="text" placeholder="🔍 검색..." oninput="renderList()">
+    </div>
+    <div class="clist-items" id="clistItems"></div>
+  </div>
+
+  <div class="detail-area">
+    <div class="paste-panel hidden" id="pastePanel">
+      <div>
+        <div class="paste-hd">클로드 결과물 붙여넣기</div>
+        <div class="paste-sub">대본 · 제목 · 해시태그 · 고정댓글 · Suno 프롬프트 등<br>전체를 그대로 붙여넣으면 AI가 섹션별 서랍으로 정리해드려요.</div>
+      </div>
+      <textarea id="pasteTA" class="paste-ta"
+        placeholder="📋 클로드 작업 결과를 여기에 붙여넣기 (Ctrl+V)
+
+든든백세 / 은혜여사  →  대본 · 제목 · 해시태그 · 고정댓글 · 설명란
+디어무비 / 무비카세  →  숏츠 기획 · 제목 · 해시태그 · 고정댓글
+MUSICASE            →  Suno 프롬프트 · 제목 · 해시태그 · 타임스탬프 · 썸네일
+
+채널명이 없어도 AI가 내용 보고 자동 분류합니다."></textarea>
+      <div class="paste-btns">
+        <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">✨ AI 분석 & 저장</button>
+        <button class="btn-cancel" onclick="closePaste()">취소</button>
+      </div>
+    </div>
+
+    <div class="detail-scroll" id="detailScroll">
+      <div class="detail-empty" id="detailEmpty">
+        <div class="detail-empty-ico">✦</div>
+        <h3>콘텐츠를 선택하세요</h3>
+        <p>왼쪽 목록 클릭 → 섹션 서랍이 펼쳐져요</p>
+      </div>
+      <div id="detailContent" style="display:none;">
+        <div class="detail-hd">
+          <div class="detail-title" id="detailTitle"></div>
+          <div class="detail-meta">
+            <span class="detail-ch" id="detailCh"></span>
+            <span class="detail-date" id="detailDate"></span>
+          </div>
+        </div>
+        <div class="drawers" id="drawers"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE = 'contenthub_v3';
+let items = [], currentTab = 'all', currentId = null;
+
+const CH_MAP = { '든든백세':'dundum','은혜여사':'eunhye','디어무비':'movie','무비카세':'movie','MUSICASE':'musicase','음악카세':'musicase' };
+const CH_LABEL = { dundum:'든든백세', eunhye:'은혜여사', movie:'디어무비/무비카세', musicase:'MUSICASE', other:'기타' };
+const CH_COLOR = { dundum:'var(--dundum)', eunhye:'var(--eunhye)', movie:'var(--movie)', musicase:'var(--musicase)', other:'var(--text2)' };
+const CH_BG    = { dundum:'var(--dundum-bg)', eunhye:'var(--eunhye-bg)', movie:'var(--movie-bg)', musicase:'var(--musicase-bg)', other:'var(--card2)' };
+
+function load() { try { items = JSON.parse(localStorage.getItem(STORE)||'[]'); } catch { items=[]; } }
+function save() { localStorage.setItem(STORE, JSON.stringify(items)); }
+
+load(); renderList(); updateBadges();
+
+/* ── TABS ── */
+function switchTab(ch) {
+  currentTab = ch; currentId = null;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.ch === ch));
+  showEmpty(); renderList();
+}
+
+/* ── LIST ── */
+function renderList() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = items.filter(it => {
+    const tabOk = currentTab === 'all' || it.ch === currentTab;
+    const searchOk = !q || it.title.toLowerCase().includes(q) || (CH_LABEL[it.ch]||'').toLowerCase().includes(q);
+    return tabOk && searchOk;
+  });
+  const el = document.getElementById('clistItems');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="clist-empty">여기 아직 비어있어요<br><span style="color:var(--text3)">상단 버튼으로 추가하세요</span></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(it => `
+    <div class="ci${it.id===currentId?' active':''}" data-ch="${it.ch}" onclick="selectItem(${it.id})">
+      <div class="ci-title">${esc(it.title)}</div>
+      <div class="ci-sub">
+        <span class="ci-ch">${esc(CH_LABEL[it.ch]||it.ch)}</span>
+        <span class="ci-date">${it.date}</span>
+        <span class="ci-n">${it.sections.length}섹션</span>
+      </div>
+      <button class="ci-del" onclick="event.stopPropagation();deleteItem(${it.id})">✕</button>
+    </div>`).join('');
+}
+
+function updateBadges() {
+  const c = { all:items.length, dundum:0, eunhye:0, movie:0, musicase:0 };
+  items.forEach(it => { if(c[it.ch]!==undefined) c[it.ch]++; });
+  Object.keys(c).forEach(k => { const el=document.getElementById('b-'+k); if(el) el.textContent=c[k]; });
+  document.getElementById('hdTotal').textContent = items.length+'개';
+}
+
+/* ── SELECT / DELETE ── */
+function selectItem(id) {
+  currentId = id;
+  const it = items.find(x => x.id===id);
+  if (!it) return;
+  renderList();
+  renderDetail(it);
+}
+
+function deleteItem(id) {
+  if (!confirm('삭제할까요?')) return;
+  items = items.filter(x => x.id!==id);
+  save();
+  if (currentId===id) { currentId=null; showEmpty(); }
+  renderList(); updateBadges();
+  toast('삭제했어요');
+}
+
+/* ── DETAIL ── */
+function showEmpty() {
+  document.getElementById('detailEmpty').style.display = 'flex';
+  document.getElementById('detailContent').style.display = 'none';
+}
+
+function renderDetail(it) {
+  document.getElementById('detailEmpty').style.display = 'none';
+  document.getElementById('detailContent').style.display = 'block';
+  document.getElementById('detailTitle').textContent = it.title;
+  const chEl = document.getElementById('detailCh');
+  chEl.textContent = CH_LABEL[it.ch]||it.ch;
+  chEl.style.background = CH_BG[it.ch]||'var(--card2)';
+  chEl.style.color = CH_COLOR[it.ch]||'var(--text2)';
+  document.getElementById('detailDate').textContent = it.date;
+
+  const color = CH_COLOR[it.ch]||'var(--all)';
+  document.getElementById('drawers').innerHTML = it.sections.map((s,i) => `
+    <div class="drawer">
+      <div class="drawer-top">
+        <span class="drawer-ico">${s.icon}</span>
+        <span class="drawer-name">${esc(s.name)}</span>
+        <button class="btn-edit-d" id="eb_${i}" title="편집" onclick="toggleEdit(${it.id},${i})">✏️</button>
+        <button class="btn-copy-d" id="cb_${i}" style="--dcolor:${color}" onclick="copyDrawer(${it.id},${i})">복사</button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-content" id="dc_${i}">${esc(s.content)}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('detailScroll').scrollTop = 0;
+}
+
+function copyDrawer(itemId, idx) {
+  const it = items.find(x => x.id===itemId);
+  if (!it) return;
+  const text = document.getElementById('dc_'+idx)?.innerText || it.sections[idx]?.content || '';
+  navigator.clipboard.writeText(text).then(() => {
+    toast('✅ 복사됨: ' + it.sections[idx].name);
+    const btn = document.getElementById('cb_'+idx);
+    if (btn) { btn.textContent='✓ 복사됨'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='복사'; btn.classList.remove('copied'); },2000); }
+  });
+}
+
+function toggleEdit(itemId, idx) {
+  const el = document.getElementById('dc_'+idx);
+  const btn = document.getElementById('eb_'+idx);
+  if (!el) return;
+  if (el.contentEditable==='true') {
+    el.contentEditable = 'false'; btn.classList.remove('on');
+    const it = items.find(x => x.id===itemId);
+    if (it) { it.sections[idx].content = el.innerText; save(); toast('✅ 수정 저장됨'); }
+  } else {
+    el.contentEditable = 'true'; el.focus(); btn.classList.add('on');
+    toast('✏️ 편집 중 — 다시 클릭하면 저장');
+  }
+}
+
+/* ── PASTE ── */
+function openPaste() { document.getElementById('pastePanel').classList.remove('hidden'); document.getElementById('pasteTA').focus(); }
+function closePaste() { document.getElementById('pastePanel').classList.add('hidden'); }
+
+/* ── ANALYZE ── */
+async function analyze() {
+  const raw = document.getElementById('pasteTA').value.trim();
+  if (!raw) { toast('텍스트를 붙여넣어 주세요'); return; }
+  const btn = document.getElementById('btnAnalyze');
+  btn.textContent = '분석 중...'; btn.disabled = true; setLoading(true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content:
+`아래는 유튜브 콘텐츠 작업 결과물이야. JSON만 반환해. 마크다운 코드블록 없이 순수 JSON만.
+
+{
+  "title": "콘텐츠 핵심 제목 (30자 이내)",
+  "channel": "든든백세 또는 은혜여사 또는 디어무비 또는 무비카세 또는 MUSICASE 또는 기타",
+  "sections": [
+    { "key": "script",        "name": "롱폼 대본",       "icon": "📝", "content": "실제내용전체" },
+    { "key": "shorts_script", "name": "숏츠 대본",       "icon": "🎬", "content": "실제내용전체" },
+    { "key": "title",         "name": "제목",            "icon": "✏️", "content": "실제내용전체" },
+    { "key": "hashtag",       "name": "해시태그",        "icon": "🏷️", "content": "실제내용전체" },
+    { "key": "comment",       "name": "고정댓글",        "icon": "💬", "content": "실제내용전체" },
+    { "key": "description",   "name": "설명란",          "icon": "📋", "content": "실제내용전체" },
+    { "key": "thumbnail",     "name": "썸네일 프롬프트", "icon": "🖼️", "content": "실제내용전체" },
+    { "key": "suno",          "name": "Suno 프롬프트",   "icon": "🎵", "content": "실제내용전체" },
+    { "key": "timestamp",     "name": "타임스탬프",      "icon": "⏱️", "content": "실제내용전체" },
+    { "key": "memo",          "name": "메모",            "icon": "📌", "content": "실제내용전체" }
+  ]
+}
+
+규칙: sections에는 실제로 있는 것만 포함. content는 해당 내용 전체를 그대로.
+
+---
+${raw.slice(0,7000)}` }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.map(c=>c.text||'').join('')||'';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    const ch = CH_MAP[parsed.channel]||'other';
+    const item = {
+      id: Date.now(),
+      title: parsed.title||'제목 없음',
+      ch,
+      date: new Date().toLocaleDateString('ko-KR',{month:'short',day:'numeric'}),
+      sections: parsed.sections||[],
+    };
+    items.unshift(item); save(); updateBadges();
+    switchTab(ch==='other'?'all':ch);
+    selectItem(item.id);
+    closePaste();
+    document.getElementById('pasteTA').value = '';
+    toast('✅ 저장 완료!');
+
+  } catch(e) {
+    console.error(e);
+    const item = fallbackParse(raw);
+    items.unshift(item); save(); updateBadges();
+    switchTab(item.ch==='other'?'all':item.ch);
+    selectItem(item.id);
+    closePaste();
+    document.getElementById('pasteTA').value = '';
+    toast('✅ 저장 완료 (자동 파싱)');
+  }
+
+  btn.textContent='✨ AI 분석 & 저장'; btn.disabled=false; setLoading(false);
+}
+
+function fallbackParse(raw) {
+  const lines = raw.split('\n');
+  const P = [
+    { re:/\[?(롱폼\s*)?대본\]?/i,                             key:'script',        name:'롱폼 대본',       icon:'📝' },
+    { re:/\[?숏츠\s*(대본|기획)\]?/i,                        key:'shorts_script', name:'숏츠 대본',       icon:'🎬' },
+    { re:/\[?제목/i,                                           key:'title',         name:'제목',            icon:'✏️' },
+    { re:/\[?해시태그/i,                                       key:'hashtag',       name:'해시태그',        icon:'🏷️' },
+    { re:/\[?고정\s*댓글/i,                                   key:'comment',       name:'고정댓글',        icon:'💬' },
+    { re:/\[?설명\s*란?\]?/i,                                 key:'description',   name:'설명란',          icon:'📋' },
+    { re:/\[?썸네일/i,                                         key:'thumbnail',     name:'썸네일',          icon:'🖼️' },
+    { re:/\[?(suno|수노|가사\s*프롬프트)\]?/i,                key:'suno',          name:'Suno 프롬프트',   icon:'🎵' },
+    { re:/\[?(타임스탬프|트랙\s*목록)\]?/i,                   key:'timestamp',     name:'타임스탬프',      icon:'⏱️' },
+    { re:/\[?(메모|참고|추가)\]?/i,                           key:'memo',          name:'메모',            icon:'📌' },
+  ];
+  let sections=[], cur=null, buf=[];
+  const flush=()=>{ if(cur&&buf.length) sections.push({...cur, content:buf.join('\n').trim()}); };
+  for (const line of lines) {
+    let hit=false;
+    for (const p of P) { if(p.re.test(line.trim())){ flush(); cur={key:p.key,name:p.name,icon:p.icon}; buf=[]; hit=true; break; } }
+    if (!hit&&cur) buf.push(line);
+  }
+  flush();
+  let ch='other';
+  for (const [k,v] of Object.entries(CH_MAP)) { if(raw.includes(k)){ ch=v; break; } }
+  return { id:Date.now(), title:lines.find(l=>l.trim())?.trim().slice(0,40)||'콘텐츠', ch, date:new Date().toLocaleDateString('ko-KR',{month:'short',day:'numeric'}), sections };
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2400);
+}
+function setLoading(on) {
+  const b=document.getElementById('loadingBar'); b.style.width=on?'72%':'100%';
+  if(!on) setTimeout(()=>{ b.style.width='0%'; },400);
+}
+</script>
+</body>
+</html>
