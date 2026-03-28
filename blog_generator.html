@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>블로그 자동생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f6f1;
+  --card: #ffffff;
+  --border: #e5e0d8;
+  --text: #1a1a1a;
+  --muted: #888;
+  --accent: #2d6a4f;
+  --accent2: #e76f51;
+  --accent3: #457b9d;
+  --naver: #03c75a;
+  --google: #4285f4;
+  --yellow: #f4a261;
+  --light: #f0ebe3;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nanum Gothic', sans-serif;
+  min-height: 100vh;
+  padding: 28px 20px 80px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--text);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+header h1 {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+header h1 span { color: var(--accent); }
+.header-sub { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+/* API 키 */
+.api-bar {
+  background: var(--text);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.api-bar label { font-size: 11px; color: #aaa; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+.api-bar input {
+  flex: 1; min-width: 200px;
+  background: #2a2a2a; border: 1px solid #444; border-radius: 8px;
+  padding: 8px 12px; color: #fff; font-family: 'Space Mono', monospace;
+  font-size: 11px; outline: none; transition: border-color 0.2s;
+}
+.api-bar input:focus { border-color: var(--accent); }
+
+/* 메인 레이아웃 */
+.main-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+}
+@media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* 왼쪽 패널 */
+.left-panel { display: flex; flex-direction: column; gap: 14px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.card-title {
+  font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
+}
+
+/* 블로그 타입 선택 */
+.type-tabs { display: flex; gap: 8px; margin-bottom: 4px; }
+.type-tab {
+  flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--border);
+  font-family: 'Nanum Gothic', sans-serif; font-size: 13px; font-weight: 800;
+  cursor: pointer; transition: all 0.15s; background: var(--light); text-align: center;
+}
+.type-tab.naver.active { background: var(--naver); border-color: var(--naver); color: #fff; }
+.type-tab.google.active { background: var(--google); border-color: var(--google); color: #fff; }
+.type-tab:not(.active) { color: var(--muted); }
+
+/* 폼 */
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%; background: var(--light); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 12px; color: var(--text);
+  font-family: 'Nanum Gothic', sans-serif; font-size: 13px; outline: none;
+  transition: border-color 0.2s;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+.form-row textarea { height: 60px; resize: vertical; }
+
+/* 버튼들 */
+.btn-primary {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  padding: 12px; border-radius: 10px; font-family: 'Nanum Gothic', sans-serif;
+  font-weight: 800; font-size: 14px; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--light); color: var(--text); border: 1px solid var(--border);
+  padding: 8px 14px; border-radius: 8px; font-family: 'Nanum Gothic', sans-serif;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-copy {
+  background: rgba(45,106,79,0.1); border: 1px solid rgba(45,106,79,0.2);
+  color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 11px;
+  font-weight: 700; cursor: pointer; transition: all 0.15s;
+  font-family: 'Nanum Gothic', sans-serif;
+}
+.btn-copy:hover { background: rgba(45,106,79,0.2); }
+.btn-copy.copied { background: var(--accent); color: #fff; }
+
+.btn-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  text-decoration: none; transition: all 0.15s;
+}
+.btn-naver { background: rgba(3,199,90,0.1); color: var(--naver); border: 1px solid rgba(3,199,90,0.3); }
+.btn-naver:hover { background: rgba(3,199,90,0.2); }
+.btn-google { background: rgba(66,133,244,0.1); color: var(--google); border: 1px solid rgba(66,133,244,0.3); }
+.btn-google:hover { background: rgba(66,133,244,0.2); }
+.btn-gemini { background: rgba(231,111,81,0.1); color: var(--accent2); border: 1px solid rgba(231,111,81,0.3); }
+.btn-gemini:hover { background: rgba(231,111,81,0.2); }
+
+/* 주제 추천 목록 */
+.topic-list { display: flex; flex-direction: column; gap: 6px; }
+.topic-item {
+  background: var(--light); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; cursor: pointer; transition: all 0.15s; font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.topic-item:hover { border-color: var(--accent); background: rgba(45,106,79,0.05); }
+.topic-item.selected { border-color: var(--accent); background: rgba(45,106,79,0.08); font-weight: 700; }
+.topic-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+/* 오른쪽 - 결과 패널 */
+.result-panel { display: flex; flex-direction: column; gap: 14px; }
+
+.result-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; display: none;
+}
+.result-card.visible { display: block; }
+
+.result-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+}
+.result-label { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.result-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.result-content {
+  background: var(--light); border-radius: 10px; padding: 14px;
+  font-size: 13px; line-height: 1.8; color: var(--text);
+  white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+  border: 1px solid var(--border);
+}
+
+.result-title-content {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 18px; font-weight: 700; line-height: 1.4;
+  padding: 12px 14px; background: var(--light);
+  border-radius: 10px; border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  background: var(--light); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 10px; font-size: 11px; color: var(--accent);
+  font-weight: 700;
+}
+
+/* 썸네일 프롬프트 */
+.prompt-box {
+  background: #1a1a1a; border-radius: 10px; padding: 14px;
+  font-family: 'Space Mono', monospace; font-size: 11px; color: #ccc;
+  line-height: 1.7; white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+}
+
+/* 로딩 */
+.loading-state {
+  text-align: center; padding: 40px 20px;
+  display: none;
+}
+.loading-state.visible { display: block; }
+.spinner {
+  display: inline-block; width: 24px; height: 24px;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--muted); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* 구분선 */
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+.step-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--accent);
+  color: #fff; font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📝 블로그 <span>자동생성기</span></h1>
+    <div class="header-sub">AI 기반 블로그 콘텐츠 자동 생성 · Powered by Gemini</div>
+  </div>
+</header>
+
+<!-- API 키 -->
+<div class="api-bar">
+  <label>✨ GEMINI API KEY</label>
+  <input type="password" id="gemini_key" placeholder="Gemini API 키 입력..." oninput="saveKey()">
+</div>
+
+<div class="main-grid">
+  <!-- 왼쪽 패널 -->
+  <div class="left-panel">
+
+    <!-- 블로그 타입 -->
+    <div class="card">
+      <div class="card-title">📌 블로그 플랫폼 선택</div>
+      <div class="type-tabs">
+        <button class="type-tab naver active" onclick="setType('naver')">🟢 네이버</button>
+        <button class="type-tab google" onclick="setType('google')">🔵 구글 블로그</button>
+      </div>
+    </div>
+
+    <!-- 주제 설정 -->
+    <div class="card">
+      <div class="card-title">🔍 <span class="step-badge">1</span> 최신 이슈 주제 추천</div>
+      <div class="form-row">
+        <label>관심 카테고리</label>
+        <select id="category">
+          <option value="일반">일반 (자동 선택)</option>
+          <option value="건강·의학">건강·의학</option>
+          <option value="재테크·경제">재테크·경제</option>
+          <option value="AI·테크">AI·테크</option>
+          <option value="라이프스타일">라이프스타일</option>
+          <option value="음식·요리">음식·요리</option>
+          <option value="여행">여행</option>
+          <option value="연예·문화">연예·문화</option>
+          <option value="육아·교육">육아·교육</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>키워드 (선택)</label>
+        <input type="text" id="keyword" placeholder="예: 다이어트, 주식, ChatGPT...">
+      </div>
+      <button class="btn-primary" onclick="getTopics()" id="topicBtn">🔍 주제 5개 추천받기</button>
+    </div>
+
+    <!-- 추천 주제 목록 -->
+    <div class="card" id="topicCard" style="display:none;">
+      <div class="card-title">💡 추천 주제 (클릭해서 선택)</div>
+      <div class="topic-list" id="topicList"></div>
+    </div>
+
+    <!-- 글 생성 설정 -->
+    <div class="card">
+      <div class="card-title">⚙️ <span class="step-badge">2</span> 생성 설정</div>
+      <div class="form-row">
+        <label>선택한 주제 / 직접 입력</label>
+        <input type="text" id="selectedTopic" placeholder="주제를 선택하거나 직접 입력...">
+      </div>
+      <div class="form-row">
+        <label>글 톤</label>
+        <select id="tone">
+          <option value="친근하고 쉽게">친근하고 쉽게 (일반 독자)</option>
+          <option value="전문적이고 신뢰감 있게">전문적·신뢰감 (정보성)</option>
+          <option value="감성적이고 공감되게">감성적·공감형 (라이프)</option>
+          <option value="유머러스하고 재미있게">유머러스·재미있게</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>글 길이</label>
+        <select id="length">
+          <option value="1500자">짧게 (1500자)</option>
+          <option value="2500자" selected>보통 (2500자)</option>
+          <option value="4000자">길게 (4000자)</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="generateBlog()" id="generateBtn">✍️ 블로그 글 생성</button>
+    </div>
+
+  </div>
+
+  <!-- 오른쪽 결과 패널 -->
+  <div class="result-panel">
+
+    <!-- 빈 상태 -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📝</div>
+      <p style="font-size:14px;font-weight:700;margin-bottom:8px;">왼쪽에서 주제를 선택하고<br>블로그 글을 생성해보세요!</p>
+      <p style="font-size:12px;color:var(--muted);">Gemini API가 최신 트렌드를 분석해<br>완성도 높은 블로그 글을 만들어드려요</p>
+    </div>
+
+    <!-- 로딩 -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">AI가 글을 작성하고 있어요...</div>
+    </div>
+
+    <!-- 제목 -->
+    <div class="result-card" id="titleCard">
+      <div class="result-header">
+        <span class="result-label">📌 제목 (3가지)</span>
+        <div class="result-btns">
+          <button class="btn-copy" onclick="copyResult('titleContent', this)">📋 복사</button>
+        </div>
+      </div>
+      <div id="titleContent" class="result-content" style="max-height:120px;"></div>
+    </div>
+
+    <!-- 본문 -->
+    <div class="result-card" id="bodyCard">
+      <div class="result-header">
+        <span class="result-label">📄 본문</span>
+        <div class="result-btns">
+          <button class="btn-copy" onclick="copyResult('bodyContent', this)">📋 복사</button>
+          <a id="naverLink" class="btn-link btn-naver" href="https://blog.naver.com" target="_blank">🟢 네이버 글쓰기</a>
+          <a id="googleLink" class="btn-link btn-google" href="https://www.blogger.com/blog/posts/4444661722135110066" target="_blank">🔵 구글 블로그</a>
+        </div>
+      </div>
+      <div id="bodyContent" class="result-content"></div>
+    </div>
+
+    <!-- 해시태그 -->
+    <div class="result-card" id="tagCard">
+      <div class="result-header">
+        <span class="result-label">🏷️ 해시태그</span>
+        <div class="result-btns">
+          <button class="btn-copy" onclick="copyResult('tagContent', this)">📋 복사</button>
+        </div>
+      </div>
+      <div id="tagContent" class="tags-wrap"></div>
+    </div>
+
+    <!-- 썸네일 -->
+    <div class="result-card" id="thumbCard">
+      <div class="result-header">
+        <span class="result-label">🖼️ 썸네일 이미지 프롬프트</span>
+        <div class="result-btns">
+          <button class="btn-copy" onclick="copyResult('thumbContent', this)">📋 복사</button>
+          <a class="btn-link btn-gemini" href="https://gemini.google.com" target="_blank" onclick="copyThumbAndOpen()">✨ 제미나이로 생성</a>
+        </div>
+      </div>
+      <div id="thumbContent" class="prompt-box"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">💡 복사 버튼 클릭 후 제미나이에 붙여넣기 → 텍스트 포함 썸네일 이미지 생성!</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let blogType = 'naver';
+let selectedTopic = '';
+let thumbPrompt = '';
+
+function saveKey() { localStorage.setItem('gemini_key', document.getElementById('gemini_key').value); }
+function loadKey() { const k = localStorage.getItem('gemini_key'); if (k) document.getElementById('gemini_key').value = k; }
+function getKey() { return document.getElementById('gemini_key').value.trim(); }
+
+function setType(type) {
+  blogType = type;
+  document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.type-tab.' + type).classList.add('active');
+}
+
+async function callGemini(prompt) {
+  const key = getKey();
+  if (!key) throw new Error('Gemini API 키를 입력해주세요!');
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function getTopics() {
+  if (!getKey()) { alert('Gemini API 키를 먼저 입력해주세요!'); return; }
+  const btn = document.getElementById('topicBtn');
+  btn.disabled = true; btn.textContent = '⏳ 검색중...';
+  const category = document.getElementById('category').value;
+  const keyword = document.getElementById('keyword').value;
+
+  try {
+    const text = await callGemini(`오늘 날짜 기준으로 ${category} 카테고리에서 블로그 글로 쓰기 좋은 최신 트렌드 주제 5개를 추천해줘.
+${keyword ? '키워드: ' + keyword : ''}
+블로그 플랫폼: ${blogType === 'naver' ? '네이버 블로그' : '구글 블로그(Blogger)'}
+
+조건:
+- 검색량이 많고 최신 트렌드에 맞는 주제
+- 독자의 궁금증을 자극하는 구체적인 주제
+- 아래 형식으로 딱 5개만 출력 (번호만, 설명 없이):
+1. 주제1
+2. 주제2
+3. 주제3
+4. 주제4
+5. 주제5`);
+
+    const topics = text.split('\n').filter(l => /^\d\./.test(l.trim())).map(l => l.replace(/^\d\.\s*/, '').trim());
+    const card = document.getElementById('topicCard');
+    const list = document.getElementById('topicList');
+    card.style.display = 'block';
+    list.innerHTML = topics.map((t, i) => `
+      <div class="topic-item" onclick="selectTopic(this, '${t.replace(/'/g,"\\'")}')">
+        <span class="topic-num">0${i+1}</span>
+        <span>${t}</span>
+      </div>`).join('');
+  } catch(e) {
+    alert('오류: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '🔍 주제 5개 추천받기';
+}
+
+function selectTopic(el, topic) {
+  document.querySelectorAll('.topic-item').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTopic = topic;
+  document.getElementById('selectedTopic').value = topic;
+}
+
+async function generateBlog() {
+  if (!getKey()) { alert('Gemini API 키를 먼저 입력해주세요!'); return; }
+  const topic = document.getElementById('selectedTopic').value.trim();
+  if (!topic) { alert('주제를 입력해주세요!'); return; }
+
+  const tone = document.getElementById('tone').value;
+  const length = document.getElementById('length').value;
+  const platform = blogType === 'naver' ? '네이버 블로그' : '구글 블로그';
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').classList.add('visible');
+  document.querySelectorAll('.result-card').forEach(c => c.classList.remove('visible'));
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.textContent = '⏳ 생성중...';
+
+  try {
+    document.getElementById('loadingText').textContent = '제목 생성 중...';
+    const fullText = await callGemini(`${platform}에 올릴 블로그 글을 작성해줘.
+
+주제: ${topic}
+톤: ${tone}
+글 길이: ${length} 내외
+플랫폼 특성: ${blogType === 'naver' ? '네이버 블로그 - 검색 최적화, 이웃 소통 중심, 소제목과 줄바꿈 가독성 중요, 네이버 검색 키워드 최적화 필요' : '구글 블로그(Blogger) - SEO 최적화, 영어권도 고려, 전문성 있는 구성, 구조화된 본문'}
+
+아래 형식으로 정확히 출력해줘:
+
+[제목후보]
+제목1: (클릭률 높은 제목)
+제목2: (감성적인 제목)
+제목3: (정보성 제목)
+
+[본문]
+(소제목, 단락 구분 명확하게, 가독성 좋게, ${length} 내외)
+
+[해시태그]
+(#태그 15개, 쉼표로 구분)
+
+[썸네일프롬프트]
+(제미나이 이미지 생성용 영문 프롬프트, 텍스트 오버레이 포함 요청, 블로그 썸네일 최적화)`);
+
+    // 파싱
+    const titleMatch = fullText.match(/\[제목후보\]([\s\S]*?)\[본문\]/);
+    const bodyMatch = fullText.match(/\[본문\]([\s\S]*?)\[해시태그\]/);
+    const tagMatch = fullText.match(/\[해시태그\]([\s\S]*?)\[썸네일프롬프트\]/);
+    const thumbMatch = fullText.match(/\[썸네일프롬프트\]([\s\S]*?)$/);
+
+    if (titleMatch) {
+      document.getElementById('titleContent').textContent = titleMatch[1].trim();
+      document.getElementById('titleCard').classList.add('visible');
+    }
+    if (bodyMatch) {
+      document.getElementById('bodyContent').textContent = bodyMatch[1].trim();
+      document.getElementById('bodyCard').classList.add('visible');
+    }
+    if (tagMatch) {
+      const tags = tagMatch[1].trim().split(/[,\n]/).map(t => t.trim()).filter(t => t);
+      document.getElementById('tagContent').innerHTML = tags.map(t => `<span class="tag">${t.startsWith('#') ? t : '#'+t}</span>`).join('');
+      document.getElementById('tagCard').classList.add('visible');
+    }
+    if (thumbMatch) {
+      thumbPrompt = thumbMatch[1].trim();
+      document.getElementById('thumbContent').textContent = thumbPrompt;
+      document.getElementById('thumbCard').classList.add('visible');
+    }
+
+    document.getElementById('loadingState').classList.remove('visible');
+  } catch(e) {
+    document.getElementById('loadingState').classList.remove('visible');
+    document.getElementById('emptyState').style.display = 'block';
+    alert('오류: ' + e.message);
+  }
+
+  btn.disabled = false; btn.textContent = '✍️ 블로그 글 생성';
+}
+
+function copyResult(id, btn) {
+  const el = document.getElementById(id);
+  const text = el.tagName === 'DIV' && el.classList.contains('tags-wrap')
+    ? Array.from(el.querySelectorAll('.tag')).map(t => t.textContent).join(' ')
+    : el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ 복사됨!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 복사'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyThumbAndOpen() {
+  if (thumbPrompt) {
+    navigator.clipboard.writeText(thumbPrompt);
+  }
+}
+
+loadKey();
+</script>
+</body>
+</html>
