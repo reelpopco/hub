@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유튜브 파인더 - 뜨는 채널 찾기</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  color: #f1f1f1;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 24px 32px;
+  border-bottom: 2px solid #e63946;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header p { color: #aaa; margin-top: 4px; font-size: 14px; }
+
+/* API Key Section */
+.api-section {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  margin: 20px 24px;
+  padding: 20px;
+}
+.api-key-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.api-key-row input {
+  flex: 1;
+  padding: 10px 14px;
+  background: #0f0f0f;
+  border: 1px solid #444;
+  border-radius: 8px;
+  color: #f1f1f1;
+  font-size: 14px;
+}
+.api-key-row input:focus { outline: none; border-color: #e63946; }
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: #e63946; color: white; }
+.btn-primary:hover { background: #c1121f; }
+.btn-secondary { background: #333; color: #f1f1f1; }
+.btn-secondary:hover { background: #444; }
+.btn-success { background: #2d6a4f; color: white; }
+.btn-success:hover { background: #1b4332; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.api-guide-toggle {
+  margin-top: 12px;
+  color: #ffd93d;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+}
+.api-guide-toggle:hover { text-decoration: underline; }
+
+.api-guide {
+  display: none;
+  margin-top: 16px;
+  padding: 20px;
+  background: #0f0f0f;
+  border-radius: 8px;
+  border: 1px solid #333;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.api-guide.show { display: block; }
+.api-guide h3 { color: #ffd93d; margin-bottom: 12px; font-size: 16px; }
+.api-guide ol { padding-left: 20px; }
+.api-guide li { margin-bottom: 10px; color: #ccc; }
+.api-guide a { color: #6bc5f8; text-decoration: underline; }
+.api-guide .step-img { color: #888; font-style: italic; }
+.api-guide code {
+  background: #1a1a2e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #ffd93d;
+  font-size: 12px;
+}
+.api-saved { color: #2d6a4f; font-size: 13px; margin-left: 8px; display: none; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 24px;
+  border-bottom: 2px solid #333;
+}
+.tab {
+  padding: 14px 28px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  color: #888;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab:hover { color: #f1f1f1; }
+.tab.active { color: #e63946; border-bottom-color: #e63946; }
+
+/* Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px 24px;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-group label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.filter-group select,
+.filter-group input[type="text"],
+.filter-group input[type="number"] {
+  padding: 8px 12px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #f1f1f1;
+  font-size: 14px;
+  min-width: 140px;
+}
+.filter-group select:focus,
+.filter-group input:focus { outline: none; border-color: #e63946; }
+
+.search-input {
+  flex: 1;
+  min-width: 250px;
+}
+.search-input input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #f1f1f1;
+  font-size: 15px;
+}
+.search-input input:focus { outline: none; border-color: #e63946; }
+
+/* Category filter for trending */
+.trending-filters { display: none; }
+.trending-filters.show { display: flex; }
+.search-filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.search-filters.hide { display: none; }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid #222;
+}
+.result-count { color: #888; font-size: 14px; }
+.toolbar-actions { display: flex; gap: 10px; }
+
+/* Sort */
+.sort-group { display: flex; align-items: center; gap: 8px; }
+.sort-group label { font-size: 12px; color: #888; }
+.sort-group select {
+  padding: 6px 10px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #f1f1f1;
+  font-size: 13px;
+}
+
+/* Loading */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+}
+.loading.show { display: block; }
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #333;
+  border-top-color: #e63946;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { color: #888; font-size: 14px; }
+
+/* Results Grid */
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.card {
+  background: #1a1a2e;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #222;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.card:hover { border-color: #e63946; transform: translateY(-2px); }
+
+.card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.card-outlier-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #e63946;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.card-outlier-badge.high { background: #e63946; }
+.card-outlier-badge.mid { background: #f77f00; }
+.card-outlier-badge.low { background: #2d6a4f; }
+
+.card-body { padding: 14px; }
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.card-channel {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-channel .subs {
+  font-size: 11px;
+  color: #666;
+  background: #0f0f0f;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.card-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: #888;
+}
+.card-stats span { display: flex; align-items: center; gap: 4px; }
+.card-stats .icon { font-size: 14px; }
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #222;
+}
+.outlier-score {
+  font-size: 13px;
+  font-weight: 700;
+}
+.outlier-score.high { color: #e63946; }
+.outlier-score.mid { color: #f77f00; }
+.outlier-score.low { color: #2d6a4f; }
+.card-date { font-size: 11px; color: #666; }
+
+/* Video length tag */
+.video-type-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.tag-short { background: #7209b7; color: white; }
+.tag-mid { background: #0077b6; color: white; }
+.tag-long { background: #e63946; color: white; }
+
+/* Load more */
+.load-more {
+  text-align: center;
+  padding: 30px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #666;
+}
+.empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+.empty-state h3 { color: #888; margin-bottom: 8px; }
+
+/* Error */
+.error-msg {
+  background: #3d0000;
+  border: 1px solid #e63946;
+  color: #ff6b6b;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin: 12px 24px;
+  font-size: 13px;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+/* Quota info */
+.quota-info {
+  padding: 8px 24px;
+  font-size: 12px;
+  color: #555;
+  text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header { padding: 16px; }
+  .header h1 { font-size: 22px; }
+  .filters { padding: 16px; }
+  .results { padding: 16px; grid-template-columns: 1fr; }
+  .api-section { margin: 12px; }
+  .tabs { margin: 0 12px; }
+}
+
+/* Duration Range Slider */
+.duration-slider-group {
+  min-width: 280px;
+}
+.duration-slider-container {
+  position: relative;
+  height: 36px;
+  margin-top: 2px;
+}
+.duration-track {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  border-radius: 4px;
+  background: #222;
+  overflow: hidden;
+}
+.duration-zones {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+.zone-short { flex: 0 0 8.33%; background: #7209b7; opacity: 0.3; }
+.zone-mid { flex: 0 0 25%; background: #0077b6; opacity: 0.3; }
+.zone-long { flex: 1; background: #e63946; opacity: 0.3; }
+.duration-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #7209b7, #0077b6, #e63946);
+  border-radius: 4px;
+  opacity: 0.8;
+}
+.duration-slider-container input[type="range"] {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+  margin: 0;
+}
+.duration-slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  border: 2px solid #e63946;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.duration-slider-container input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  border: 2px solid #e63946;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.duration-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #666;
+}
+.duration-value {
+  text-align: center;
+  font-size: 12px;
+  color: #ffd93d;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.duration-presets {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.preset-btn {
+  padding: 2px 8px;
+  border: 1px solid #444;
+  border-radius: 12px;
+  background: transparent;
+  color: #aaa;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.preset-btn:hover, .preset-btn.active { border-color: #e63946; color: #e63946; background: rgba(230,57,70,0.1); }
+
+/* Banner */
+.banner {
+  margin: 30px 24px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 1px solid #e63946;
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -15%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(230,57,70,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.banner-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.banner-badge {
+  display: inline-block;
+  background: #e63946;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}
+.banner-live {
+  font-size: 12px;
+  color: #ffd93d;
+  font-weight: 700;
+}
+.banner-headline {
+  font-size: 15px;
+  color: #ddd;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.banner-headline strong {
+  color: #ffd93d;
+}
+.banner-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+.banner-features li {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 2;
+}
+.banner-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 18px 0;
+}
+.banner-community {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: rgba(255,217,61,0.06);
+  border-radius: 10px;
+  border-left: 3px solid #ffd93d;
+  line-height: 1.6;
+}
+.banner-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.banner-btn-primary {
+  background: #e63946;
+  color: white;
+}
+.banner-btn-primary:hover { background: #c1121f; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(230,57,70,0.3); }
+.banner-btn-secondary {
+  background: rgba(255,217,61,0.1);
+  color: #ffd93d;
+  border: 1px solid rgba(255,217,61,0.25);
+}
+.banner-btn-secondary:hover { background: rgba(255,217,61,0.18); transform: translateY(-1px); }
+@media (max-width: 768px) {
+  .banner { margin: 16px 12px; padding: 20px; }
+  .banner-buttons { flex-direction: column; }
+  .banner-btn { justify-content: center; }
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #2d6a4f;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>🔍 유튜브 파인더</h1>
+  <p>구독자 대비 조회수가 터진 Outlier 영상을 찾아 벤치마킹하세요</p>
+</div>
+
+<!-- API Key -->
+<div class="api-section">
+  <div class="api-key-row">
+    <input type="password" id="apiKeyInput" placeholder="YouTube Data API v3 키를 입력하세요">
+    <button class="btn btn-primary" onclick="saveApiKey()">저장</button>
+    <button class="btn btn-secondary" onclick="toggleApiKeyVisibility()">👁</button>
+    <span class="api-saved" id="apiSaved">✓ 저장됨</span>
+  </div>
+  <div class="api-guide-toggle" onclick="toggleGuide()">
+    📘 API 키 발급 방법 자세히 보기 ▾
+  </div>
+  <div class="api-guide" id="apiGuide">
+    <h3>📘 YouTube Data API v3 키 발급 방법</h3>
+    <ol>
+      <li>
+        <strong>Google Cloud Console 접속</strong><br>
+        <a href="https://console.cloud.google.com/" target="_blank">👉 https://console.cloud.google.com/</a> 에 접속합니다.<br>
+        구글 계정으로 로그인하세요.
+      </li>
+      <li>
+        <strong>새 프로젝트 만들기</strong><br>
+        상단 바에서 프로젝트 선택 드롭다운 클릭 → <code>새 프로젝트</code> 클릭<br>
+        프로젝트 이름: 아무거나 입력 (예: <code>youtube-finder</code>)<br>
+        <code>만들기</code> 클릭 후 잠시 대기
+      </li>
+      <li>
+        <strong>YouTube Data API v3 활성화</strong><br>
+        <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank">👉 YouTube Data API v3 활성화 페이지 바로가기</a><br>
+        또는: 좌측 메뉴 → <code>API 및 서비스</code> → <code>라이브러리</code> → "YouTube Data API v3" 검색<br>
+        <code>사용</code> 버튼 클릭하여 활성화
+      </li>
+      <li>
+        <strong>API 키 생성</strong><br>
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank">👉 사용자 인증 정보 페이지 바로가기</a><br>
+        또는: 좌측 메뉴 → <code>API 및 서비스</code> → <code>사용자 인증 정보</code><br>
+        상단 <code>+ 사용자 인증 정보 만들기</code> → <code>API 키</code> 선택<br>
+        API 키가 생성됩니다! 복사해서 위 입력란에 붙여넣기 하세요.
+      </li>
+      <li>
+        <strong>(선택) API 키 제한 설정</strong><br>
+        보안을 위해 키 제한을 권장합니다:<br>
+        생성된 키 클릭 → <code>API 제한사항</code> → <code>키 제한</code> → YouTube Data API v3만 선택<br>
+        이렇게 하면 이 키로는 YouTube API만 사용 가능합니다.
+      </li>
+    </ol>
+    <p style="margin-top: 16px; padding: 12px; background: #1a1a2e; border-radius: 8px; border-left: 3px solid #ffd93d;">
+      <strong>💡 참고:</strong> 무료 할당량은 하루 <strong>10,000 유닛</strong>입니다.<br>
+      검색 1회 = 100 유닛, 영상 상세 조회 = 1 유닛, 채널 조회 = 1 유닛<br>
+      일반적으로 하루 50~100회 검색이 가능합니다.
+    </p>
+  </div>
+</div>
+
+<!-- Error Message -->
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="search" onclick="switchTab('search')">🔍 키워드 검색</div>
+  <div class="tab" data-tab="trending" onclick="switchTab('trending')">🔥 급상승</div>
+</div>
+
+<!-- Search Filters -->
+<div class="filters search-filters" id="searchFilters">
+  <div class="filter-group search-input">
+    <label>검색어</label>
+    <input type="text" id="searchQuery" placeholder="키워드 입력 (예: AI 자동화, 부업, 쿠키영상)" onkeydown="if(event.key==='Enter') doSearch()">
+  </div>
+  <div class="filter-group">
+    <label>기간</label>
+    <select id="dateRange">
+      <option value="">전체</option>
+      <option value="1">최근 24시간</option>
+      <option value="7" selected>최근 1주</option>
+      <option value="30">최근 1개월</option>
+      <option value="90">최근 3개월</option>
+      <option value="180">최근 6개월</option>
+      <option value="365">최근 1년</option>
+    </select>
+  </div>
+  <div class="filter-group duration-slider-group">
+    <label>영상 길이</label>
+    <div class="duration-value" id="durationValue">전체 (0분 ~ 120분+)</div>
+    <div class="duration-slider-container">
+      <div class="duration-track">
+        <div class="duration-zones">
+          <div class="zone-short"></div>
+          <div class="zone-mid"></div>
+          <div class="zone-long"></div>
+        </div>
+        <div class="duration-fill" id="durationFill"></div>
+      </div>
+      <input type="range" id="durationMin" min="0" max="120" value="0" step="1" oninput="updateDurationSlider()">
+      <input type="range" id="durationMax" min="0" max="120" value="120" step="1" oninput="updateDurationSlider()">
+    </div>
+    <div class="duration-presets">
+      <button class="preset-btn" onclick="setDurationPreset(0,1)">SHORT</button>
+      <button class="preset-btn" onclick="setDurationPreset(1,20)">MID</button>
+      <button class="preset-btn" onclick="setDurationPreset(20,120)">LONG</button>
+      <button class="preset-btn active" onclick="setDurationPreset(0,120)">ALL</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <label>최소 조회수</label>
+    <select id="minViews">
+      <option value="0">제한 없음</option>
+      <option value="1000">1천+</option>
+      <option value="5000">5천+</option>
+      <option value="10000">1만+</option>
+      <option value="50000">5만+</option>
+      <option value="100000">10만+</option>
+      <option value="500000">50만+</option>
+      <option value="1000000">100만+</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>구독자 최소</label>
+    <select id="subMin">
+      <option value="0">제한 없음</option>
+      <option value="1000">1천+</option>
+      <option value="5000">5천+</option>
+      <option value="10000" selected>1만+</option>
+      <option value="50000">5만+</option>
+      <option value="100000">10만+</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>구독자 최대</label>
+    <select id="subMax">
+      <option value="0">제한 없음</option>
+      <option value="10000">~1만</option>
+      <option value="50000">~5만</option>
+      <option value="100000">~10만</option>
+      <option value="500000">~50만</option>
+      <option value="1000000">~100만</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" onclick="doSearch()" id="searchBtn">검색</button>
+</div>
+
+<!-- Trending Filters -->
+<div class="filters trending-filters" id="trendingFilters">
+  <div class="filter-group">
+    <label>카테고리</label>
+    <select id="trendingCategory">
+      <option value="0">전체</option>
+      <option value="1">영화/애니메이션</option>
+      <option value="2">자동차</option>
+      <option value="10">음악</option>
+      <option value="15">반려동물</option>
+      <option value="17">스포츠</option>
+      <option value="20">게임</option>
+      <option value="22">일상/블로그</option>
+      <option value="23">코미디</option>
+      <option value="24">엔터테인먼트</option>
+      <option value="25">뉴스/정치</option>
+      <option value="26">스타일</option>
+      <option value="27">교육</option>
+      <option value="28">과학기술</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>구독자 최소</label>
+    <select id="trendSubMin">
+      <option value="0">제한 없음</option>
+      <option value="1000">1천+</option>
+      <option value="10000">1만+</option>
+      <option value="100000">10만+</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>구독자 최대</label>
+    <select id="trendSubMax">
+      <option value="0">제한 없음</option>
+      <option value="50000">~5만</option>
+      <option value="100000">~10만</option>
+      <option value="500000">~50만</option>
+      <option value="1000000">~100만</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" onclick="doTrending()">급상승 불러오기</button>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <span class="result-count" id="resultCount"></span>
+  <div class="toolbar-actions">
+    <div class="sort-group">
+      <label>정렬:</label>
+      <select id="sortBy" onchange="sortResults()">
+        <option value="outlier">Outlier 스코어 ↓</option>
+        <option value="views">조회수 ↓</option>
+        <option value="likes">좋아요 ↓</option>
+        <option value="comments">댓글수 ↓</option>
+        <option value="date">최신순</option>
+        <option value="ratio">조회수/구독자 비율 ↓</option>
+      </select>
+    </div>
+    <button class="btn btn-success" onclick="exportCSV()" id="csvBtn" disabled>📊 CSV 내보내기</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p id="loadingText">영상 데이터를 불러오는 중...</p>
+</div>
+
+<!-- Results -->
+<div class="results" id="results"></div>
+
+<!-- Empty State -->
+<div class="empty-state" id="emptyState">
+  <div class="emoji">🎯</div>
+  <h3>키워드를 검색하거나 급상승 탭을 확인하세요</h3>
+  <p>구독자 대비 조회수가 높은 Outlier 영상을 찾아드립니다</p>
+</div>
+
+<!-- Load More -->
+<div class="load-more" id="loadMore" style="display:none;">
+  <button class="btn btn-secondary" onclick="loadMore()">+ 더 불러오기 (50개)</button>
+</div>
+
+<!-- Quota Info -->
+<div class="quota-info" id="quotaInfo"></div>
+
+<!-- Banner -->
+<div class="banner">
+  <div class="banner-top">
+    <span class="banner-badge">무료특강</span>
+    <span class="banner-live">📌 실시간 4,250명 시청 | 강의시간 9시간+ ㄷㄷ</span>
+  </div>
+  <div class="banner-headline">
+    카카오 출신 개발자, 코인으로 2억 날린 신용불량자에서<br>
+    <strong>'유튜브 자동화 프로그램'</strong>으로 단 5일 만에 수익 창출,<br>
+    <strong>하루 95만원 수익 중</strong> ㄷㄷ! 오토워커 <strong>[개발남 노씨]</strong>
+  </div>
+  <ul class="banner-features">
+    <li>🛫 클릭 한번으로 4롱폼 동시에 나오는 2달간 갈아서 만든 영상 자동화방법</li>
+    <li>🛫 똑똑한 AI 직원으로 자동화하여 수익화하는 상세 코딩 프로세스</li>
+    <li>🛫 요즘 핫한 채널 파인더 프로그램 직접 만드는 방법 (10분컷)</li>
+    <li>🔥 무료특강만 보고도 누구나 할 수 있게끔 섬세한 실습 3회 A-Z</li>
+  </ul>
+  <hr class="banner-divider">
+  <div class="banner-community">
+    ✨ <strong>바이브코딩으로 월세벌기 단톡방</strong>에서 실시간 질문하고 같이 성장하세요!
+  </div>
+  <div class="banner-buttons">
+    <a class="banner-btn banner-btn-primary" href="https://cafe.naver.com/dinohighclass/225197" target="_blank">🎓 무료특강 바로가기</a>
+    <a class="banner-btn banner-btn-secondary" href="https://open.kakao.com/o/gjqLWiii" target="_blank">💬 단톡방 입장하기</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ State ============
+let API_KEY = '';
+let allResults = [];
+let nextPageToken = null;
+let currentMode = 'search'; // 'search' | 'trending'
+let quotaUsed = 0;
+
+// ============ Init ============
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('yt_finder_api_key');
+  if (saved) {
+    API_KEY = saved;
+    document.getElementById('apiKeyInput').value = saved;
+    document.getElementById('apiSaved').style.display = 'inline';
+  }
+  updateDurationSlider();
+});
+
+// ============ Duration Slider ============
+function updateDurationSlider() {
+  let minVal = parseInt(document.getElementById('durationMin').value);
+  let maxVal = parseInt(document.getElementById('durationMax').value);
+
+  if (minVal > maxVal) {
+    [minVal, maxVal] = [maxVal, minVal];
+    document.getElementById('durationMin').value = minVal;
+    document.getElementById('durationMax').value = maxVal;
+  }
+
+  const pctMin = (minVal / 120) * 100;
+  const pctMax = (maxVal / 120) * 100;
+  const fill = document.getElementById('durationFill');
+  fill.style.left = pctMin + '%';
+  fill.style.width = (pctMax - pctMin) + '%';
+
+  const minLabel = minVal === 0 ? '0초' : minVal + '분';
+  const maxLabel = maxVal >= 120 ? '120분+' : maxVal + '분';
+  document.getElementById('durationValue').textContent = `${minLabel} ~ ${maxLabel}`;
+
+  // Update preset buttons
+  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  if (minVal === 0 && maxVal >= 120) document.querySelector('.preset-btn:nth-child(4)').classList.add('active');
+  else if (minVal === 0 && maxVal === 1) document.querySelector('.preset-btn:nth-child(1)').classList.add('active');
+  else if (minVal === 1 && maxVal === 20) document.querySelector('.preset-btn:nth-child(2)').classList.add('active');
+  else if (minVal === 20 && maxVal >= 120) document.querySelector('.preset-btn:nth-child(3)').classList.add('active');
+}
+
+function setDurationPreset(min, max) {
+  document.getElementById('durationMin').value = min;
+  document.getElementById('durationMax').value = max;
+  updateDurationSlider();
+}
+
+function getDurationApiParam() {
+  const minVal = parseInt(document.getElementById('durationMin').value);
+  const maxVal = parseInt(document.getElementById('durationMax').value);
+  // Map to YouTube API videoDuration param (best approximation)
+  if (minVal === 0 && maxVal >= 120) return 'any';
+  if (maxVal <= 4) return 'short';
+  if (minVal >= 20) return 'long';
+  if (minVal >= 1 && maxVal <= 20) return 'medium';
+  return 'any'; // use client-side filtering for precise ranges
+}
+
+// ============ API Key ============
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return showError('API 키를 입력해주세요.');
+  API_KEY = key;
+  localStorage.setItem('yt_finder_api_key', key);
+  document.getElementById('apiSaved').style.display = 'inline';
+  showToast('API 키가 저장되었습니다!');
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function toggleGuide() {
+  document.getElementById('apiGuide').classList.toggle('show');
+}
+
+// ============ Tabs ============
+function switchTab(tab) {
+  currentMode = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+
+  if (tab === 'search') {
+    document.getElementById('searchFilters').classList.remove('hide');
+    document.getElementById('trendingFilters').classList.remove('show');
+  } else {
+    document.getElementById('searchFilters').classList.add('hide');
+    document.getElementById('trendingFilters').classList.add('show');
+  }
+}
+
+// ============ Search ============
+async function doSearch(pageToken = null) {
+  if (!API_KEY) return showError('먼저 API 키를 입력하고 저장해주세요.');
+
+  const query = document.getElementById('searchQuery').value.trim();
+  if (!query) return showError('검색어를 입력해주세요.');
+
+  if (!pageToken) {
+    allResults = [];
+    nextPageToken = null;
+  }
+
+  showLoading('영상을 검색하는 중...');
+  hideError();
+
+  try {
+    // Step 1: Search
+    const dateRange = document.getElementById('dateRange').value;
+    const duration = getDurationApiParam();
+
+    let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&order=viewCount&q=${encodeURIComponent(query)}&regionCode=KR&key=${API_KEY}`;
+
+    if (dateRange) {
+      const d = new Date();
+      d.setDate(d.getDate() - parseInt(dateRange));
+      searchUrl += `&publishedAfter=${d.toISOString()}`;
+    }
+
+    if (duration !== 'any') {
+      searchUrl += `&videoDuration=${duration}`;
+    }
+
+    if (pageToken) {
+      searchUrl += `&pageToken=${pageToken}`;
+    }
+
+    const searchRes = await fetch(searchUrl);
+    quotaUsed += 100;
+    const searchData = await searchRes.json();
+
+    if (searchData.error) {
+      throw new Error(searchData.error.message);
+    }
+
+    nextPageToken = searchData.nextPageToken || null;
+    const videoIds = searchData.items.map(i => i.id.videoId).filter(Boolean);
+
+    if (videoIds.length === 0) {
+      showEmpty();
+      return;
+    }
+
+    // Step 2: Get video details
+    updateLoading('영상 상세 정보를 불러오는 중...');
+    const videoDetails = await getVideoDetails(videoIds);
+
+    // Step 3: Get channel details
+    updateLoading('채널 정보를 불러오는 중...');
+    const channelIds = [...new Set(videoDetails.map(v => v.snippet.channelId))];
+    const channelDetails = await getChannelDetails(channelIds);
+
+    // Step 4: Combine & filter
+    const results = buildResults(videoDetails, channelDetails);
+    allResults = allResults.concat(results);
+
+    renderResults();
+  } catch (err) {
+    showError(`오류: ${err.message}`);
+    hideLoading();
+  }
+}
+
+// ============ Trending ============
+async function doTrending(pageToken = null) {
+  if (!API_KEY) return showError('먼저 API 키를 입력하고 저장해주세요.');
+
+  if (!pageToken) {
+    allResults = [];
+    nextPageToken = null;
+  }
+
+  showLoading('급상승 영상을 불러오는 중...');
+  hideError();
+
+  try {
+    const category = document.getElementById('trendingCategory').value;
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=KR&maxResults=50&key=${API_KEY}`;
+
+    if (category !== '0') {
+      url += `&videoCategoryId=${category}`;
+    }
+    if (pageToken) {
+      url += `&pageToken=${pageToken}`;
+    }
+
+    const res = await fetch(url);
+    quotaUsed += 1;
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error.message);
+
+    nextPageToken = data.nextPageToken || null;
+
+    // Get channel details
+    updateLoading('채널 정보를 불러오는 중...');
+    const channelIds = [...new Set(data.items.map(v => v.snippet.channelId))];
+    const channelDetails = await getChannelDetails(channelIds);
+
+    const channelMap = {};
+    channelDetails.forEach(ch => {
+      channelMap[ch.id] = {
+        subscriberCount: parseInt(ch.statistics.subscriberCount) || 0,
+        hiddenSubscriberCount: ch.statistics.hiddenSubscriberCount
+      };
+    });
+
+    const subMin = parseInt(document.getElementById('trendSubMin').value) || 0;
+    const subMax = parseInt(document.getElementById('trendSubMax').value) || 0;
+
+    const results = data.items.map(v => {
+      const ch = channelMap[v.snippet.channelId] || {};
+      const subs = ch.subscriberCount || 0;
+      const views = parseInt(v.statistics.viewCount) || 0;
+      const likes = parseInt(v.statistics.likeCount) || 0;
+      const comments = parseInt(v.statistics.commentCount) || 0;
+      const outlierScore = subs > 0 ? (views / subs) : 0;
+
+      return {
+        videoId: v.id,
+        title: v.snippet.title,
+        channelTitle: v.snippet.channelTitle,
+        channelId: v.snippet.channelId,
+        thumbnail: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.medium?.url,
+        publishedAt: v.snippet.publishedAt,
+        views, likes, comments,
+        subscriberCount: subs,
+        hiddenSubs: ch.hiddenSubscriberCount,
+        duration: parseDuration(v.contentDetails.duration),
+        durationRaw: v.contentDetails.duration,
+        outlierScore
+      };
+    }).filter(r => {
+      if (subMin > 0 && r.subscriberCount < subMin) return false;
+      if (subMax > 0 && r.subscriberCount > subMax) return false;
+      return true;
+    });
+
+    allResults = allResults.concat(results);
+    renderResults();
+  } catch (err) {
+    showError(`오류: ${err.message}`);
+    hideLoading();
+  }
+}
+
+// ============ API Helpers ============
+async function getVideoDetails(videoIds) {
+  const chunks = chunkArray(videoIds, 50);
+  let allVideos = [];
+
+  for (const chunk of chunks) {
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${chunk.join(',')}&key=${API_KEY}`;
+    const res = await fetch(url);
+    quotaUsed += 1;
+    const data = await res.json();
+    if (data.items) allVideos = allVideos.concat(data.items);
+  }
+
+  return allVideos;
+}
+
+async function getChannelDetails(channelIds) {
+  const chunks = chunkArray(channelIds, 50);
+  let allChannels = [];
+
+  for (const chunk of chunks) {
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${chunk.join(',')}&key=${API_KEY}`;
+    const res = await fetch(url);
+    quotaUsed += 1;
+    const data = await res.json();
+    if (data.items) allChannels = allChannels.concat(data.items);
+  }
+
+  return allChannels;
+}
+
+function buildResults(videos, channels) {
+  const channelMap = {};
+  channels.forEach(ch => {
+    channelMap[ch.id] = {
+      subscriberCount: parseInt(ch.statistics.subscriberCount) || 0,
+      hiddenSubscriberCount: ch.statistics.hiddenSubscriberCount
+    };
+  });
+
+  const subMin = parseInt(document.getElementById('subMin').value) || 0;
+  const subMax = parseInt(document.getElementById('subMax').value) || 0;
+  const minViews = parseInt(document.getElementById('minViews').value) || 0;
+  const durMin = parseInt(document.getElementById('durationMin').value) * 60; // to seconds
+  const durMax = parseInt(document.getElementById('durationMax').value) * 60;
+
+  return videos.map(v => {
+    const ch = channelMap[v.snippet.channelId] || {};
+    const subs = ch.subscriberCount || 0;
+    const views = parseInt(v.statistics.viewCount) || 0;
+    const likes = parseInt(v.statistics.likeCount) || 0;
+    const comments = parseInt(v.statistics.commentCount) || 0;
+    const outlierScore = subs > 0 ? (views / subs) : 0;
+
+    return {
+      videoId: v.id,
+      title: v.snippet.title,
+      channelTitle: v.snippet.channelTitle,
+      channelId: v.snippet.channelId,
+      thumbnail: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.medium?.url,
+      publishedAt: v.snippet.publishedAt,
+      views, likes, comments,
+      subscriberCount: subs,
+      hiddenSubs: ch.hiddenSubscriberCount,
+      duration: parseDuration(v.contentDetails.duration),
+      durationRaw: v.contentDetails.duration,
+      outlierScore
+    };
+  }).filter(r => {
+    if (subMin > 0 && r.subscriberCount < subMin) return false;
+    if (subMax > 0 && r.subscriberCount > subMax) return false;
+    if (minViews > 0 && r.views < minViews) return false;
+    // Duration range filter (client-side precise)
+    if (r.duration < durMin) return false;
+    if (durMax < 7200 && r.duration > durMax) return false; // 120min+ means no upper limit
+    return true;
+  });
+}
+
+// ============ Rendering ============
+function renderResults() {
+  hideLoading();
+
+  sortResults(false);
+
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  if (allResults.length === 0) {
+    showEmpty();
+    return;
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultCount').textContent = `${allResults.length}개 결과`;
+  document.getElementById('csvBtn').disabled = false;
+
+  allResults.forEach(r => {
+    container.innerHTML += createCard(r);
+  });
+
+  document.getElementById('loadMore').style.display = nextPageToken ? 'block' : 'none';
+  document.getElementById('quotaInfo').textContent = `예상 API 사용량: ~${quotaUsed} 유닛 / 10,000`;
+}
+
+function createCard(r) {
+  const durationStr = formatDuration(r.duration);
+  const typeTag = getVideoTypeTag(r.duration);
+  const outlierClass = r.outlierScore >= 10 ? 'high' : r.outlierScore >= 3 ? 'mid' : 'low';
+  const outlierLabel = r.outlierScore >= 10 ? '🔥 HOT' : r.outlierScore >= 3 ? '📈 UP' : '📊';
+  const dateStr = timeAgo(r.publishedAt);
+  const subsStr = r.hiddenSubs ? '비공개' : formatNumber(r.subscriberCount);
+
+  return `
+    <div class="card" onclick="window.open('https://www.youtube.com/watch?v=${r.videoId}','_blank')">
+      <div class="card-thumb">
+        <img src="${r.thumbnail}" alt="" loading="lazy">
+        <span class="card-duration">${durationStr}</span>
+        ${r.outlierScore >= 3 ? `<span class="card-outlier-badge ${outlierClass}">${outlierLabel}</span>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(r.title)}</div>
+        <div class="card-channel">
+          <span onclick="event.stopPropagation();window.open('https://www.youtube.com/channel/${r.channelId}','_blank')" style="cursor:pointer;color:#6bc5f8">${escapeHtml(r.channelTitle)}</span>
+          <span class="subs">구독 ${subsStr}</span>
+          ${typeTag}
+        </div>
+        <div class="card-stats">
+          <span><span class="icon">👁</span> ${formatNumber(r.views)}</span>
+          <span><span class="icon">👍</span> ${formatNumber(r.likes)}</span>
+          <span><span class="icon">💬</span> ${formatNumber(r.comments)}</span>
+        </div>
+        <div class="card-meta">
+          <span class="outlier-score ${outlierClass}">Outlier: x${r.outlierScore.toFixed(1)}</span>
+          <span class="card-date">${dateStr}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function sortResults(rerender = true) {
+  const sortBy = document.getElementById('sortBy').value;
+
+  allResults.sort((a, b) => {
+    switch (sortBy) {
+      case 'outlier': return b.outlierScore - a.outlierScore;
+      case 'views': return b.views - a.views;
+      case 'likes': return b.likes - a.likes;
+      case 'comments': return b.comments - a.comments;
+      case 'date': return new Date(b.publishedAt) - new Date(a.publishedAt);
+      case 'ratio': return b.outlierScore - a.outlierScore;
+      default: return 0;
+    }
+  });
+
+  if (rerender && allResults.length > 0) {
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+    allResults.forEach(r => {
+      container.innerHTML += createCard(r);
+    });
+  }
+}
+
+function loadMore() {
+  if (!nextPageToken) return;
+  if (currentMode === 'search') doSearch(nextPageToken);
+  else doTrending(nextPageToken);
+}
+
+// ============ CSV Export ============
+function exportCSV() {
+  if (allResults.length === 0) return;
+
+  const headers = ['제목', '채널', '구독자수', '조회수', '좋아요', '댓글수', 'Outlier스코어', '영상길이(초)', '업로드일', '영상URL', '채널URL'];
+  const rows = allResults.map(r => [
+    `"${r.title.replace(/"/g, '""')}"`,
+    `"${r.channelTitle.replace(/"/g, '""')}"`,
+    r.subscriberCount,
+    r.views,
+    r.likes,
+    r.comments,
+    r.outlierScore.toFixed(2),
+    r.duration,
+    r.publishedAt.split('T')[0],
+    `https://www.youtube.com/watch?v=${r.videoId}`,
+    `https://www.youtube.com/channel/${r.channelId}`
+  ]);
+
+  // BOM for Korean
+  const bom = '\uFEFF';
+  const csv = bom + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `유튜브파인더_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV 파일이 다운로드되었습니다!');
+}
+
+// ============ Utilities ============
+function parseDuration(iso) {
+  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  return (parseInt(match[1] || 0) * 3600) + (parseInt(match[2] || 0) * 60) + parseInt(match[3] || 0);
+}
+
+function formatDuration(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function getVideoTypeTag(seconds) {
+  if (seconds <= 60) return '<span class="video-type-tag tag-short">SHORT</span>';
+  if (seconds <= 1200) return '<span class="video-type-tag tag-mid">MID</span>';
+  return '<span class="video-type-tag tag-long">LONG</span>';
+}
+
+function formatNumber(n) {
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + '억';
+  if (n >= 10000) return (n / 10000).toFixed(1) + '만';
+  if (n >= 1000) return (n / 1000).toFixed(1) + '천';
+  return n.toString();
+}
+
+function timeAgo(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)}일 전`;
+  if (diff < 31536000) return `${Math.floor(diff / 2592000)}개월 전`;
+  return `${Math.floor(diff / 31536000)}년 전`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// ============ UI Helpers ============
+function showLoading(text) {
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadMore').style.display = 'none';
+}
+function updateLoading(text) {
+  document.getElementById('loadingText').textContent = text;
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  hideLoading();
+}
+function hideError() {
+  document.getElementById('errorMsg').classList.remove('show');
+}
+function showEmpty() {
+  hideLoading();
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('emptyState').innerHTML = '<div class="emoji">😅</div><h3>조건에 맞는 결과가 없습니다</h3><p>검색어나 필터를 변경해보세요</p>';
+}
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

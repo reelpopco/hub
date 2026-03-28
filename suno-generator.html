@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUSICASE — Suno 생성기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --surface3: #252525;
+  --border: #2a2a2a;
+  --border2: #383838;
+  --text: #f0ece4;
+  --text2: #888880;
+  --text3: #4a4a44;
+  --gold: #c9a84c;
+  --gold-light: #f0d890;
+  --gold-dim: #c9a84c22;
+  --green: #4caf82;
+  --red: #e05a5a;
+  --mono: 'DM Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* Grain texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 32px 20px 100px; }
+
+/* ── Header ── */
+.header { text-align: center; margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+.header-logo { font-family: var(--serif); font-size: 11px; letter-spacing: 6px; color: var(--gold); margin-bottom: 12px; }
+.header h1 { font-family: var(--serif); font-size: clamp(28px, 5vw, 40px); font-weight: 400; color: var(--text); line-height: 1.1; }
+.header h1 em { font-style: italic; color: var(--gold); }
+.header-sub { font-size: 12px; color: var(--text2); margin-top: 10px; font-family: var(--mono); letter-spacing: 1px; }
+.header-back { display: inline-block; margin-top: 14px; font-size: 11px; color: var(--text3); border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; cursor: pointer; background: none; font-family: 'Noto Sans KR', sans-serif; transition: all .15s; }
+.header-back:hover { color: var(--text2); border-color: var(--border2); }
+
+/* ── Section ── */
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+.section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--gold); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.section-label::before { content: ''; width: 2px; height: 12px; background: var(--gold); border-radius: 2px; }
+
+/* ── Field ── */
+.field-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.field-label { font-size: 11px; color: var(--text2); font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+.field-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: var(--mono);
+  font-size: 12px; padding: 9px 12px; outline: none; width: 100%;
+  transition: border-color .15s;
+}
+.field-input:focus { border-color: var(--gold); }
+.field-input::placeholder { color: var(--text3); }
+.key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:580px){ .key-grid { grid-template-columns:1fr; } }
+
+/* ── Mode tabs ── */
+.mode-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.mode-btn {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text2); cursor: pointer; font-size: 12px;
+  padding: 9px; font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
+}
+.mode-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+
+/* ── Scout section ── */
+.scout-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.scout-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; padding: 9px 12px; outline: none; font-family: 'Noto Sans KR', sans-serif; transition: border-color .15s; }
+.scout-input:focus { border-color: var(--gold); }
+.scout-input::placeholder { color: var(--text3); }
+.scout-btn { background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text2); cursor: pointer; font-size: 12px; padding: 9px 14px; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; transition: all .15s; }
+.scout-btn:hover { border-color: var(--gold); color: var(--gold); }
+.scout-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Topic chips ── */
+.topic-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.topic-chip {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 20px; color: var(--text2); cursor: pointer;
+  font-size: 12px; padding: 5px 14px; transition: all .15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.topic-chip:hover { border-color: var(--gold); color: var(--gold-light); background: var(--gold-dim); }
+.topic-chip.selected { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+
+/* ── Options grid ── */
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:500px){ .options-grid { grid-template-columns: 1fr; } }
+
+.opt-card {
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 10px; cursor: pointer; padding: 14px;
+  transition: all .15s; text-align: center;
+}
+.opt-card:hover { border-color: var(--border2); }
+.opt-card.active { border-color: var(--gold); background: var(--gold-dim); }
+.opt-icon { font-size: 20px; margin-bottom: 6px; }
+.opt-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.opt-desc { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+.opt-card.active .opt-name { color: var(--gold-light); }
+
+/* ── Theme presets ── */
+.preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.preset-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text2); cursor: pointer;
+  font-size: 11px; padding: 5px 11px; transition: all .15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.preset-chip:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── Generate button ── */
+.gen-btn {
+  width: 100%; background: var(--gold); border: none; border-radius: 12px;
+  color: #0d0d0d; font-family: 'Noto Sans KR', sans-serif; font-size: 15px;
+  font-weight: 800; padding: 16px; cursor: pointer; transition: all .15s;
+  letter-spacing: 0.5px;
+}
+.gen-btn:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,.3); }
+.gen-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Progress ── */
+.progress-wrap { margin-top: 14px; display: none; }
+.progress-wrap.show { display: block; }
+.p-list { display: flex; flex-direction: column; gap: 6px; }
+.p-step { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text2); transition: all .2s; }
+.p-step.active { border-color: var(--gold); color: var(--text); background: var(--gold-dim); }
+.p-step.done { border-color: #4caf8244; color: var(--green); background: #4caf8210; }
+.p-step.error { border-color: #e05a5a44; color: var(--red); }
+.p-icon { width: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.p-step.active .p-icon { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error ── */
+.error-box { background: #e05a5a10; border: 1px solid #e05a5a33; border-radius: 8px; color: var(--red); font-size: 12px; padding: 12px; margin-top: 10px; display: none; line-height: 1.6; }
+.error-box.show { display: block; }
+
+/* ── Results ── */
+.results { margin-top: 28px; display: none; }
+.results.show { display: block; }
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.results-title { font-family: var(--serif); font-size: 20px; color: var(--gold); }
+
+/* ── Tabs ── */
+.tab-bar { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tab { background: none; border: none; border-radius: 6px 6px 0 0; color: var(--text2); cursor: pointer; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; padding: 8px 14px; white-space: nowrap; transition: all .15s; position: relative; bottom: -1px; border: 1px solid transparent; border-bottom: none; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--gold-light); background: var(--surface); border-color: var(--border); border-bottom-color: var(--surface); font-weight: 700; }
+
+.tab-pane { display: none; }
+.tab-pane.show { display: block; }
+
+/* ── Content blocks ── */
+.content-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.block-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.block-title { font-weight: 700; font-size: 12px; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.block-actions { display: flex; gap: 5px; }
+.block-body { padding: 16px; font-size: 13px; line-height: 1.9; white-space: pre-wrap; word-break: keep-all; }
+.block-body.mono { font-family: var(--mono); font-size: 11px; line-height: 1.7; color: var(--text); }
+
+/* ── Suno track cards ── */
+.track-grid { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.track-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.track-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface3); }
+.track-num { font-family: var(--mono); font-size: 10px; color: var(--gold); }
+.track-name { font-weight: 700; font-size: 13px; }
+.track-body { padding: 12px 14px; font-family: var(--mono); font-size: 11px; line-height: 1.8; color: var(--text2); }
+.track-style { background: var(--gold-dim); border: 1px solid var(--gold); border-radius: 5px; padding: 7px 10px; font-size: 11px; color: var(--gold-light); margin-bottom: 8px; font-family: var(--mono); }
+.track-section { margin-top: 8px; }
+.track-section-label { font-size: 10px; color: var(--gold); letter-spacing: 1px; margin-bottom: 3px; }
+.track-lyrics { color: var(--text); line-height: 1.9; }
+
+/* ── Pinterest grid ── */
+.pint-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px; }
+@media(max-width:500px){ .pint-grid { grid-template-columns: 1fr 1fr; } }
+.pint-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 10px; }
+.pint-cat { font-size: 10px; color: var(--gold); font-family: var(--mono); letter-spacing: 1px; margin-bottom: 6px; }
+.pint-kw { font-size: 11px; line-height: 1.9; color: var(--text2); }
+.pint-kw span { display: block; cursor: pointer; padding: 1px 0; transition: color .1s; }
+.pint-kw span:hover { color: var(--gold); }
+
+/* ── Thumbnail subtext ── */
+.thumb-preview { padding: 16px; }
+.thumb-mockup { background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; max-width: 360px; margin: 0 auto; }
+.thumb-main { font-family: var(--serif); font-size: 22px; color: var(--gold-light); font-style: italic; margin-bottom: 6px; }
+.thumb-sub { font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 2px; }
+
+/* ── Title options ── */
+.title-option-list { display: flex; flex-direction: column; gap: 7px; padding: 12px; }
+.title-option { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .15s; background: var(--surface2); }
+.title-option:hover { border-color: var(--border2); }
+.title-option.selected { border-color: var(--gold); background: var(--gold-dim); }
+.title-radio { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border2); flex-shrink: 0; transition: all .15s; }
+.title-option.selected .title-radio { border-color: var(--gold); background: var(--gold); }
+.title-type { font-size: 10px; color: var(--text3); font-family: var(--mono); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+.title-text { font-size: 13px; font-weight: 600; flex: 1; }
+
+/* ── Buttons ── */
+.btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text2); cursor: pointer; font-size: 11px; font-family: 'Noto Sans KR', sans-serif; padding: 5px 10px; transition: all .15s; white-space: nowrap; }
+.btn:hover { border-color: var(--border2); color: var(--text); }
+.btn.gold { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+.btn.gold:hover { opacity: .8; }
+
+/* ── Tags ── */
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 5px; padding: 12px 14px; }
+.tag-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; font-size: 11px; padding: 3px 9px; color: var(--text2); }
+
+/* ── Save ── */
+.save-section { background: var(--surface); border: 1px solid var(--gold); border-radius: 12px; padding: 16px 20px; margin-top: 20px; }
+.save-title { font-weight: 800; font-size: 13px; color: var(--gold-light); margin-bottom: 12px; font-family: var(--mono); letter-spacing: 1px; }
+.save-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.save-btn { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; font-weight: 600; transition: all .15s; border: 1.5px solid; }
+.save-btn.txt { border-color: #4caf82; color: #4caf82; background: #4caf8210; }
+.save-btn.docs { border-color: #4285f4; color: #4285f4; background: #4285f410; }
+.save-btn.copy { border-color: var(--border2); color: var(--text2); background: var(--surface2); }
+.save-btn:hover { opacity: .8; }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface3); color: var(--text); border: 1px solid var(--border2); border-radius: 10px; padding: 11px 20px; font-size: 12px; font-weight: 600; z-index: 9999; display: none; max-width: 380px; width: 90%; line-height: 1.6; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">M U S I C A S E</div>
+  <h1>Suno <em>Playlist</em> Generator</h1>
+  <div class="header-sub">THEME → PROMPTS × 15 · METADATA · PINTEREST · THUMBNAIL</div>
+  <button class="header-back" onclick="window.location.href='launcher.html'">← 홈으로</button>
+</div>
+
+<!-- STEP 1: API Keys -->
+<div class="section">
+  <div class="section-label">STEP 1 — API 키</div>
+  <div class="key-grid">
+    <div class="field-group" style="margin-bottom:0">
+      <div class="field-label">
+        <span>Claude API Key <span style="color:var(--gold);font-size:10px">필수</span></span>
+        <a href="https://console.anthropic.com/settings/keys" target="_blank"
+           style="font-size:10px;color:#4285f4;text-decoration:none;border:1px solid #4285f433;border-radius:4px;padding:2px 7px;background:#4285f410">
+          🔑 발급 →
+        </a>
+      </div>
+      <input class="field-input" type="password" id="claudeKey" placeholder="sk-ant-..." oninput="localStorage.setItem('musicase_claude_key', this.value)">
+    </div>
+    <div class="field-group" style="margin-bottom:0">
+      <div class="field-label">
+        <span>YouTube API Key <span style="color:var(--text3);font-size:10px">스카우터 검색 시</span></span>
+        <a href="https://console.cloud.google.com" target="_blank"
+           style="font-size:10px;color:#34a853;text-decoration:none;border:1px solid #34a85333;border-radius:4px;padding:2px 7px;background:#34a85310">
+          🔑 발급 →
+        </a>
+      </div>
+      <input class="field-input" type="password" id="ytKey" placeholder="AIza..." oninput="localStorage.setItem('musicase_yt_key', this.value)">
+    </div>
+  </div>
+</div>
+
+<!-- 추가 키워드 입력 -->
+<div class="section" style="margin-bottom:10px;">
+  <div class="section-label">✨ 추가 키워드 (선택)</div>
+  <input class="field-input" type="text" id="extraKeyword" placeholder="예: 벚꽃, 봄비, 창가, Cornwall... (메타데이터에 반영됩니다)">
+</div>
+
+<!-- STEP 2: Theme Input -->
+<div class="section">
+  <div class="section-label">STEP 2 — 테마 입력</div>
+
+  <div class="mode-row">
+    <button class="mode-btn active" id="modeManual" onclick="setInputMode('manual')">✏️ 직접 입력</button>
+    <button class="mode-btn" id="modeScout" onclick="setInputMode('scout')">🔍 스카우터 검색</button>
+  </div>
+
+  <!-- Manual -->
+  <div id="manualWrap">
+    <div class="field-group" style="margin-bottom:8px">
+      <div class="field-label">테마 / 분위기</div>
+      <input class="field-input" type="text" id="themeInput"
+        placeholder="예) 비 오는 날 카페 재즈 / 새벽 드라이브 lo-fi / 유럽 골목 산책">
+    </div>
+    <div class="field-label" style="margin-bottom:6px;color:var(--text2);font-size:11px">빠른 선택 프리셋</div>
+    <div class="preset-row" id="presetRow"></div>
+  </div>
+
+  <!-- Scout -->
+  <div id="scoutWrap" style="display:none">
+    <div class="scout-row">
+      <input class="scout-input" type="text" id="scoutQuery" placeholder="검색어 입력 (예: cafe music, lofi playlist, 감성음악)">
+      <button class="scout-btn" id="scoutBtn" onclick="runScout()">🔍 최근 7일 검색</button>
+    </div>
+    <div id="scoutResults" style="display:none">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:7px">클릭하면 테마로 선택됩니다</div>
+      <div class="topic-chips" id="scoutChips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: Options -->
+<div class="section">
+  <div class="section-label">STEP 3 — 옵션 설정</div>
+
+  <div style="margin-bottom:14px">
+    <div class="field-label" style="margin-bottom:8px">🎤 가사 유무</div>
+    <div class="options-grid">
+      <div class="opt-card active" id="optLyrics" onclick="setLyrics('yes')">
+        <div class="opt-icon">🎵</div>
+        <div class="opt-name">가사 있음</div>
+        <div class="opt-desc">보컬 + 가사 포함<br>Verse / Chorus 구성</div>
+      </div>
+      <div class="opt-card" id="optInst" onclick="setLyrics('no')">
+        <div class="opt-icon">🎹</div>
+        <div class="opt-name">인스트루멘탈</div>
+        <div class="opt-desc">보컬 없음<br>분위기·분위기 설명만</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="field-label" style="margin-bottom:8px">🎸 선호 장르 (선택)</div>
+    <div class="options-grid">
+      <div class="opt-card active" id="genreAll" onclick="setGenre('all')">
+        <div class="opt-name" style="font-size:12px">전체 (자동 선택)</div>
+        <div class="opt-desc">테마에 맞게 자동</div>
+      </div>
+      <div class="opt-card" id="genreLofi" onclick="setGenre('lofi')">
+        <div class="opt-name" style="font-size:12px">Lo-fi / Ambient</div>
+        <div class="opt-desc">잔잔한 배경음악</div>
+      </div>
+      <div class="opt-card" id="genreJazz" onclick="setGenre('jazz')">
+        <div class="opt-name" style="font-size:12px">Jazz / Neo Soul</div>
+        <div class="opt-desc">세련된 재즈 감성</div>
+      </div>
+      <div class="opt-card" id="genreAcoustic" onclick="setGenre('acoustic')">
+        <div class="opt-name" style="font-size:12px">Acoustic / Folk</div>
+        <div class="opt-desc">따뜻한 어쿠스틱</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generate -->
+<button class="gen-btn" id="genBtn" onclick="generate()">
+  ♪ Suno 플레이리스트 풀패키지 생성
+</button>
+<div class="error-box" id="errorBox"></div>
+
+<!-- Progress -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="p-list" id="pList"></div>
+</div>
+
+<!-- Results -->
+<div class="results" id="results">
+  <div class="results-header">
+    <div class="results-title">Playlist Package</div>
+    <button class="btn" onclick="expandAll()">전체 펼치기</button>
+  </div>
+  <div class="tab-bar" id="tabBar"></div>
+  <div id="tabPanes"></div>
+
+  <!-- Save -->
+  <div class="save-section">
+    <div class="save-title">// EXPORT</div>
+    <div class="save-btns">
+      <div class="save-btn copy" onclick="copyAll()">📋 전체 복사</div>
+      <div class="save-btn txt" onclick="saveAsTxt()">💾 TXT 저장</div>
+      <div class="save-btn docs" onclick="openDocs()">📄 Google Docs</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .app -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let inputMode = 'manual';
+let lyricsMode = 'yes';
+let genreMode = 'all';
+let selectedTheme = '';
+let generatedData = {};
+let selectedTitles = { main: 0 };
+
+// ═══════════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════════
+const PRESETS = [
+  '☕ 카페 봄 감성','🌙 새벽 lo-fi','🌧 비 오는 날 재즈',
+  '🚗 유럽 드라이브','🍂 가을 감성','❄️ 겨울 크리스마스',
+  '🌅 새벽 피아노','🏙 도시 산책 앰비언트','🌊 오션 사운드스케이프'
+];
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('presetRow').innerHTML = PRESETS.map(p =>
+    `<div class="preset-chip" onclick="selectPreset('${esc(p)}')">${p}</div>`
+  ).join('');
+  // API 키 로드
+  const ck = localStorage.getItem('musicase_claude_key');
+  const yk = localStorage.getItem('musicase_yt_key');
+  if (ck) document.getElementById('claudeKey').value = ck;
+  if (yk) document.getElementById('ytKey').value = yk;
+});
+
+// ═══════════════════════════════════════════════
+// UI CONTROLS
+// ═══════════════════════════════════════════════
+function setInputMode(m) {
+  inputMode = m;
+  document.getElementById('modeManual').classList.toggle('active', m==='manual');
+  document.getElementById('modeScout').classList.toggle('active', m==='scout');
+  document.getElementById('manualWrap').style.display = m==='manual' ? 'block' : 'none';
+  document.getElementById('scoutWrap').style.display = m==='scout' ? 'block' : 'none';
+}
+
+function setLyrics(v) {
+  lyricsMode = v;
+  document.getElementById('optLyrics').classList.toggle('active', v==='yes');
+  document.getElementById('optInst').classList.toggle('active', v==='no');
+}
+
+function setGenre(g) {
+  genreMode = g;
+  ['all','lofi','jazz','acoustic'].forEach(x =>
+    document.getElementById(`genre${x.charAt(0).toUpperCase()+x.slice(1)}`).classList.toggle('active', x===g)
+  );
+}
+
+function selectPreset(p) {
+  selectedTheme = p;
+  document.getElementById('themeInput').value = p;
+  document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
+
+function selectTheme(theme) {
+  selectedTheme = theme;
+  document.getElementById('themeInput').value = theme;
+  document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  showToast(`✅ 테마 선택: ${theme}`);
+}
+
+// ═══════════════════════════════════════════════
+// SCOUT (YouTube API)
+// ═══════════════════════════════════════════════
+async function runScout() {
+  const ytKey = document.getElementById('ytKey').value.trim();
+  if (!ytKey) { showToast('YouTube API 키를 입력해주세요.'); return; }
+
+  const q = document.getElementById('scoutQuery').value.trim() || 'cafe playlist music';
+  const btn = document.getElementById('scoutBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 검색 중...';
+
+  try {
+    // 최근 7일 날짜 계산
+    const after = new Date();
+    after.setDate(after.getDate() - 7);
+    const publishedAfter = after.toISOString();
+
+    const url = `https://www.googleapis.com/youtube/v3/search?` +
+      `part=snippet&type=video&q=${encodeURIComponent(q)}&` +
+      `publishedAfter=${publishedAfter}&` +
+      `order=viewCount&maxResults=20&` +
+      `videoCategoryId=10&relevanceLanguage=ko&` +
+      `key=${ytKey}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`YouTube API ${res.status}`);
+    const data = await res.json();
+
+    if (!data.items?.length) {
+      showToast('검색 결과가 없어요. 다른 검색어로 시도해보세요.');
+      return;
+    }
+
+    // 제목에서 테마 추출
+    const themes = data.items
+      .map(item => item.snippet.title)
+      .filter(t => t.length < 60)
+      .slice(0, 10);
+
+    const chips = document.getElementById('scoutChips');
+    chips.innerHTML = themes.map(t =>
+      `<div class="topic-chip" onclick="selectTheme('${esc(t)}')">${t}</div>`
+    ).join('');
+    document.getElementById('scoutResults').style.display = 'block';
+    showToast(`✅ 최근 7일 인기 영상 ${themes.length}개 로드`);
+
+  } catch(e) {
+    showToast(`❌ 검색 실패: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 최근 7일 검색';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function initProgress(steps) {
+  document.getElementById('progressWrap').classList.add('show');
+  document.getElementById('pList').innerHTML = steps.map(s =>
+    `<div class="p-step" id="ps-${s.id}">
+      <div class="p-icon">${s.status==='done'?'✓':'○'}</div>
+      <div id="psl-${s.id}">${s.label}</div>
+    </div>`).join('');
+}
+function setStep(id, status, label) {
+  const el = document.getElementById(`ps-${id}`);
+  if (!el) return;
+  el.className = `p-step ${status}`;
+  el.querySelector('.p-icon').textContent = status==='done'?'✓':status==='active'?'↻':status==='error'?'✗':'○';
+  if (label) document.getElementById(`psl-${id}`).textContent = label;
+}
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+// ═══════════════════════════════════════════════
+// MAIN GENERATE
+// ═══════════════════════════════════════════════
+async function generate() {
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  generatedData = {};
+
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  if (!claudeKey) { showError('Claude API 키를 입력해주세요.'); return; }
+
+  const theme = (document.getElementById('themeInput').value.trim()) || selectedTheme;
+  if (!theme) { showError('테마를 입력하거나 선택해주세요.'); return; }
+
+  document.getElementById('genBtn').disabled = true;
+
+  initProgress([
+    { id:'prompts', label:'Suno 프롬프트 15곡 생성 중...' },
+    { id:'meta',    label:'유튜브 메타데이터 생성 중...' },
+    { id:'thumb',   label:'썸네일 서브텍스트 생성 중...' },
+    { id:'pint',    label:'핀터레스트 검색어 생성 중...' },
+  ]);
+
+  try {
+    // STEP 1: Suno prompts
+    setStep('prompts', 'active');
+    const prompts = await generateSunoPrompts(claudeKey, theme);
+    generatedData.prompts = prompts;
+    setStep('prompts', 'done', `Suno 프롬프트 15곡 완료`);
+
+    // STEP 2: YouTube metadata
+    setStep('meta', 'active');
+    const meta = await generateMeta(claudeKey, theme);
+    generatedData.meta = meta;
+    setStep('meta', 'done', '메타데이터 완료');
+
+    // STEP 3: Thumbnail subtext
+    setStep('thumb', 'active');
+    const thumb = await generateThumb(claudeKey, theme);
+    generatedData.thumb = thumb;
+    setStep('thumb', 'done', '썸네일 텍스트 완료');
+
+    // STEP 4: Pinterest
+    setStep('pint', 'active');
+    const pint = await generatePinterest(claudeKey, theme);
+    generatedData.pint = pint;
+    setStep('pint', 'done', '핀터레스트 검색어 완료');
+
+    generatedData.theme = theme;
+    renderResults();
+
+  } catch(e) {
+    showError(`오류: ${e.message}`);
+  } finally {
+    document.getElementById('genBtn').disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════
+async function callClaude(apiKey, prompt, maxTokens=4000) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTokens, messages:[{role:'user',content:prompt}] })
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
+}
+
+async function callClaudeJSON(apiKey, prompt) {
+  const text = await callClaude(apiKey, prompt, 2000);
+  try { return JSON.parse(text.replace(/```json|```/g,'').trim()); }
+  catch { return null; }
+}
+
+async function generateSunoPrompts(apiKey, theme) {
+  const genreHint = {
+    all: '테마에 가장 어울리는 장르를 자유롭게 선택',
+    lofi: 'lo-fi hip hop, ambient, chillhop 위주',
+    jazz: 'jazz, neo soul, smooth jazz 위주',
+    acoustic: 'acoustic pop, indie folk, singer-songwriter 위주'
+  }[genreMode];
+
+  const lyricsInst = lyricsMode === 'yes'
+    ? `가사 구성: [Verse 1] 4줄 / [Pre-Chorus] 2줄 / [Chorus] 4줄 / [Verse 2] 4줄 / [Bridge] 2줄 / [Outro] 2줄
+가사 원칙:
+- 영어 가사
+- 감각적 이미지 중심 (커피향, 빛, 온기, 창문, 도시 등)
+- 직접적 감정 표현 지양 → 장면 묘사로 감정 전달
+- 반복 훅은 한 줄로 단순하게`
+    : `인스트루멘탈: 가사 없음. 대신 [Arrangement] 섹션에 악기 구성과 분위기 전개 방식을 3~4줄로 서술`;
+
+  const prompt = `당신은 MUSICASE 유튜브 채널 전용 Suno AI 음악 프롬프트 전문가입니다.
+
+[채널 정체성]
+- 컨셉: 유럽 도시 감성 + 세련된 앰비언트/인스트루멘탈 큐레이션
+- 타겟: 감성적 음악 취향의 20–40대, 카페·작업·드라이브 BGM 수요층
+- 금지 장르: 보사노바, 재패니즈 팝 (J-pop, City Pop 계열)
+
+[테마] ${theme}
+[장르 방향] ${genreHint}
+[가사 유무] ${lyricsMode === 'yes' ? '가사 있음' : '인스트루멘탈'}
+
+[임무]
+Suno 스타일 프롬프트 3종 × 각 5곡 = 총 15곡을 생성하세요.
+
+프롬프트 3종 구성:
+① 메인 스타일 (테마에 가장 잘 맞는 핵심 장르)
+② 서브 스타일 1 (보컬 톤이나 악기 변주)
+③ 서브 스타일 2 (템포나 분위기 변주)
+
+각 곡 출력 형식:
+===TRACK_START===
+NUM: [번호]
+NAME: [영문 곡명]
+STYLE: [Suno Style Prompt — 장르, 보컬/악기, 분위기, BPM, 조성 한 줄]
+${lyricsMode === 'yes' ? `VERSE1:
+(4줄)
+PRECHORUS:
+(2줄)
+CHORUS:
+(4줄)
+VERSE2:
+(4줄)
+BRIDGE:
+(2줄)
+OUTRO:
+(2줄)` : `ARRANGEMENT:
+(악기 구성과 분위기 전개 3~4줄)`}
+===TRACK_END===
+
+${lyricsInst}
+
+Suno Style Prompt 요소:
+- 장르: acoustic pop / lo-fi / jazz / ambient / indie folk / cinematic
+- 보컬: soft female vocal / warm male vocal / no vocal
+- 악기: piano / guitar / cello / trumpet / vibraphone
+- 분위기: warm reverb / airy / melancholic / cozy / bittersweet
+- BPM: 60–90
+- 조성: C major / G major / D minor / A minor
+
+15곡 전체를 빠짐없이 출력하세요.`;
+
+  const text = await callClaude(apiKey, prompt, 5000);
+
+  // Parse tracks
+  const tracks = [];
+  const parts = text.split('===TRACK_START===').slice(1);
+  for (const part of parts) {
+    const body = part.split('===TRACK_END===')[0].trim();
+    const get = (key) => {
+      const match = body.match(new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z]+:|$)`));
+      return match ? match[1].trim() : '';
+    };
+    tracks.push({
+      num: get('NUM'),
+      name: get('NAME'),
+      style: get('STYLE'),
+      verse1: get('VERSE1'),
+      prechorus: get('PRECHORUS'),
+      chorus: get('CHORUS'),
+      verse2: get('VERSE2'),
+      bridge: get('BRIDGE'),
+      outro: get('OUTRO'),
+      arrangement: get('ARRANGEMENT'),
+      raw: body
+    });
+  }
+
+  return tracks.length > 0 ? tracks : [{ name: 'Parse Error', style: '', raw: text }];
+}
+
+async function generateMeta(apiKey, theme) {
+  const extraKeyword = document.getElementById('extraKeyword') ? document.getElementById('extraKeyword').value.trim() : '';
+  const prompt = `MUSICASE 유튜브 채널, 테마: "${theme}"${extraKeyword ? '\n추가 키워드: ' + extraKeyword : ''}
+
+채널 정체성: 유럽 도시 감성 + 세련된 앰비언트/인스트루멘탈 큐레이션. 타겟: 20-40대.
+경쟁채널: 시소웨이브, 포시즌플리, 오늘의멜로디, 문화인플리, popment, MUSICASE
+
+롱폼 1개 + 숏츠 3개의 메타데이터를 생성해줘.
+JSON만 출력 (설명 없이):
+{
+  "long": {
+    "titles": [
+      {"title":"감성/분위기형 제목 (한글+영문 혼용, 30자 이내)","type":"감성형"},
+      {"title":"검색최적화형 제목 (카페음악·플레이리스트 키워드 포함)","type":"검색형"},
+      {"title":"미니멀 영문형 제목","type":"영문형"}
+    ],
+    "description": "SEO 최적화 설명글 정확히 500자. 첫 1~2줄 핵심 키워드. 플리 분위기+상황 묘사. 🎵 Track List ↓ 안내. 구독 CTA. 500자 맞춰줘.",
+    "hash_tags": "#카페음악 #플레이리스트 등 해시태그 정확히 500자 채워줘. 경쟁채널명 포함: #시소웨이브 #포시즌플리 #오늘의멜로디 #문화인플리 #popment #MUSICASE",
+    "hidden_tags": "숨은태그(쉼표구분) 정확히 500자. 검색 키워드 중심, 경쟁채널명 포함, SEO 최적화",
+    "upload_time": "업로드 최적 시간대"
+  },
+  "shorts": [
+    {
+      "number": 1,
+      "title": "숏츠1 제목 (20자 이내, 궁금증 유발)",
+      "description": "숏츠 설명글 150자 이내",
+      "hash_tags": "#숏츠 해시태그 10개",
+      "hook": "첫 3초 후킹 문구"
+    },
+    {
+      "number": 2,
+      "title": "숏츠2 제목",
+      "description": "숏츠2 설명글",
+      "hash_tags": "#숏츠2 해시태그",
+      "hook": "숏츠2 후킹 문구"
+    },
+    {
+      "number": 3,
+      "title": "숏츠3 제목",
+      "description": "숏츠3 설명글",
+      "hash_tags": "#숏츠3 해시태그",
+      "hook": "숏츠3 후킹 문구"
+    }
+  ]
+}`;
+  return callClaudeJSON(apiKey, prompt);
+}
+
+async function generateThumb(apiKey, theme) {
+  const prompt = `MUSICASE 유튜브 썸네일 텍스트 레이어를 만들어주세요.
+
+테마: "${theme}"
+
+MUSICASE 스타일:
+- 메인 텍스트: 감성적이고 시적인 한 줄 (영문 또는 한글, 20자 이내)
+- 서브 텍스트: 테마 설명, 영문 소문자, 간결하게 (예: "a playlist for quiet mornings")
+- 채널명 표기: MUSICASE
+
+JSON만 출력:
+{
+  "main_text": "메인 텍스트",
+  "sub_text": "서브 텍스트 (영문)",
+  "channel": "MUSICASE",
+  "font_guide": "폰트 가이드 한 줄",
+  "color_guide": "색상 가이드 한 줄"
+}`;
+  return callClaudeJSON(apiKey, prompt);
+}
+
+async function generatePinterest(apiKey, theme) {
+  const prompt = `MUSICASE 채널 썸네일용 핀터레스트 검색어를 생성해주세요.
+
+테마: "${theme}"
+
+MUSICASE 썸네일 원칙:
+- 사람 없거나 뒷모습/실루엣만
+- 공간 중심: 카페 창가 / 유럽 골목 / 빈 테이블 / 창문 밖 풍경
+- 색감: 따뜻한 자연광, 연한 파스텔, 필름 그레인
+- 영어 검색어 위주, 구체적 조합어, 색감·스타일 키워드 포함
+
+JSON만 출력:
+{
+  "space": ["공간/배경용 검색어1","검색어2","검색어3","검색어4","검색어5"],
+  "object": ["오브젝트 클로즈업용 검색어1","검색어2","검색어3","검색어4","검색어5"],
+  "mood": ["분위기/색감 키워드1","키워드2","키워드3","키워드4","키워드5"]
+}`;
+  return callClaudeJSON(apiKey, prompt);
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function renderResults() {
+  const d = generatedData;
+  const tracks = d.prompts || [];
+
+  // Group into 3 styles (5 each)
+  const styleGroups = [
+    { label: '🎵 스타일 ①', tracks: tracks.slice(0,5) },
+    { label: '🎶 스타일 ②', tracks: tracks.slice(5,10) },
+    { label: '🎼 스타일 ③', tracks: tracks.slice(10,15) },
+  ];
+
+  const tabs = [
+    ...styleGroups.map((g,i) => ({ id:`style${i}`, label: g.label })),
+    { id:'meta', label: '📺 유튜브' },
+    { id:'thumb', label: '🖼 썸네일' },
+    { id:'pint', label: '📌 핀터레스트' },
+  ];
+
+  document.getElementById('tabBar').innerHTML = tabs.map((t,i) =>
+    `<button class="tab ${i===0?'active':''}" onclick="switchTab(${i})">${t.label}</button>`
+  ).join('');
+
+  let html = '';
+
+  // Style panes
+  styleGroups.forEach((g, gi) => {
+    html += `<div class="tab-pane ${gi===0?'show':''}" id="pane-${gi}">
+      <div class="content-block">
+        <div class="block-header">
+          <div class="block-title">${g.label} — ${g.tracks.length}곡</div>
+          <div class="block-actions">
+            <button class="btn" onclick="copyStyleGroup(${gi})">전체 복사</button>
+          </div>
+        </div>
+        <div class="track-grid">
+          ${g.tracks.map(t => renderTrackCard(t)).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Meta pane - 롱폼 + 숏츠 3개
+  const meta = d.meta || {};
+  const longMeta = meta.long || meta; // 하위호환
+  const titles = longMeta.titles || [];
+  const shorts = meta.shorts || [];
+
+  html += `<div class="tab-pane" id="pane-3">
+    <div style="font-size:11px;font-family:var(--mono);color:var(--gold);letter-spacing:2px;margin-bottom:14px;">📺 롱폼 메타데이터</div>
+
+    <!-- 제목 -->
+    <div class="content-block" style="margin-bottom:12px">
+      <div class="block-header">
+        <div class="block-title">🏷️ 유튜브 제목 (1개 선택)</div>
+        <button class="btn" onclick="copySelectedTitle()">선택 복사</button>
+      </div>
+      <div class="title-option-list">
+        ${titles.map((t,i) => `
+          <div class="title-option title-opt ${i===0?'selected':''}" onclick="selectTitle(${i})">
+            <div class="title-radio"></div>
+            <span class="title-type">${t.type||''}</span>
+            <span class="title-text">${escHtml(t.title||'')}</span>
+            <button class="btn" onclick="event.stopPropagation();copyText('${esc(t.title||'')}')">복사</button>
+          </div>`).join('')}
+      </div>
+    </div>
+    <!-- 설명글 -->
+    <div class="content-block" style="margin-bottom:12px">
+      <div class="block-header">
+        <div class="block-title">📝 설명글 (500자)</div>
+        <button class="btn" onclick="copyText(document.getElementById('descBody').innerText)">복사</button>
+      </div>
+      <div class="block-body" id="descBody">${escHtml(longMeta.description||'')}</div>
+    </div>
+    <!-- 샵태그 -->
+    <div class="content-block" style="margin-bottom:12px">
+      <div class="block-header">
+        <div class="block-title">🔖 샵태그 (500자)</div>
+        <button class="btn" onclick="copyText(document.getElementById('hashBody').innerText)">복사</button>
+      </div>
+      <div class="block-body" id="hashBody">${escHtml(longMeta.hash_tags||longMeta.tags||'')}</div>
+    </div>
+    <!-- 숨은태그 -->
+    <div class="content-block" style="margin-bottom:12px">
+      <div class="block-header">
+        <div class="block-title">🔍 숨은태그 (500자)</div>
+        <button class="btn" onclick="copyText(document.getElementById('hiddenBody').innerText)">복사</button>
+      </div>
+      <div class="block-body mono" id="hiddenBody" style="font-size:11px;">${escHtml(longMeta.hidden_tags||'')}</div>
+    </div>
+    <!-- 타임스탬프 -->
+    <div class="content-block" style="margin-bottom:20px">
+      <div class="block-header">
+        <div class="block-title">⏱ 타임스탬프</div>
+        <button class="btn" onclick="copyText(document.getElementById('tsBody').innerText)">복사</button>
+      </div>
+      <div class="block-body mono" id="tsBody">${generateTimestamps(tracks)}</div>
+    </div>
+
+    <!-- 숏츠 섹션 -->
+    <div style="font-size:11px;font-family:var(--mono);color:var(--gold);letter-spacing:2px;margin-bottom:14px;padding-top:14px;border-top:1px solid var(--border)">🎬 숏츠 메타데이터 (3개)</div>
+    ${shorts.map((s,i) => `
+    <div class="content-block" style="margin-bottom:12px;border-left:2px solid var(--gold)">
+      <div class="block-header">
+        <div class="block-title">숏츠 ${s.number||i+1}</div>
+        <button class="btn" onclick="copyShorts(${i})">전체 복사</button>
+      </div>
+      <div style="padding:10px 12px;font-size:12px;line-height:2;" id="shorts-${i}">
+        <div><span style="color:var(--text3);font-size:10px;font-family:var(--mono)">TITLE</span><br>${escHtml(s.title||'')}</div>
+        <div style="margin-top:8px"><span style="color:var(--text3);font-size:10px;font-family:var(--mono)">HOOK (첫 3초)</span><br>${escHtml(s.hook||'')}</div>
+        <div style="margin-top:8px"><span style="color:var(--text3);font-size:10px;font-family:var(--mono)">DESCRIPTION</span><br>${escHtml(s.description||'')}</div>
+        <div style="margin-top:8px"><span style="color:var(--text3);font-size:10px;font-family:var(--mono)">HASHTAGS</span><br>${escHtml(s.hash_tags||'')}</div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+
+  // Thumbnail pane
+  const thumb = d.thumb || {};
+  html += `<div class="tab-pane" id="pane-4">
+    <div class="content-block">
+      <div class="block-header">
+        <div class="block-title">🖼 썸네일 텍스트 레이어</div>
+        <button class="btn" onclick="copyText(document.getElementById('thumbText').innerText)">복사</button>
+      </div>
+      <div class="thumb-preview">
+        <div class="thumb-mockup">
+          <div class="thumb-main">${escHtml(thumb.main_text||d.theme||'')}</div>
+          <div class="thumb-sub">${escHtml(thumb.sub_text||'')}</div>
+          <div style="margin-top:10px;font-size:10px;font-family:var(--mono);letter-spacing:3px;color:var(--gold)">MUSICASE</div>
+        </div>
+        <div id="thumbText" style="margin-top:16px;font-size:12px;line-height:1.9;color:var(--text2)">
+메인 텍스트: ${escHtml(thumb.main_text||'')}
+서브 텍스트: ${escHtml(thumb.sub_text||'')}
+채널명: MUSICASE
+폰트 가이드: ${escHtml(thumb.font_guide||'')}
+색상 가이드: ${escHtml(thumb.color_guide||'')}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Pinterest pane
+  const pint = d.pint || {};
+  html += `<div class="tab-pane" id="pane-5">
+    <div class="content-block">
+      <div class="block-header">
+        <div class="block-title">📌 핀터레스트 검색어 — ${escHtml(d.theme||'')}</div>
+        <button class="btn" onclick="copyAllPinterest()">전체 복사</button>
+      </div>
+      <div style="padding:12px;font-size:11px;color:var(--text2);margin-bottom:4px">클릭하면 핀터레스트 검색 탭이 열립니다</div>
+      <div class="pint-grid">
+        <div class="pint-card">
+          <div class="pint-cat">SPACE / BACKGROUND</div>
+          <div class="pint-kw">${(pint.space||[]).map(k=>`<span onclick="openPint('${esc(k)}')">${escHtml(k)}</span>`).join('')}</div>
+        </div>
+        <div class="pint-card">
+          <div class="pint-cat">OBJECT / CLOSEUP</div>
+          <div class="pint-kw">${(pint.object||[]).map(k=>`<span onclick="openPint('${esc(k)}')">${escHtml(k)}</span>`).join('')}</div>
+        </div>
+        <div class="pint-card">
+          <div class="pint-cat">MOOD / COLOR</div>
+          <div class="pint-kw">${(pint.mood||[]).map(k=>`<span onclick="openPint('${esc(k)}')">${escHtml(k)}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('tabPanes').innerHTML = html;
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function renderTrackCard(t) {
+  const hasLyrics = lyricsMode === 'yes';
+  const lyricsHtml = hasLyrics ? `
+    ${t.verse1 ? `<div class="track-section"><div class="track-section-label">VERSE 1</div><div class="track-lyrics">${escHtml(t.verse1)}</div></div>` : ''}
+    ${t.prechorus ? `<div class="track-section"><div class="track-section-label">PRE-CHORUS</div><div class="track-lyrics">${escHtml(t.prechorus)}</div></div>` : ''}
+    ${t.chorus ? `<div class="track-section"><div class="track-section-label">CHORUS</div><div class="track-lyrics">${escHtml(t.chorus)}</div></div>` : ''}
+    ${t.verse2 ? `<div class="track-section"><div class="track-section-label">VERSE 2</div><div class="track-lyrics">${escHtml(t.verse2)}</div></div>` : ''}
+    ${t.bridge ? `<div class="track-section"><div class="track-section-label">BRIDGE</div><div class="track-lyrics">${escHtml(t.bridge)}</div></div>` : ''}
+    ${t.outro ? `<div class="track-section"><div class="track-section-label">OUTRO</div><div class="track-lyrics">${escHtml(t.outro)}</div></div>` : ''}
+  ` : `
+    ${t.arrangement ? `<div class="track-section"><div class="track-section-label">ARRANGEMENT</div><div class="track-lyrics">${escHtml(t.arrangement)}</div></div>` : ''}
+  `;
+
+  return `<div class="track-card">
+    <div class="track-header">
+      <span class="track-num">${t.num||''}</span>
+      <span class="track-name">${escHtml(t.name||'')}</span>
+      <button class="btn" onclick="copyTrack(this)" data-raw="${esc(t.raw||'')}">복사</button>
+    </div>
+    <div class="track-body">
+      ${t.style ? `<div class="track-style">${escHtml(t.style)}</div>` : ''}
+      ${lyricsHtml}
+      ${(!hasLyrics && !t.arrangement && t.raw) ? `<div style="color:var(--text2)">${escHtml(t.raw)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function generateTimestamps(tracks) {
+  if (!tracks.length) return '';
+  const lines = ['🎵 Track List\n'];
+  tracks.forEach((t, i) => {
+    const total = i * 3;
+    const m = String(Math.floor(total/60)).padStart(2,'0');
+    const s = String(total%60).padStart(2,'0');
+    lines.push(`${m}:${s} — ${t.name||`Track ${i+1}`}`);
+  });
+  const totalMin = tracks.length * 3;
+  lines.push(`\n총 재생시간: 약 ${totalMin}분`);
+  return lines.join('\n');
+}
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('show', i===idx));
+}
+
+function expandAll() {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.add('active'));
+}
+
+function selectTitle(idx) {
+  selectedTitles.main = idx;
+  document.querySelectorAll('.title-opt').forEach((el,i) => el.classList.toggle('selected', i===idx));
+}
+
+function copySelectedTitle() {
+  const titles = generatedData.meta?.titles || [];
+  const t = titles[selectedTitles.main] || titles[0];
+  if (t) copyText(t.title);
+}
+
+function copyTrack(btn) {
+  copyText(btn.dataset.raw);
+  showToast('✅ 복사됨');
+}
+
+function copyStyleGroup(gi) {
+  const tracks = (generatedData.prompts || []).slice(gi*5, gi*5+5);
+  const text = tracks.map(t => `[${t.num}] ${t.name}\n${t.style}\n${t.raw}`).join('\n\n─────────────\n\n');
+  copyText(text);
+  showToast('✅ 스타일 그룹 복사됨');
+}
+
+function copyAllPinterest() {
+  const p = generatedData.pint || {};
+  const text = [
+    `📌 핀터레스트 검색어 — ${generatedData.theme}`,
+    '\n[공간/배경용]', ...(p.space||[]),
+    '\n[오브젝트 클로즈업용]', ...(p.object||[]),
+    '\n[분위기/색감]', ...(p.mood||[])
+  ].join('\n');
+  copyText(text);
+  showToast('✅ 핀터레스트 검색어 복사됨');
+}
+
+function openPint(q) {
+  window.open(`https://www.pinterest.com/search/pins/?q=${encodeURIComponent(q)}`, '_blank');
+}
+
+// ═══════════════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════════════
+function buildFullDoc() {
+  const d = generatedData;
+  const tracks = d.prompts || [];
+  const meta = d.meta || {};
+  const thumb = d.thumb || {};
+  const pint = d.pint || {};
+  const lines = [];
+
+  lines.push(`══════════════════════════════════════`);
+  lines.push(`MUSICASE — Suno Playlist Package`);
+  lines.push(`테마: ${d.theme||''}  /  날짜: ${getTodayStr()}`);
+  lines.push(`══════════════════════════════════════\n`);
+
+  lines.push('【 Suno 프롬프트 15곡 】');
+  tracks.forEach(t => {
+    lines.push(`\n[${t.num||''}] ${t.name||''}`);
+    lines.push(`Style: ${t.style||''}`);
+    if (t.verse1) lines.push(`\n[Verse 1]\n${t.verse1}`);
+    if (t.prechorus) lines.push(`\n[Pre-Chorus]\n${t.prechorus}`);
+    if (t.chorus) lines.push(`\n[Chorus]\n${t.chorus}`);
+    if (t.verse2) lines.push(`\n[Verse 2]\n${t.verse2}`);
+    if (t.bridge) lines.push(`\n[Bridge]\n${t.bridge}`);
+    if (t.outro) lines.push(`\n[Outro]\n${t.outro}`);
+    if (t.arrangement) lines.push(`\n[Arrangement]\n${t.arrangement}`);
+    lines.push('\n─────────────────────────');
+  });
+
+  lines.push('\n【 유튜브 메타데이터 】');
+  const selTitle = meta.titles?.[selectedTitles.main||0];
+  if (selTitle) lines.push(`제목: ${selTitle.title}`);
+  if (meta.description) lines.push(`\n[설명글]\n${meta.description}`);
+  if (meta.tags) lines.push(`\n[해시태그]\n${meta.tags}`);
+  lines.push(`\n${generateTimestamps(tracks)}`);
+
+  lines.push('\n【 썸네일 텍스트 】');
+  lines.push(`메인: ${thumb.main_text||''}`);
+  lines.push(`서브: ${thumb.sub_text||''}`);
+  lines.push(`폰트: ${thumb.font_guide||''}`);
+  lines.push(`색상: ${thumb.color_guide||''}`);
+
+  lines.push('\n【 핀터레스트 검색어 】');
+  lines.push('[공간/배경용]'); (pint.space||[]).forEach(k => lines.push(k));
+  lines.push('\n[오브젝트용]'); (pint.object||[]).forEach(k => lines.push(k));
+  lines.push('\n[분위기/색감]'); (pint.mood||[]).forEach(k => lines.push(k));
+
+  return lines.join('\n');
+}
+
+async function copyAll() {
+  await copyText(buildFullDoc());
+  showToast('✅ 전체 복사됨');
+}
+
+function saveAsTxt() {
+  const theme = (generatedData.theme||'theme').replace(/\s+/g,'_').replace(/[^\w가-힣_]/g,'').substring(0,20);
+  const fname = `${getTodayStr()}_MUSICASE_${theme}.txt`;
+  const blob = new Blob([buildFullDoc()], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`💾 저장: ${fname}`);
+}
+
+async function openDocs() {
+  await copyText(buildFullDoc());
+  window.open('https://docs.google.com/document/create','_blank');
+  const fname = `${getTodayStr()}_MUSICASE_${generatedData.theme||''}`;
+  showToast(`📄 Docs 열림\n① Ctrl+V 붙여넣기\n② 제목: ${fname}`);
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function esc(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+}
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg; el.classList.add('show');
+}
+function showToast(msg, dur=3000) {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg.replace(/\n/g,'<br>');
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display='none', dur);
+}
+</script>
+</body>
+</html>
