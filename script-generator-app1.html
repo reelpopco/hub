@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대본·영상 생성기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #e0dbd0;
+  --border2: #ccc8bc;
+  --text: #1a1814;
+  --text2: #6b6456;
+  --text3: #a09880;
+  --accent: #c8601a;
+  --accent-light: #fdf0e8;
+  --dundum: #d44a2a;
+  --eunhye: #8b5cf6;
+  --success: #2a7a4b;
+  --warn: #c8601a;
+  --mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* Texture overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' x='0' y='0' fill='%23000' opacity='.015'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%23000' opacity='.015'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 28px 20px 100px; }
+
+/* ── Header ── */
+.header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid var(--text); }
+.header-icon { width: 42px; height: 42px; background: var(--text); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.header-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+.header-sub { font-size: 12px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+.header-back { margin-left: auto; background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--text2); cursor: pointer; font-size: 12px; padding: 6px 12px; font-family: 'Noto Sans KR', sans-serif; }
+.header-back:hover { border-color: var(--text); color: var(--text); }
+
+/* ── Section ── */
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+.section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-label::before { content: ''; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+/* ── API Keys ── */
+.key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:600px){ .key-grid { grid-template-columns:1fr; } }
+
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-size: 11px; color: var(--text2); font-weight: 600; }
+.field-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: var(--mono);
+  font-size: 12px; padding: 9px 12px; outline: none; width: 100%;
+  transition: border-color .15s;
+}
+.field-input:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--text3); }
+textarea.field-input { resize: vertical; line-height: 1.6; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; }
+
+/* ── Channel ── */
+.ch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ch-btn {
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 10px; cursor: pointer; padding: 14px 16px;
+  text-align: left; transition: all .15s; color: var(--text);
+}
+.ch-btn:hover { border-color: var(--border2); }
+.ch-btn.active-dundum { border-color: var(--dundum); background: #fff5f3; }
+.ch-btn.active-eunhye { border-color: var(--eunhye); background: #f8f4ff; }
+.ch-name { font-weight: 800; font-size: 14px; }
+.ch-name.dundum { color: var(--dundum); }
+.ch-name.eunhye { color: var(--eunhye); }
+.ch-desc { font-size: 11px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+.ch-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.ch-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text3); }
+
+/* ── Mode toggle ── */
+.mode-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.mode-btn {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text2); cursor: pointer; font-size: 12px;
+  padding: 8px; font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
+}
+.mode-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* ── Speed toggle ── */
+.speed-row { display: flex; gap: 6px; }
+.speed-btn {
+  flex: 1; border-radius: 8px; cursor: pointer; font-size: 12px;
+  padding: 10px 14px; font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
+  border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2);
+  display: flex; align-items: center; gap: 8px;
+}
+.speed-btn:hover { border-color: var(--border2); }
+.speed-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.speed-btn-icon { font-size: 16px; }
+.speed-btn-info { text-align: left; }
+.speed-btn-title { font-weight: 700; font-size: 12px; }
+.speed-btn-sub { font-size: 10px; opacity: .7; margin-top: 1px; }
+
+/* ── Generate button ── */
+.gen-btn {
+  width: 100%; background: var(--text); border: none; border-radius: 12px;
+  color: var(--bg); font-family: 'Noto Sans KR', sans-serif; font-size: 15px;
+  font-weight: 700; padding: 16px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.gen-btn:hover { opacity: .87; transform: translateY(-1px); }
+.gen-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* ── Progress ── */
+.progress-wrap { margin-top: 16px; display: none; }
+.progress-wrap.show { display: block; }
+.progress-list { display: flex; flex-direction: column; gap: 6px; }
+.p-step {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 12px; color: var(--text2); transition: all .2s;
+}
+.p-step.active { border-color: var(--accent); color: var(--text); background: var(--accent-light); }
+.p-step.done { border-color: #b6e0c8; color: var(--success); background: #f0faf5; }
+.p-step.error { border-color: #f5c6c6; color: #c0392b; background: #fff5f5; }
+.p-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.p-step.active .p-icon { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error box ── */
+.error-box { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; color: #c0392b; font-size: 13px; padding: 12px 14px; margin-top: 10px; display: none; line-height: 1.6; }
+.error-box.show { display: block; }
+
+/* ── Results ── */
+.results { margin-top: 24px; display: none; }
+.results.show { display: block; }
+
+.results-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.results-title { font-size: 16px; font-weight: 800; }
+.toolbar-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Tab bar ── */
+.tab-bar { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 16px; border-bottom: 2px solid var(--border); }
+.tab {
+  background: none; border: none; border-radius: 6px 6px 0 0;
+  color: var(--text2); cursor: pointer; font-size: 12px;
+  font-family: 'Noto Sans KR', sans-serif; padding: 8px 14px;
+  white-space: nowrap; transition: all .15s; position: relative; bottom: -2px;
+  border: 1px solid transparent; border-bottom: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); background: var(--surface); border-color: var(--border); border-bottom-color: var(--surface); font-weight: 700; }
+
+/* ── Content blocks ── */
+.tab-pane { display: none; }
+.tab-pane.show { display: block; }
+
+.content-block {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 14px;
+}
+.block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.block-title { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.block-actions { display: flex; gap: 6px; }
+
+.block-body {
+  padding: 16px; font-size: 13px; line-height: 2;
+  white-space: pre-wrap; word-break: keep-all;
+}
+.block-body.mono { font-family: var(--mono); font-size: 12px; line-height: 1.7; }
+
+/* ── Inline select (제목 선택) ── */
+.title-option-list { display: flex; flex-direction: column; gap: 8px; }
+.title-option {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer;
+  transition: all .15s; background: var(--surface2);
+}
+.title-option:hover { border-color: var(--border2); }
+.title-option.selected { border-color: var(--accent); background: var(--accent-light); }
+.title-option-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border2); flex-shrink: 0; transition: all .15s; }
+.title-option.selected .title-option-radio { border-color: var(--accent); background: var(--accent); }
+.title-option-type { font-size: 10px; color: var(--text3); font-family: var(--mono); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.title-option-text { font-size: 13px; font-weight: 600; flex: 1; }
+
+/* ── Regen row ── */
+.regen-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--border); background: var(--surface2);
+  align-items: center; flex-wrap: wrap;
+}
+.regen-input {
+  flex: 1; min-width: 160px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px; padding: 7px 10px; outline: none;
+}
+.regen-input:focus { border-color: var(--accent); }
+.regen-input::placeholder { color: var(--text3); }
+
+/* ── Buttons ── */
+.btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text2); cursor: pointer;
+  font-size: 11px; font-family: 'Noto Sans KR', sans-serif;
+  padding: 6px 12px; transition: all .15s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--text); color: var(--text); }
+.btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btn.primary:hover { opacity: .8; }
+.btn.accent { background: var(--accent); color: white; border-color: var(--accent); }
+.btn.accent:hover { opacity: .85; }
+.btn.sm { font-size: 11px; padding: 5px 10px; }
+.btn.success { background: var(--success); color: white; border-color: var(--success); }
+
+/* ── Tags display ── */
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 5px; padding: 14px 16px; }
+.tag-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; font-size: 11px; padding: 3px 9px; color: var(--text2); }
+
+/* ── Image prompts grid ── */
+.img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
+@media(max-width:500px){ .img-grid { grid-template-columns: 1fr; } }
+.img-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.img-card-num { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-bottom: 6px; }
+.img-card-text { font-size: 11px; line-height: 1.6; color: var(--text); font-family: var(--mono); }
+
+/* ── Thumbnail ── */
+.thumb-lines { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; }
+.thumb-line {
+  background: #1a1814; color: white; border-radius: 6px;
+  padding: 10px 14px; font-size: 16px; font-weight: 900;
+  text-align: center; letter-spacing: -0.3px;
+}
+
+/* ── Category grid (든든백세 요일) ── */
+.cat-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cat-btn {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 10px; cursor: pointer; padding: 10px 16px;
+  transition: all .15s; min-width: 90px;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.cat-btn:hover { border-color: var(--border2); }
+.cat-btn.active { border-color: var(--dundum); background: #fff5f3; }
+.cat-day { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; }
+.cat-emoji { font-size: 18px; margin-bottom: 4px; }
+.cat-name { font-size: 12px; font-weight: 700; color: var(--dundum); }
+.cat-desc { font-size: 10px; color: var(--text3); margin-top: 2px; text-align: center; line-height: 1.4; }
+
+/* ── Topic suggestion ── */
+.topic-suggest-wrap { display: none; margin-top: 14px; }
+.topic-suggest-wrap.show { display: block; }
+.topic-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.topic-chip {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 20px; color: var(--text); cursor: pointer;
+  font-size: 12px; padding: 6px 14px; transition: all .15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.topic-chip:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.topic-chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* ── Keyword table ── */
+.kw-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+.kw-table th { background: var(--surface2); border: 1px solid var(--border); padding: 7px 10px; text-align: left; font-weight: 600; color: var(--text2); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; }
+.kw-table td { border: 1px solid var(--border); padding: 7px 10px; vertical-align: middle; }
+.kw-table tr:hover td { background: var(--accent-light); }
+.kw-link { color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 11px; white-space: nowrap; }
+.topic-section-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+
+/* ── Save row ── */
+.save-section { background: var(--surface); border: 2px solid var(--text); border-radius: 12px; padding: 16px 20px; margin-top: 20px; }
+.save-title { font-weight: 800; font-size: 14px; margin-bottom: 12px; }
+.save-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.save-btn-item {
+  display: flex; align-items: center; gap: 7px; padding: 10px 16px;
+  border-radius: 8px; cursor: pointer; font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 600;
+  transition: all .15s; border: 1.5px solid;
+}
+.save-btn-item.txt { border-color: var(--success); color: var(--success); background: #f0faf5; }
+.save-btn-item.txt:hover { background: #e0f5ea; }
+.save-btn-item.docs { border-color: #4285f4; color: #4285f4; background: #f0f4ff; }
+.save-btn-item.docs:hover { background: #e0eaff; }
+.save-btn-item.copy-all { border-color: var(--text); color: var(--text); background: var(--surface2); }
+.save-btn-item.copy-all:hover { background: var(--border); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--text); color: var(--bg); border-radius: 10px;
+  padding: 12px 20px; font-size: 13px; font-weight: 600;
+  z-index: 9999; display: none; max-width: 380px; width: 90%;
+  line-height: 1.6; text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">📝</div>
+  <div>
+    <div class="header-title">대본·영상 생성기</div>
+    <div class="header-sub">SCRIPT & VIDEO GENERATOR — APP 01</div>
+  </div>
+  <button class="header-back" onclick="window.location.href='launcher.html'">← 홈</button>
+</div>
+
+<!-- STEP 1: API Keys -->
+<div class="section">
+  <div class="section-label">STEP 1 — API 키</div>
+  <div class="key-grid">
+    <div class="field-group">
+      <div class="field-label" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Claude API Key <span style="color:var(--accent);font-size:10px">필수</span></span>
+        <a href="https://console.anthropic.com/settings/keys" target="_blank"
+           style="font-size:10px;color:#4285f4;text-decoration:none;border:1px solid #4285f433;border-radius:4px;padding:2px 7px;background:#f0f4ff">
+          🔑 발급 바로가기 →
+        </a>
+      </div>
+      <input class="field-input" type="password" id="claudeKey" placeholder="sk-ant-...">
+    </div>
+    <div class="field-group">
+      <div class="field-label" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Gemini API Key <span style="color:var(--text3);font-size:10px">경쟁채널 URL 분석 시</span></span>
+        <a href="https://aistudio.google.com/apikey" target="_blank"
+           style="font-size:10px;color:#34a853;text-decoration:none;border:1px solid #34a85333;border-radius:4px;padding:2px 7px;background:#f0faf5">
+          🔑 발급 바로가기 →
+        </a>
+      </div>
+      <input class="field-input" type="password" id="geminiKey" placeholder="AIza...">
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.7">
+    💡 Claude: console.anthropic.com → API Keys → Create Key (첫 가입 시 $5 무료 크레딧)<br>
+    💡 Gemini: aistudio.google.com → Get API Key (무료 티어 제공)
+  </div>
+</div>
+
+<!-- STEP 2: Channel -->
+<div class="section">
+  <div class="section-label">STEP 2 — 채널 선택</div>
+  <div class="ch-row">
+    <button class="ch-btn" id="ch-dundum" onclick="selectCh('dundum')">
+      <div class="ch-name dundum">🏃 든든백세</div>
+      <div class="ch-desc">60~80대 시니어 건강·생활정보<br>따뜻한 존댓말 · 신뢰감 우선</div>
+      <div class="ch-tags">
+        <span class="ch-tag">팩트체크 필수</span>
+        <span class="ch-tag">병원명 금지</span>
+        <span class="ch-tag">6,000자 목표</span>
+      </div>
+    </button>
+    <button class="ch-btn" id="ch-eunhye" onclick="selectCh('eunhye')">
+      <div class="ch-name eunhye">📖 은혜여사의인생상담소</div>
+      <div class="ch-desc">시니어 여성 1인칭 드라마틱 서사<br>고부갈등 · 반전 · 감정몰입</div>
+      <div class="ch-tags">
+        <span class="ch-tag">반전 필수</span>
+        <span class="ch-tag">감정몰입</span>
+        <span class="ch-tag">1인칭 서술</span>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- STEP 2.5: Topic Selection -->
+<div class="section">
+  <div class="section-label">STEP 2.5 — 주제 선정</div>
+
+  <!-- 카테고리 선택 (든든백세 전용, 채널 선택 시 표시) -->
+  <div id="categoryWrap" style="display:none;margin-bottom:16px">
+    <div class="topic-section-title">📅 업로드 요일 · 카테고리 선택</div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+
+  <!-- AI 주제 제안 -->
+  <div style="margin-bottom:16px">
+    <div class="topic-section-title">
+      💡 AI 주제 제안
+      <span style="font-weight:400;color:var(--text3)" id="suggestHint">(채널 선택 후 클릭)</span>
+    </div>
+    <button class="btn primary" id="suggestBtn" onclick="suggestTopics()" style="font-size:12px;padding:8px 16px">
+      ✦ 주제 10개 뽑기
+    </button>
+    <div class="topic-suggest-wrap" id="topicSuggestWrap">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">클릭하면 주제어 입력란에 자동 입력됩니다</div>
+      <div class="topic-chips" id="topicChips"></div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:var(--border);margin-bottom:16px"></div>
+
+  <!-- 소싱 키워드 추천 -->
+  <div>
+    <div class="topic-section-title">🔍 소싱 영상 검색 키워드 추천 <span style="font-weight:400;color:var(--text3)">(주제어 입력 후 클릭)</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="field-input" type="text" id="kwTopicInput" placeholder="예) 무릎 통증, 기초연금, 고부갈등..." style="flex:1">
+      <button class="btn accent" onclick="suggestKeywords()" style="white-space:nowrap;font-size:12px">🔑 키워드 추천</button>
+    </div>
+    <div id="kwTableWrap" style="display:none">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">🔗 클릭하면 유튜브 검색 탭이 열립니다</div>
+      <table class="kw-table" id="kwTable">
+        <thead><tr><th>#</th><th>한국어</th><th>English</th><th>유튜브 바로가기</th></tr></thead>
+        <tbody id="kwTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: Topic / Competition -->
+<div class="section">
+  <div class="section-label">STEP 3 — 주제 & 경쟁채널 분석 (선택)</div>
+
+  <div class="field-group" style="margin-bottom:14px">
+    <div class="field-label">주제어 (필수) <span style="font-weight:400;color:var(--text3)">— 위에서 클릭하거나 직접 입력</span></div>
+    <input class="field-input" type="text" id="topicInput" placeholder="예) 노인 무릎 통증 / 며느리와 갈등 해결 / 기초연금 수령 방법">
+  </div>
+
+  <div class="field-group" style="margin-bottom:10px">
+    <div class="field-label">경쟁채널 분석 (선택 — 있으면 대본 품질 향상)</div>
+    <div class="mode-row" style="margin-bottom:8px">
+      <button class="mode-btn active" id="compModeUrl" onclick="setCompMode('url')">🔗 YouTube URL 입력</button>
+      <button class="mode-btn" id="compModeName" onclick="setCompMode('name')">🔍 채널명 텍스트 검색</button>
+      <button class="mode-btn" id="compModeNone" onclick="setCompMode('none')">⏭ 생략</button>
+    </div>
+    <div id="compUrlWrap">
+      <input class="field-input" type="text" id="compUrl" placeholder="https://www.youtube.com/watch?v=... (여러 개면 줄바꿈으로 구분, 최대 3개)">
+    </div>
+    <div id="compNameWrap" style="display:none">
+      <input class="field-input" type="text" id="compName" placeholder="예) 실버라이프TV, 건강한의사, 노년의행복 (쉼표로 구분)">
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: Mode -->
+<div class="section">
+  <div class="section-label">STEP 4 — 생성 모드</div>
+  <div class="speed-row">
+    <button class="speed-btn active" id="modeQuick" onclick="setMode('quick')">
+      <div class="speed-btn-icon">⚡</div>
+      <div class="speed-btn-info">
+        <div class="speed-btn-title">빠른 모드</div>
+        <div class="speed-btn-sub">팩트체크 생략 · 대본+메타데이터만</div>
+      </div>
+    </button>
+    <button class="speed-btn" id="modeFull" onclick="setMode('full')">
+      <div class="speed-btn-icon">🔬</div>
+      <div class="speed-btn-info">
+        <div class="speed-btn-title">전체 모드</div>
+        <div class="speed-btn-sub">7단계 · 팩트체크·웹서치 포함</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- Generate -->
+<button class="gen-btn" id="genBtn" onclick="generate()">
+  ✦ 풀패키지 생성 시작
+</button>
+<div class="error-box" id="errorBox"></div>
+
+<!-- Progress -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-list" id="progressList"></div>
+</div>
+
+<!-- Results -->
+<div class="results" id="results">
+  <div class="results-toolbar">
+    <div class="results-title">✦ 생성 완료</div>
+    <div class="toolbar-btns">
+      <button class="btn" onclick="expandAll()">전체 펼치기</button>
+    </div>
+  </div>
+
+  <div class="tab-bar" id="tabBar"></div>
+  <div id="tabPanes"></div>
+
+  <!-- Save -->
+  <div class="save-section">
+    <div class="save-title">💾 저장</div>
+    <div class="save-btns">
+      <div class="save-btn-item copy-all" onclick="copyAllContent()">📋 전체 복사</div>
+      <div class="save-btn-item txt" onclick="saveAsTxt()">💾 TXT 저장</div>
+      <div class="save-btn-item docs" onclick="openDocs()">📄 Google Docs</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let selectedCh = null;
+let compMode = 'url';
+let genMode = 'quick';
+let generatedData = {};   // 생성된 모든 결과 저장
+let selectedTitles = { longform: null, shortsA: null, shortsB: null };
+
+// ═══════════════════════════════════════════════════════════
+// CHANNEL CONFIG
+// ═══════════════════════════════════════════════════════════
+const CH = {
+  dundum: {
+    name: '든든백세', color: '#d44a2a',
+    target: '60~80대 시니어 (건강·복지·경제적 자립 관심층)',
+    tone: '따뜻한 존댓말, "어르신들" 호칭, 전문 정보를 쉽게 풀어주는 방식',
+    forbidden: '~고요, ~까요, ~네요, ~는요, ~겠습니다, 특정 병원명·의사명',
+    hook: '시청자의 건강 불안이나 경제적 이득 감각을 자극하는 선언형 첫 문장',
+    cta: '마지막에 구독·좋아요·댓글 자연스럽게 유도',
+    factcheck: '모든 의학 정보는 "전문의", "의학계", "보건 당국" 등 일반 표현으로만 표기',
+    charTarget: 6000
+  },
+  eunhye: {
+    name: '은혜여사의인생상담소', color: '#8b5cf6',
+    target: '50~70대 여성 (고부갈등·인생역전·가족 이야기에 감정이입)',
+    tone: '1인칭 드라마틱 서사, 감정 기복 뚜렷한 구어체, 한숨·탄식 포함 가능',
+    forbidden: '설명투, 정보전달식 문장, 딱딱한 어미',
+    hook: '충격적이거나 강한 공감을 유발하는 1인칭 선언',
+    cta: '공감 댓글 유도 + 구독 자연스럽게',
+    factcheck: '법적 상식·실제 사례 기반. 반전 포인트 반드시 포함.',
+    charTarget: 6000
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// DUNDUM CATEGORIES
+// ═══════════════════════════════════════════════════════════
+
+const DUNDUM_CATEGORIES = [
+  {
+    id: 'maeum',
+    day: '월요일',
+    emoji: '🧠',
+    name: '마음든든',
+    desc: '정서·심리·관계',
+    topics: [
+      '노년 우울증 극복하는 방법','혼자 사는 노인 외로움 해소법',
+      '자녀와 사이좋게 지내는 대화법','황혼기 부부 갈등 해결 비결',
+      '은퇴 후 삶의 의미 찾는 방법','노인 자존감 높이는 생활 습관',
+      '손주와 세대 차이 극복하기','노년에 새 친구 사귀는 방법',
+      '치매 걱정 줄이는 마음 관리','죽음 앞에서 평온해지는 법'
+    ]
+  },
+  {
+    id: 'health',
+    day: '수요일',
+    emoji: '💪',
+    name: '건강든든',
+    desc: '운동·질병·관리',
+    topics: [
+      '노인 무릎 통증 자연 치유법','60대 근육 키우는 운동법',
+      '당뇨 합병증 예방하는 생활법','고혈압 낮추는 식습관 비결',
+      '백내장 수술 전 꼭 알아야 할 것','치매 예방에 좋은 두뇌 운동',
+      '노인 낙상 예방 핵심 운동 3가지','관절염 통증 줄이는 생활 수칙',
+      '수면 부족 노인에게 생기는 문제','전립선 건강 지키는 방법'
+    ]
+  },
+  {
+    id: 'food',
+    day: '수요일',
+    emoji: '🍚',
+    name: '밥상든든',
+    desc: '식품·영양·식단',
+    topics: [
+      '당뇨에 좋은 밥상 차리는 방법','노인 단백질 부족 증상과 해결법',
+      '혈압 낮추는 음식 BEST 5','치매 예방에 좋은 식품 총정리',
+      '관절에 좋은 음식 나쁜 음식','노인이 꼭 먹어야 할 영양제',
+      '속 편한 노인 소화 식단 비법','골다공증 예방하는 칼슘 식품',
+      '암 예방에 효과 있는 채소 조합','노인 식욕 없을 때 먹기 좋은 음식'
+    ]
+  },
+  {
+    id: 'info',
+    day: '금요일',
+    emoji: '📋',
+    name: '정보든든',
+    desc: '복지·혜택·생활정보',
+    topics: [
+      '기초연금 수령 조건 총정리 2025','노인 장기요양등급 신청 방법',
+      '혼자 사는 노인 안전 지원금 신청','노인 일자리 신청 방법 2025',
+      '65세 이상 무료로 받는 혜택 총정리','노인 의료비 지원 신청하는 방법',
+      '경로우대 교통 혜택 완전 정복','노인 주거 급여 신청 자격과 방법',
+      '치매 가족 돌봄 지원금 받는 법','노인 스마트폰 무료 교육 신청법'
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════
+// UI CONTROLS
+// ═══════════════════════════════════════════════════════════
+let selectedCategory = null;
+
+function selectCh(ch) {
+  selectedCh = ch;
+  selectedCategory = null;
+  ['dundum','eunhye'].forEach(c => {
+    const el = document.getElementById(`ch-${c}`);
+    el.classList.remove('active-dundum','active-eunhye');
+  });
+  document.getElementById(`ch-${ch}`).classList.add(`active-${ch}`);
+
+  // 든든백세 → 카테고리 패널 표시
+  const catWrap = document.getElementById('categoryWrap');
+  const hint = document.getElementById('suggestHint');
+  if (ch === 'dundum') {
+    catWrap.style.display = 'block';
+    renderCategoryButtons();
+    hint.textContent = '(카테고리 선택 후 클릭)';
+  } else {
+    catWrap.style.display = 'none';
+    hint.textContent = '(채널 선택 완료 — 클릭)';
+  }
+
+  // 주제 칩 초기화
+  document.getElementById('topicSuggestWrap').classList.remove('show');
+  document.getElementById('topicChips').innerHTML = '';
+}
+
+function renderCategoryButtons() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = DUNDUM_CATEGORIES.map(cat => `
+    <button class="cat-btn" id="cat-${cat.id}" onclick="selectCategory('${cat.id}')">
+      <div class="cat-day">${cat.day}</div>
+      <div class="cat-emoji">${cat.emoji}</div>
+      <div class="cat-name">${cat.name}</div>
+      <div class="cat-desc">${cat.desc}</div>
+    </button>
+  `).join('');
+}
+
+function selectCategory(catId) {
+  selectedCategory = catId;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`cat-${catId}`).classList.add('active');
+  // 카테고리 선택 시 해당 카테고리 주제 즉시 표시
+  const cat = DUNDUM_CATEGORIES.find(c => c.id === catId);
+  if (cat) {
+    const wrap = document.getElementById('topicSuggestWrap');
+    const chips = document.getElementById('topicChips');
+    wrap.classList.add('show');
+    chips.innerHTML = cat.topics.map(t =>
+      `<div class="topic-chip" onclick="selectTopic(this,'${esc(t)}')">${t}</div>`
+    ).join('');
+  }
+}
+
+function setCompMode(m) {
+  compMode = m;
+  ['url','name','none'].forEach(x => document.getElementById(`compMode${x.charAt(0).toUpperCase()+x.slice(1)}`).classList.remove('active'));
+  document.getElementById(`compMode${m.charAt(0).toUpperCase()+m.slice(1)}`).classList.add('active');
+  document.getElementById('compUrlWrap').style.display = m==='url' ? 'block' : 'none';
+  document.getElementById('compNameWrap').style.display = m==='name' ? 'block' : 'none';
+}
+
+function setMode(m) {
+  genMode = m;
+  document.getElementById('modeQuick').classList.toggle('active', m==='quick');
+  document.getElementById('modeFull').classList.toggle('active', m==='full');
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.innerHTML = msg; el.classList.add('show');
+}
+function hideError() { document.getElementById('errorBox').classList.remove('show'); }
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════════════════
+function initProgress(steps) {
+  document.getElementById('progressWrap').classList.add('show');
+  document.getElementById('progressList').innerHTML = steps.map(s =>
+    `<div class="p-step" id="ps-${s.id}">
+      <div class="p-icon">${s.status==='done'?'✓':s.status==='active'?'↻':'○'}</div>
+      <div id="ps-label-${s.id}">${s.label}</div>
+    </div>`
+  ).join('');
+}
+
+function setStep(id, status, label) {
+  const el = document.getElementById(`ps-${id}`);
+  if (!el) return;
+  el.className = `p-step ${status}`;
+  el.querySelector('.p-icon').textContent = status==='done'?'✓':status==='active'?'↻':status==='error'?'✗':'○';
+  if (label) document.getElementById(`ps-label-${id}`).textContent = label;
+}
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+// ═══════════════════════════════════════════════════════════
+// MAIN GENERATE
+// ═══════════════════════════════════════════════════════════
+async function generate() {
+  hideError();
+  document.getElementById('results').classList.remove('show');
+  generatedData = {};
+
+  if (!selectedCh) { showError('채널을 선택해주세요.'); return; }
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  if (!claudeKey) { showError('Claude API 키를 입력해주세요.'); return; }
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { showError('주제어를 입력해주세요.'); return; }
+
+  const geminiKey = document.getElementById('geminiKey').value.trim();
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+
+  const steps = [
+    { id:'comp', label:'경쟁채널 분석 중...', status:'' },
+    { id:'script', label:'롱폼 대본 생성 중...', status:'' },
+    { id:'shorts', label:'숏츠 A·B 대본 생성 중...', status:'' },
+    { id:'meta', label:'제목·설명글·태그 생성 중...', status:'' },
+    { id:'images', label:'이미지 프롬프트 생성 중...', status:'' },
+    { id:'thumb', label:'썸네일 문구 생성 중...', status:'' },
+  ];
+  if (genMode === 'full') steps.splice(1, 0, { id:'factcheck', label:'팩트체크 & 웹서치 중...', status:'' });
+  initProgress(steps);
+
+  try {
+    // ── STEP: 경쟁채널 분석
+    setStep('comp', 'active');
+    let compAnalysis = '';
+    if (compMode === 'none') {
+      compAnalysis = '(경쟁채널 분석 생략)';
+      setStep('comp', 'done', '경쟁채널 분석 생략');
+    } else if (compMode === 'url' && geminiKey) {
+      const urls = document.getElementById('compUrl').value.trim();
+      if (urls) {
+        compAnalysis = await analyzeCompUrl(geminiKey, urls, topic);
+        setStep('comp', 'done', '경쟁채널 URL 분석 완료');
+      } else {
+        compAnalysis = '(URL 미입력 — 생략)';
+        setStep('comp', 'done', '경쟁채널 URL 없음 — 생략');
+      }
+    } else if (compMode === 'name') {
+      const name = document.getElementById('compName').value.trim();
+      if (name) {
+        compAnalysis = await analyzeCompName(claudeKey, name, topic);
+        setStep('comp', 'done', '경쟁채널명 분석 완료');
+      } else {
+        compAnalysis = '(채널명 미입력 — 생략)';
+        setStep('comp', 'done', '생략');
+      }
+    } else {
+      compAnalysis = '(Gemini 키 없음 — URL 분석 불가)';
+      setStep('comp', 'done', 'Gemini 키 없음 — 생략');
+    }
+    generatedData.compAnalysis = compAnalysis;
+
+    // ── STEP: 팩트체크 (전체 모드만)
+    if (genMode === 'full') {
+      setStep('factcheck', 'active');
+      const factResult = await runFactCheck(claudeKey, topic, selectedCh);
+      generatedData.factcheck = factResult;
+      setStep('factcheck', 'done', '팩트체크 완료');
+    }
+
+    // ── STEP: 롱폼 대본
+    setStep('script', 'active');
+    const longform = await generateLongform(claudeKey, topic, compAnalysis, generatedData.factcheck||'');
+    generatedData.longform = longform;
+    setStep('script', 'done', `롱폼 대본 완료 (${longform.length.toLocaleString()}자)`);
+
+    // ── STEP: 숏츠 A·B
+    setStep('shorts', 'active');
+    const [shortsA, shortsB] = await generateShorts(claudeKey, topic, longform);
+    generatedData.shortsA = shortsA;
+    generatedData.shortsB = shortsB;
+    setStep('shorts', 'done', '숏츠 2종 완료');
+
+    // ── STEP: 메타데이터 (제목3개·설명·태그·숨은댓글)
+    setStep('meta', 'active');
+    const meta = await generateMeta(claudeKey, topic, longform, compAnalysis);
+    generatedData.meta = meta;
+    setStep('meta', 'done', '메타데이터 완료');
+
+    // ── STEP: 이미지 프롬프트
+    setStep('images', 'active');
+    const images = await generateImages(claudeKey, topic, longform, shortsA, shortsB);
+    generatedData.images = images;
+    setStep('images', 'done', '이미지 프롬프트 완료');
+
+    // ── STEP: 썸네일 문구
+    setStep('thumb', 'active');
+    const thumb = await generateThumb(claudeKey, topic, meta);
+    generatedData.thumb = thumb;
+    setStep('thumb', 'done', '썸네일 문구 완료');
+
+    renderResults();
+
+  } catch(e) {
+    showError(`오류 발생: ${e.message}`);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════════════════
+
+async function callClaude(apiKey, prompt, maxTokens=4000) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTokens, messages:[{role:'user',content:prompt}] })
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`Claude ${res.status}`); }
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
+}
+
+async function callClaudeJSON(apiKey, prompt) {
+  const text = await callClaude(apiKey, prompt, 2000);
+  try { return JSON.parse(text.replace(/```json|```/g,'').trim()); }
+  catch { return null; }
+}
+
+async function analyzeCompUrl(geminiKey, urls, topic) {
+  const urlList = urls.split('\n').map(u=>u.trim()).filter(Boolean).slice(0,3);
+  const prompt = `아래 YouTube 영상들을 분석해서 "${topic}" 주제와 관련한 콘텐츠 전략을 한국어로 정리해주세요.
+
+분석 항목:
+1. 훅 구조 (첫 10초)
+2. 정보 전달 순서
+3. 자주 쓰는 표현과 어휘
+4. 감정 트리거 방식
+5. CTA 방식
+6. 핵심 성공 공식 (3가지 이내)
+
+영상 URL들:
+${urlList.join('\n')}`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiKey}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.3, maxOutputTokens:1500} })
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`Gemini ${res.status}`); }
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || '분석 결과 없음';
+}
+
+async function analyzeCompName(claudeKey, names, topic) {
+  const prompt = `유튜브 채널 "${names}" 를 분석해서 "${topic}" 주제의 콘텐츠 전략을 추론해주세요.
+
+아래 항목을 한국어로 정리:
+1. 해당 채널 타깃층 특성
+2. 주로 사용하는 훅 구조
+3. 인기 콘텐츠 패턴
+4. 제목 공식
+5. 우리 채널에서 참고할 핵심 전략 3가지
+
+(웹 검색 없이 해당 채널명에 대해 알고 있는 정보 기반으로 분석)`;
+  return callClaude(claudeKey, prompt, 1000);
+}
+
+async function runFactCheck(claudeKey, topic, ch) {
+  const ch_info = CH[ch];
+  const prompt = `"${topic}" 주제로 ${ch_info.name} 채널 대본을 작성하려 합니다.
+
+아래 항목을 팩트체크해주세요:
+1. 주제 관련 핵심 통계·수치 (최신 기준)
+2. 주의해야 할 잘못된 속설
+3. 신뢰할 수 있는 정보 출처 유형
+4. ${ch==='dundum' ? '의학·건강 정보 관련 주의사항 (병원명·의사명 금지)' : '법적·사회적 맥락 주의사항'}
+
+결과를 ✅/⚠️/❌ 형식으로 명확히 정리해주세요.`;
+  return callClaude(claudeKey, prompt, 1500);
+}
+
+async function generateLongform(claudeKey, topic, compAnalysis, factcheck) {
+  const ch = CH[selectedCh];
+  const prompt = `당신은 "${ch.name}" 유튜브 채널 전문 대본 작가입니다.
+
+[채널 설정]
+- 타겟: ${ch.target}
+- 톤: ${ch.tone}
+- 금지: ${ch.forbidden}
+- 훅: ${ch.hook}
+- CTA: ${ch.cta}
+- 팩트 원칙: ${ch.factcheck}
+
+[경쟁채널 분석]
+${compAnalysis}
+
+${factcheck ? `[팩트체크 결과]\n${factcheck}` : ''}
+
+[임무]
+주제 "${topic}" 으로 롱폼 유튜브 영상 대본을 작성하세요.
+
+필수 요건:
+- 목표 분량: ${ch.charTarget.toLocaleString()}자 이상
+- TTS 직접 복사 가능한 순수 텍스트
+- 구분선(---), 소제목 헤더, 괄호 지시글 일절 금지
+- 오직 말로 읽힐 텍스트만
+- 첫 문장: 강력한 훅 (${ch.hook})
+- 중간: 핵심 정보 3~5개
+- 마지막: CTA (${ch.cta})
+- 자막용 줄바꿈만 허용
+
+대본만 출력하세요. 다른 설명 없이.`;
+  return callClaude(claudeKey, prompt, 4000);
+}
+
+async function generateShorts(claudeKey, topic, longform) {
+  const ch = CH[selectedCh];
+  const SHORTS_ENDING = '\n자세한 내용은 왼쪽 하단 관련동영상 클릭해서 본 영상에서 확인해주세요.';
+
+  const promptA = `당신은 "${ch.name}" 유튜브 숏츠 전문 대본 작가입니다.
+
+[채널 설정]
+- 타겟: ${ch.target}
+- 톤: ${ch.tone}
+- 금지: ${ch.forbidden}
+
+[롱폼 대본 앞부분]
+${longform.substring(0, 800)}
+
+[임무]
+위 롱폼 대본 앞부분의 훅을 활용해 30초 숏츠A 대본을 작성하세요.
+
+필수:
+- 첫 3초: 강한 훅 (롱폼과 같거나 더 강하게)
+- 전체 길이: 약 150~200자 (30초 기준)
+- 마지막 문장: 반드시 "자세한 내용은 왼쪽 하단 관련동영상 클릭해서 본 영상에서 확인해주세요."
+- TTS용 순수 텍스트, 지시글 금지
+- 자막용 줄바꿈만
+
+대본만 출력하세요.`;
+
+  const promptB = `당신은 "${ch.name}" 유튜브 숏츠 전문 대본 작가입니다.
+
+[채널 설정]
+- 타겟: ${ch.target}
+- 톤: ${ch.tone}
+- 금지: ${ch.forbidden}
+
+[롱폼 대본 핵심 요약 부분]
+${longform.substring(Math.floor(longform.length*0.5), Math.floor(longform.length*0.75))}
+
+[임무]
+위 롱폼 대본 중반부의 핵심 내용을 활용해 30초 숏츠B 대본을 작성하세요.
+
+필수:
+- 첫 3초: 강한 훅 (핵심 정보나 궁금증 유발)
+- 전체 길이: 약 150~200자 (30초 기준)
+- 마지막 문장: 반드시 "자세한 내용은 왼쪽 하단 관련동영상 클릭해서 본 영상에서 확인해주세요."
+- TTS용 순수 텍스트, 지시글 금지
+- 자막용 줄바꿈만
+
+대본만 출력하세요.`;
+
+  const [sA, sB] = await Promise.all([
+    callClaude(claudeKey, promptA, 800),
+    callClaude(claudeKey, promptB, 800)
+  ]);
+  return [sA, sB];
+}
+
+async function generateMeta(claudeKey, topic, longform, compAnalysis) {
+  const ch = CH[selectedCh];
+  const prompt = `채널 "${ch.name}", 주제 "${topic}", 타겟 "${ch.target}"
+
+[대본 요약]
+${longform.substring(0, 500)}...
+
+[경쟁채널 분석]
+${compAnalysis.substring(0, 300)}
+
+아래 JSON만 출력 (다른 텍스트 없이):
+{
+  "longform": {
+    "titles": [
+      {"title":"검색최적화형 제목 (20자 이내)","type":"검색최적화"},
+      {"title":"감성/클릭유도형 제목 (20자 이내)","type":"클릭유도"},
+      {"title":"궁금증유발형 제목 (20자 이내)","type":"궁금증유발"}
+    ],
+    "description": "SEO 최적화 설명글 500자. 첫 1~2줄 핵심 키워드. 본문 영상 내용 요약. 마지막 CTA. 경쟁채널 키워드 포함.",
+    "tags": "쉼표구분 태그 500자, 30개 이상, 경쟁채널 키워드 포함",
+    "pinned_comment": "고정댓글 쉼표구분 500자"
+  },
+  "shortsA": {
+    "titles": [
+      {"title":"숏츠A 제목 옵션1 (15자 이내)","type":"훅형"},
+      {"title":"숏츠A 제목 옵션2 (15자 이내)","type":"질문형"},
+      {"title":"숏츠A 제목 옵션3 (15자 이내)","type":"충격형"}
+    ],
+    "description": "숏츠A SEO 설명 500자",
+    "tags": "숏츠A 태그 쉼표구분 500자"
+  },
+  "shortsB": {
+    "titles": [
+      {"title":"숏츠B 제목 옵션1 (15자 이내)","type":"훅형"},
+      {"title":"숏츠B 제목 옵션2 (15자 이내)","type":"정보형"},
+      {"title":"숏츠B 제목 옵션3 (15자 이내)","type":"반전형"}
+    ],
+    "description": "숏츠B SEO 설명 500자",
+    "tags": "숏츠B 태그 쉼표구분 500자"
+  }
+}`;
+  return callClaudeJSON(claudeKey, prompt);
+}
+
+async function generateImages(claudeKey, topic, longform, shortsA, shortsB) {
+  const ch = CH[selectedCh];
+  const prompt = `채널 "${ch.name}", 주제 "${topic}"
+
+[롱폼 대본 일부]
+${longform.substring(0,600)}
+
+아래 JSON만 출력:
+{
+  "longform": [
+    {"num":1,"scene":"장면 설명","prompt":"Hyperrealistic photo, present day South Korea, [내용], natural lighting, Korean senior adults, --no vintage, --no old-fashioned"},
+    {"num":2,"scene":"장면 설명","prompt":"..."},
+    {"num":3,"scene":"장면 설명","prompt":"..."},
+    {"num":4,"scene":"장면 설명","prompt":"..."},
+    {"num":5,"scene":"장면 설명","prompt":"..."},
+    {"num":6,"scene":"장면 설명","prompt":"..."},
+    {"num":7,"scene":"장면 설명","prompt":"..."},
+    {"num":8,"scene":"장면 설명","prompt":"..."}
+  ],
+  "shortsA": [
+    {"num":1,"scene":"장면 설명","prompt":"Hyperrealistic photo, present day South Korea, [내용], natural lighting, --no vintage"},
+    {"num":2,"scene":"장면 설명","prompt":"..."}
+  ],
+  "shortsB": [
+    {"num":1,"scene":"장면 설명","prompt":"..."},
+    {"num":2,"scene":"장면 설명","prompt":"..."}
+  ]
+}`;
+  return callClaudeJSON(claudeKey, prompt);
+}
+
+async function generateThumb(claudeKey, topic, meta) {
+  const selectedTitle = meta?.longform?.titles?.[0]?.title || topic;
+  const prompt = `유튜브 썸네일 문구를 만들어주세요.
+
+영상 주제: ${topic}
+영상 제목: ${selectedTitle}
+
+규칙:
+- 3줄 구성
+- 각 줄 3단어 이내
+- 임팩트 있고 클릭을 유발하는 문구
+- 시니어 타겟에 맞는 관심사 자극
+- 한국어
+
+아래 JSON만 출력:
+{"lines": ["줄1 (3단어 이내)", "줄2 (3단어 이내)", "줄3 (3단어 이내)"]}`;
+  return callClaudeJSON(claudeKey, prompt);
+}
+
+// ═══════════════════════════════════════════════════════════
+// REGEN FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+async function regenDescription(target) {
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  const hint = document.getElementById(`regenHint-${target}`)?.value?.trim() || '';
+  const ch = CH[selectedCh];
+  const topic = document.getElementById('topicInput').value.trim();
+
+  const contentMap = { longform: generatedData.longform, shortsA: generatedData.shortsA, shortsB: generatedData.shortsB };
+  const script = contentMap[target] || '';
+
+  const prompt = `채널 "${ch.name}", 주제 "${topic}" 의 ${target} 영상 설명글을 새로 작성해주세요.
+
+${hint ? `반드시 포함할 내용: ${hint}` : ''}
+
+규칙:
+- SEO 최적화 500자
+- 첫 1~2줄 핵심 키워드 자연스럽게 포함
+- 영상 핵심 내용 + 시청자 혜택 중심
+- 마지막 줄: 구독/좋아요 CTA
+- 경쟁채널 키워드 포함
+- 타겟: ${ch.target}
+
+[대본 일부]
+${script.substring(0,400)}
+
+설명글 텍스트만 출력하세요.`;
+
+  showToast('⏳ 설명글 재생성 중...');
+  try {
+    const result = await callClaude(claudeKey, prompt, 800);
+    const bodyEl = document.getElementById(`desc-body-${target}`);
+    if (bodyEl) bodyEl.textContent = result;
+    if (target === 'longform') generatedData.meta.longform.description = result;
+    else if (target === 'shortsA') generatedData.meta.shortsA.description = result;
+    else generatedData.meta.shortsB.description = result;
+    showToast('✅ 설명글 재생성 완료');
+  } catch(e) { showToast('❌ 재생성 실패: ' + e.message); }
+}
+
+async function regenTags(target) {
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  const ch = CH[selectedCh];
+  const topic = document.getElementById('topicInput').value.trim();
+
+  const prompt = `채널 "${ch.name}", 주제 "${topic}", 타겟 "${ch.target}"
+유튜브 태그를 새로 생성해주세요.
+쉼표로 구분, 500자, 30개 이상, 채널 타겟 실제 검색어 기반, 경쟁채널 키워드 포함.
+태그 텍스트만 출력하세요.`;
+
+  showToast('⏳ 태그 재생성 중...');
+  try {
+    const result = await callClaude(claudeKey, prompt, 600);
+    const el = document.getElementById(`tags-body-${target}`);
+    if (el) {
+      el.innerHTML = result.split(',').map(t=>`<span class="tag-chip">${t.trim()}</span>`).join('');
+    }
+    if (target === 'longform') generatedData.meta.longform.tags = result;
+    else if (target === 'shortsA') generatedData.meta.shortsA.tags = result;
+    else generatedData.meta.shortsB.tags = result;
+    showToast('✅ 태그 재생성 완료');
+  } catch(e) { showToast('❌ 재생성 실패: ' + e.message); }
+}
+
+async function regenThumb() {
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  const hint = document.getElementById('thumbHint')?.value?.trim() || '';
+  const topic = document.getElementById('topicInput').value.trim();
+  const ch = CH[selectedCh];
+
+  const prompt = `유튜브 썸네일 문구 재생성.
+주제: ${topic}, 채널: ${ch.name}
+${hint ? `반드시 포함: ${hint}` : ''}
+3줄, 각 줄 3단어 이내, 임팩트·클릭유발.
+JSON만: {"lines":["줄1","줄2","줄3"]}`;
+
+  showToast('⏳ 썸네일 문구 재생성 중...');
+  try {
+    const result = await callClaudeJSON(claudeKey, prompt);
+    if (result?.lines) {
+      generatedData.thumb = result;
+      const wrap = document.getElementById('thumb-lines');
+      if (wrap) wrap.innerHTML = result.lines.map(l=>`<div class="thumb-line">${l}</div>`).join('');
+    }
+    showToast('✅ 썸네일 문구 재생성 완료');
+  } catch(e) { showToast('❌ 재생성 실패: ' + e.message); }
+}
+
+function selectTitle(target, idx) {
+  selectedTitles[target] = idx;
+  document.querySelectorAll(`.title-opt-${target}`).forEach((el,i) => {
+    el.classList.toggle('selected', i===idx);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════════════════
+function renderResults() {
+  const d = generatedData;
+  const tabs = ['롱폼', '숏츠 A', '숏츠 B'];
+  if (genMode === 'full') tabs.unshift('팩트체크');
+
+  document.getElementById('tabBar').innerHTML = tabs.map((t,i) =>
+    `<button class="tab ${i===0?'active':''}" onclick="switchTab(${i})">${t}</button>`
+  ).join('');
+
+  let panesHtml = '';
+
+  // 팩트체크 탭 (전체 모드)
+  if (genMode === 'full') {
+    panesHtml += `<div class="tab-pane show" id="pane-0">
+      ${makeBlock('📋 팩트체크 결과', d.factcheck||'', false, false)}
+    </div>`;
+  }
+
+  const offset = genMode === 'full' ? 1 : 0;
+
+  // 롱폼 탭
+  panesHtml += `<div class="tab-pane ${offset===0?'show':''}" id="pane-${offset}">
+    ${makeTitleBlock('longform', d.meta?.longform?.titles||[])}
+    ${makeBlock('📄 롱폼 대본', d.longform||'', true, false, `${(d.longform||'').length.toLocaleString()}자`)}
+    ${makeDescBlock('longform', d.meta?.longform?.description||'')}
+    ${makeTagsBlock('longform', d.meta?.longform?.tags||'')}
+    ${makePinnedBlock(d.meta?.longform?.pinned_comment||'')}
+    ${makeImagesBlock('롱폼 이미지 프롬프트 (8장)', d.images?.longform||[])}
+    ${makeThumbBlock(d.thumb)}
+  </div>`;
+
+  // 숏츠A 탭
+  panesHtml += `<div class="tab-pane" id="pane-${offset+1}">
+    ${makeTitleBlock('shortsA', d.meta?.shortsA?.titles||[])}
+    ${makeBlock('🎬 숏츠 A 대본 (앞부분 훅 기반)', d.shortsA||'', true, false)}
+    ${makeDescBlock('shortsA', d.meta?.shortsA?.description||'')}
+    ${makeTagsBlock('shortsA', d.meta?.shortsA?.tags||'')}
+    ${makeImagesBlock('숏츠 A 이미지 프롬프트 (2장)', d.images?.shortsA||[])}
+  </div>`;
+
+  // 숏츠B 탭
+  panesHtml += `<div class="tab-pane" id="pane-${offset+2}">
+    ${makeTitleBlock('shortsB', d.meta?.shortsB?.titles||[])}
+    ${makeBlock('🎬 숏츠 B 대본 (핵심 요약 기반)', d.shortsB||'', true, false)}
+    ${makeDescBlock('shortsB', d.meta?.shortsB?.description||'')}
+    ${makeTagsBlock('shortsB', d.meta?.shortsB?.tags||'')}
+    ${makeImagesBlock('숏츠 B 이미지 프롬프트 (2장)', d.images?.shortsB||[])}
+  </div>`;
+
+  document.getElementById('tabPanes').innerHTML = panesHtml;
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('show', i===idx));
+}
+
+// ── Block builders ──────────────────────────────────────────
+
+function makeBlock(title, content, copyable=true, regen=false, badge='') {
+  const id = 'blk-' + Math.random().toString(36).slice(2,7);
+  return `<div class="content-block">
+    <div class="block-header">
+      <div class="block-title">${title} ${badge?`<span style="font-size:10px;color:var(--text3);font-weight:400;font-family:var(--mono)">${badge}</span>`:''}
+      </div>
+      <div class="block-actions">
+        ${copyable?`<button class="btn sm" onclick="copyText(document.getElementById('${id}').innerText)">복사</button>`:''}
+      </div>
+    </div>
+    <div class="block-body" id="${id}">${escHtml(content)}</div>
+  </div>`;
+}
+
+function makeTitleBlock(target, titles) {
+  const label = target==='longform'?'롱폼':target==='shortsA'?'숏츠 A':'숏츠 B';
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">🏷️ ${label} 제목 (1개 선택)</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copySelectedTitle('${target}')">선택 제목 복사</button>
+      </div>
+    </div>
+    <div style="padding:14px">
+      <div class="title-option-list">
+        ${titles.map((t,i)=>`
+          <div class="title-option title-opt-${target} ${i===0?'selected':''}" onclick="selectTitle('${target}',${i})">
+            <div class="title-option-radio"></div>
+            <span class="title-option-type">${t.type||''}</span>
+            <span class="title-option-text">${escHtmlInline(t.title||'')}</span>
+            <button class="btn sm" onclick="event.stopPropagation();copyText('${esc(t.title||'')}')">복사</button>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function makeDescBlock(target, desc) {
+  const id = `desc-body-${target}`;
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">📝 설명글 (SEO)</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copyText(document.getElementById('${id}').innerText)">복사</button>
+      </div>
+    </div>
+    <div class="block-body" id="${id}">${escHtml(desc)}</div>
+    <div class="regen-row">
+      <input class="regen-input" id="regenHint-${target}" placeholder="필수 포함 내용 입력 (선택)">
+      <button class="btn accent" onclick="regenDescription('${target}')">↻ 다시 만들기</button>
+    </div>
+  </div>`;
+}
+
+function makeTagsBlock(target, tags) {
+  const id = `tags-body-${target}`;
+  const chips = tags.split(',').map(t=>`<span class="tag-chip">${t.trim()}</span>`).join('');
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">🔖 태그 & 숨은댓글용 태그</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copyText('${esc(tags)}')">복사</button>
+        <button class="btn accent sm" onclick="regenTags('${target}')">↻ 다시</button>
+      </div>
+    </div>
+    <div class="tags-wrap" id="${id}">${chips}</div>
+  </div>`;
+}
+
+function makePinnedBlock(pinned) {
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">📌 숨은댓글 (고정댓글용)</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copyText('${esc(pinned)}')">복사</button>
+      </div>
+    </div>
+    <div class="tags-wrap">${pinned.split(',').map(t=>`<span class="tag-chip">${t.trim()}</span>`).join('')}</div>
+  </div>`;
+}
+
+function makeImagesBlock(title, images) {
+  if (!images || !images.length) return '';
+  const safeId = title.replace(/[^a-z0-9]/gi,'');
+  // 전역 변수에 저장
+  window['imgdata_' + safeId] = images;
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">🖼️ ${title}</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copyAllImages('${title}')">전체 복사</button>
+        <button class="btn sm" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent);" onclick="startSequential('${title}', window['imgdata_${safeId}'])">▶ 순서대로 제미나이</button>
+      </div>
+    </div>
+    <div class="img-grid">
+      ${images.map((img,i)=>`
+        <div class="img-card" id="imgcard-${title.replace(/[^a-z0-9]/gi,'')}-${i}">
+          <div class="img-card-num">씬 ${img.num} — ${img.scene||''}</div>
+          <div class="img-card-text">${escHtmlInline(img.prompt||'')}</div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn sm" onclick="copyText('${esc(img.prompt||'')}')">📋 복사</button>
+            <button class="btn sm" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent);" onclick="copyAndOpenGemini('${esc(img.prompt||'')}')">✨ 복사+제미나이</button>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function makeThumbBlock(thumb) {
+  const lines = thumb?.lines || ['—', '—', '—'];
+  return `<div class="content-block" style="margin-bottom:14px">
+    <div class="block-header">
+      <div class="block-title">🖼️ 썸네일 문구 (롱폼)</div>
+      <div class="block-actions">
+        <button class="btn sm" onclick="copyText(document.getElementById('thumb-lines').innerText)">복사</button>
+      </div>
+    </div>
+    <div class="thumb-lines" id="thumb-lines">
+      ${lines.map(l=>`<div class="thumb-line">${escHtmlInline(l)}</div>`).join('')}
+    </div>
+    <div class="regen-row">
+      <input class="regen-input" id="thumbHint" placeholder="원하는 키워드나 방향 입력 (선택)">
+      <button class="btn accent" onclick="regenThumb()">↻ 다시 만들기</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// COPY / SAVE
+// ═══════════════════════════════════════════════════════════
+
+function copySelectedTitle(target) {
+  const idx = selectedTitles[target] ?? 0;
+  const titles = generatedData.meta?.[target]?.titles || [];
+  if (titles[idx]) copyText(titles[idx].title);
+}
+
+function copyAndOpenGemini(prompt) {
+  navigator.clipboard.writeText(prompt).then(() => {
+    window.open('https://gemini.google.com', '_blank');
+  }).catch(() => {
+    window.open('https://gemini.google.com', '_blank');
+  });
+}
+
+let seqImages = [];
+let seqIndex = 0;
+let seqTitle = '';
+
+function startSequential(title, images) {
+  if (!images || !images.length) return;
+  seqImages = images;
+  seqIndex = 0;
+  seqTitle = title;
+  showSeqModal();
+}
+
+function showSeqModal() {
+  const img = seqImages[seqIndex];
+  if (!img) { closeSeqModal(); return; }
+  
+  let modal = document.getElementById('seqModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'seqModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    document.body.appendChild(modal);
+  }
+  
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="font-size:11px;color:#999;font-family:monospace;margin-bottom:8px;">${seqTitle} — ${seqIndex+1}/${seqImages.length}</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;">씬 ${img.num} — ${img.scene||''}</div>
+      <div style="background:#f5f3ee;border-radius:8px;padding:14px;font-size:12px;line-height:1.7;color:#333;margin-bottom:16px;">${img.prompt||''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="copyAndOpenGeminiSeq()" style="flex:1;background:#c8601a;color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✨ 복사 + 제미나이 열기</button>
+        ${seqIndex+1 < seqImages.length ? `<button onclick="seqNext()" style="background:#f5f3ee;border:1px solid #ccc;padding:11px 16px;border-radius:8px;font-size:13px;cursor:pointer;">다음 →</button>` : ''}
+        <button onclick="closeSeqModal()" style="background:#f5f3ee;border:1px solid #ccc;padding:11px 16px;border-radius:8px;font-size:13px;cursor:pointer;">✕ 닫기</button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#999;text-align:center;">제미나이에 붙여넣기 후 → 다음 버튼으로 넘어가세요</div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+function copyAndOpenGeminiSeq() {
+  const img = seqImages[seqIndex];
+  if (!img) return;
+  navigator.clipboard.writeText(img.prompt||'').then(() => {
+    window.open('https://gemini.google.com', '_blank');
+  });
+}
+
+function seqNext() {
+  seqIndex++;
+  if (seqIndex >= seqImages.length) { closeSeqModal(); return; }
+  showSeqModal();
+}
+
+function closeSeqModal() {
+  const modal = document.getElementById('seqModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function copyAllImages(title) {
+  const allImgs = [...(generatedData.images?.longform||[]), ...(generatedData.images?.shortsA||[]), ...(generatedData.images?.shortsB||[])];
+  const text = allImgs.map(i=>`[씬 ${i.num}] ${i.scene}\n${i.prompt}`).join('\n\n');
+  copyText(text);
+}
+
+function expandAll() {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.add('active'));
+}
+
+function buildFullDocument() {
+  const d = generatedData;
+  const ch = CH[selectedCh];
+  const topic = document.getElementById('topicInput').value.trim();
+  const date = getTodayStr();
+  const lines = [];
+
+  lines.push(`═════════════════════════════════════════`);
+  lines.push(`유튜브 대본 풀패키지`);
+  lines.push(`날짜: ${date}  채널: ${ch.name}  주제: ${topic}`);
+  lines.push(`═════════════════════════════════════════`);
+  lines.push('');
+
+  // 롱폼
+  const lfTitle = d.meta?.longform?.titles?.[selectedTitles.longform??0]?.title || '';
+  lines.push(`【 롱폼 】`);
+  lines.push(`제목: ${lfTitle}`);
+  lines.push('─────────────────────────────────────────');
+  lines.push(d.longform || '');
+  lines.push('');
+  lines.push(`[설명글]\n${d.meta?.longform?.description||''}`);
+  lines.push(`\n[태그]\n${d.meta?.longform?.tags||''}`);
+  lines.push(`\n[숨은댓글]\n${d.meta?.longform?.pinned_comment||''}`);
+  lines.push('');
+
+  // 숏츠A
+  const saTitle = d.meta?.shortsA?.titles?.[selectedTitles.shortsA??0]?.title || '';
+  lines.push(`【 숏츠 A 】`);
+  lines.push(`제목: ${saTitle}`);
+  lines.push('─────────────────────────────────────────');
+  lines.push(d.shortsA || '');
+  lines.push(`\n[설명글]\n${d.meta?.shortsA?.description||''}`);
+  lines.push(`\n[태그]\n${d.meta?.shortsA?.tags||''}`);
+  lines.push('');
+
+  // 숏츠B
+  const sbTitle = d.meta?.shortsB?.titles?.[selectedTitles.shortsB??0]?.title || '';
+  lines.push(`【 숏츠 B 】`);
+  lines.push(`제목: ${sbTitle}`);
+  lines.push('─────────────────────────────────────────');
+  lines.push(d.shortsB || '');
+  lines.push(`\n[설명글]\n${d.meta?.shortsB?.description||''}`);
+  lines.push(`\n[태그]\n${d.meta?.shortsB?.tags||''}`);
+  lines.push('');
+
+  // 이미지 프롬프트
+  lines.push(`【 이미지 프롬프트 】`);
+  lines.push('[롱폼 8장]');
+  (d.images?.longform||[]).forEach(i => lines.push(`씬${i.num}: ${i.prompt}`));
+  lines.push('\n[숏츠A 2장]');
+  (d.images?.shortsA||[]).forEach(i => lines.push(`씬${i.num}: ${i.prompt}`));
+  lines.push('\n[숏츠B 2장]');
+  (d.images?.shortsB||[]).forEach(i => lines.push(`씬${i.num}: ${i.prompt}`));
+  lines.push('');
+
+  // 썸네일
+  lines.push(`【 썸네일 문구 】`);
+  (d.thumb?.lines||[]).forEach(l => lines.push(l));
+
+  return lines.join('\n');
+}
+
+async function copyAllContent() {
+  const text = buildFullDocument();
+  await copyText(text);
+  showToast('✅ 전체 내용 복사됨');
+}
+
+function saveAsTxt() {
+  const topic = document.getElementById('topicInput').value.trim().replace(/\s+/g,'_').substring(0,20);
+  const filename = `${getTodayStr()}_${CH[selectedCh]?.name}_${topic}.txt`;
+  const text = buildFullDocument();
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`💾 저장됨: ${filename}`);
+}
+
+async function openDocs() {
+  const text = buildFullDocument();
+  await copyText(text);
+  window.open('https://docs.google.com/document/create','_blank');
+  const filename = `${getTodayStr()}_${CH[selectedCh]?.name}`;
+  showToast(`📄 새 Docs 탭 열림\n① Ctrl+V 붙여넣기\n② 제목: ${filename}`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function escHtmlInline(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function esc(str) { return String(str||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+}
+
+function showToast(msg, dur=3000) {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg.replace(/\n/g,'<br>');
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display='none'; }, dur);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOPIC SUGGESTION
+// ═══════════════════════════════════════════════════════════
+
+const TOPIC_POOLS = {
+  dundum: [
+    '노인 무릎 통증 자연 치유법','기초연금 수령 조건 총정리',
+    '60대 근육 키우는 운동법','노인 장기요양등급 신청 방법',
+    '당뇨 합병증 예방하는 식단','치매 예방 두뇌 훈련법',
+    '혼자 사는 노인 안전 지원금','고혈압 낮추는 생활 습관',
+    '노인 일자리 신청 방법 2025','백내장 수술비 건강보험 적용'
+  ],
+  eunhye: [
+    '며느리가 시어머니 생활비를 끊었어요','남편이 퇴직 후 완전히 변했습니다',
+    '아들이 며느리 편만 드는 이유','시어머니와 함께 살면서 후회한 것들',
+    '황혼이혼을 결심한 이유','손주 육아 때문에 내 노후가 없어졌어요',
+    '재혼한 남편의 전처 자식들','며느리 몰래 아들에게 돈을 줬더니',
+    '딸과 아들 중 누가 더 효도하나','노후에 혼자 사는 게 더 나은 이유'
+  ]
+};
+
+async function suggestTopics() {
+  if (!selectedCh) { showToast('먼저 채널을 선택해주세요!'); return; }
+  if (selectedCh === 'dundum' && !selectedCategory) {
+    showToast('요일/카테고리를 먼저 선택해주세요!'); return;
+  }
+
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  const wrap = document.getElementById('topicSuggestWrap');
+  const chipsEl = document.getElementById('topicChips');
+  const btn = document.getElementById('suggestBtn');
+
+  // 든든백세: 카테고리별 기본 주제 즉시 표시
+  if (selectedCh === 'dundum') {
+    const cat = DUNDUM_CATEGORIES.find(c => c.id === selectedCategory);
+    if (cat) {
+      wrap.classList.add('show');
+      chipsEl.innerHTML = cat.topics.map(t =>
+        `<div class="topic-chip" onclick="selectTopic(this,'${esc(t)}')">${t}</div>`
+      ).join('');
+    }
+  } else {
+    // 은혜여사: 기본 풀
+    wrap.classList.add('show');
+    chipsEl.innerHTML = TOPIC_POOLS['eunhye'].map(t =>
+      `<div class="topic-chip" onclick="selectTopic(this,'${esc(t)}')">${t}</div>`
+    ).join('');
+  }
+
+  // Claude API 있으면 AI 트렌드 주제로 교체
+  if (claudeKey) {
+    btn.disabled = true;
+    btn.textContent = '⏳ AI 트렌드 주제 생성 중...';
+    try {
+      const ch = CH[selectedCh];
+      const catInfo = selectedCategory ? DUNDUM_CATEGORIES.find(c => c.id === selectedCategory) : null;
+      const catCtx = catInfo ? `\n카테고리: ${catInfo.name} (${catInfo.desc}) — ${catInfo.day} 업로드\n위 카테고리 범위 내에서만 제안할 것.` : '';
+
+      const prompt = `유튜브 채널 "${ch.name}" (타겟: ${ch.target}) 에서 지금 가장 조회수가 잘 나올 영상 주제 10개를 추천해주세요.${catCtx}
+
+조건:
+- 10~20자 이내 구체적인 주제어
+- 타겟이 실제로 검색할 만한 주제
+- 시의성 있는 최신 트렌드 반영
+
+JSON만 출력: {"topics":["주제1","주제2","주제3","주제4","주제5","주제6","주제7","주제8","주제9","주제10"]}`;
+
+      const result = await callClaudeJSON(claudeKey, prompt);
+      if (result?.topics) {
+        chipsEl.innerHTML = result.topics.map(t =>
+          `<div class="topic-chip" onclick="selectTopic(this,'${esc(t)}')">${t}</div>`
+        ).join('');
+        showToast('✅ AI 트렌드 주제 10개 생성 완료');
+      }
+    } catch(e) {
+      showToast('⚠️ API 오류 — 기본 주제 표시 중');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✦ 주제 10개 뽑기';
+    }
+  }
+}
+
+function selectTopic(el, topic) {
+  document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  // 주제어 입력란 두 곳에 모두 자동 입력
+  document.getElementById('topicInput').value = topic;
+  document.getElementById('kwTopicInput').value = topic;
+  showToast(`✅ 주제 선택됨: ${topic}`);
+  // STEP 3 으로 부드럽게 스크롤
+  setTimeout(() => document.getElementById('topicInput').scrollIntoView({behavior:'smooth', block:'center'}), 200);
+}
+
+// ═══════════════════════════════════════════════════════════
+// KEYWORD RECOMMENDATION (소싱용)
+// ═══════════════════════════════════════════════════════════
+
+async function suggestKeywords() {
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  const topic = document.getElementById('kwTopicInput').value.trim();
+  if (!topic) { showToast('주제어를 먼저 입력해주세요.'); return; }
+
+  showToast('⏳ 소싱 키워드 생성 중...');
+
+  if (!claudeKey) {
+    renderKeywordTable(generateBasicKeywords(topic));
+    showToast('💡 Claude API 키 입력 시 더 정확한 키워드 생성 가능');
+    return;
+  }
+
+  const ch = selectedCh ? CH[selectedCh] : null;
+  const prompt = `유튜브 영상 소싱을 위한 검색 키워드를 생성해주세요.
+
+주제: "${topic}"
+${ch ? `채널 타겟: ${ch.target}` : ''}
+
+조건:
+- 실제 유튜브에서 검색 시 관련 소스 영상이 잘 나오는 키워드
+- 한국어·영어 각 10개
+- 구체적이고 검색 의도가 명확한 키워드
+- 다양한 각도 (증상, 원인, 해결, 사례, 비교 등)
+
+JSON만 출력:
+{"keywords":[
+  {"ko":"키워드1","en":"keyword 1"},
+  {"ko":"키워드2","en":"keyword 2"},
+  {"ko":"키워드3","en":"keyword 3"},
+  {"ko":"키워드4","en":"keyword 4"},
+  {"ko":"키워드5","en":"keyword 5"},
+  {"ko":"키워드6","en":"keyword 6"},
+  {"ko":"키워드7","en":"keyword 7"},
+  {"ko":"키워드8","en":"keyword 8"},
+  {"ko":"키워드9","en":"keyword 9"},
+  {"ko":"키워드10","en":"keyword 10"}
+]}`;
+
+  try {
+    const result = await callClaudeJSON(claudeKey, prompt);
+    if (result?.keywords) {
+      renderKeywordTable(result.keywords);
+      showToast('✅ 소싱 키워드 10개 생성 완료');
+    } else {
+      renderKeywordTable(generateBasicKeywords(topic));
+    }
+  } catch(e) {
+    renderKeywordTable(generateBasicKeywords(topic));
+    showToast('⚠️ API 오류 — 기본 키워드 표시');
+  }
+}
+
+function generateBasicKeywords(topic) {
+  const sfx_ko = ['방법','원인','증상','예방','해결','비법','총정리','2025','후기','사례'];
+  const sfx_en = ['tips','how to','guide','prevention','treatment','secrets','complete guide','2025','experience','cases'];
+  return sfx_ko.map((s,i) => ({ ko:`${topic} ${s}`, en:`${topic} ${sfx_en[i]}` }));
+}
+
+function renderKeywordTable(keywords) {
+  const tbody = document.getElementById('kwTableBody');
+  const wrap = document.getElementById('kwTableWrap');
+  tbody.innerHTML = keywords.map((kw,i) => {
+    const koQ = encodeURIComponent(kw.ko);
+    const enQ = encodeURIComponent(kw.en);
+    return `<tr>
+      <td style="color:var(--text3);font-family:var(--mono);font-size:11px;width:30px">${i+1}</td>
+      <td style="font-weight:600">${escHtmlInline(kw.ko)}</td>
+      <td style="color:var(--text2)">${escHtmlInline(kw.en)}</td>
+      <td style="white-space:nowrap">
+        <span class="kw-link" onclick="window.open('https://www.youtube.com/results?search_query=${koQ}','_blank')">🇰🇷 KO</span>
+        &nbsp;·&nbsp;
+        <span class="kw-link" onclick="window.open('https://www.youtube.com/results?search_query=${enQ}','_blank')">🌐 EN</span>
+      </td>
+    </tr>`;
+  }).join('');
+  wrap.style.display = 'block';
+}
+</script>
+</body>
+</html>
