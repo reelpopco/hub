@@ -22,10 +22,13 @@
   .links-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
   .link-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); transition:all 0.18s; position:relative; }
   .link-card:hover { border-color:var(--accent); transform:translateY(-1px); box-shadow:0 4px 20px rgba(232,255,71,0.08); }
+  .link-card.featured { border-color:rgba(200,169,110,0.4); }
+  .link-card.featured:hover { border-color:#c8a96e; box-shadow:0 4px 20px rgba(200,169,110,0.15); }
   .link-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:rgba(255,255,255,0.05); }
   .link-info { flex:1; min-width:0; }
   .link-name { font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .link-desc { font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge { display:inline-block; font-size:9px; background:rgba(200,169,110,0.2); color:#c8a96e; border-radius:3px; padding:1px 5px; margin-left:4px; font-weight:800; letter-spacing:0.5px; vertical-align:middle; }
   .delete-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:4px; border-radius:4px; opacity:0; transition:all 0.15s; flex-shrink:0; }
   .link-card:hover .delete-btn { opacity:1; }
   .delete-btn:hover { color:var(--red); background:rgba(255,71,87,0.1); }
@@ -65,6 +68,7 @@
     <div class="form-row">
       <label>카테고리</label>
       <select id="inp-cat">
+        <option value="작업실">작업실</option>
         <option value="AI">AI</option>
         <option value="구글">구글</option>
         <option value="이메일">이메일</option>
@@ -85,9 +89,12 @@
 </div>
 
 <script>
-const CAT_ORDER = ['AI','구글','이메일','유튜브','영상','음악','블로그','전자책','앱','사주'];
+const CAT_ORDER = ['작업실','AI','구글','이메일','유튜브','영상','음악','블로그','전자책','앱','사주'];
 
 const DEFAULT_LINKS = [
+  // ===== 작업실 =====
+  {id:'ws_musicase',name:'음악카세 작업실',url:'musicase-suno.html',desc:'트렌드분석·Suno·메타·숏츠·핀터레스트',icon:'🎵',cat:'작업실',color:'#1a1520',featured:true},
+
   // AI
   {id:'claude',name:'Claude',url:'https://claude.ai',desc:'Anthropic AI',icon:'🤖',cat:'AI',color:'#1a1a2a'},
   {id:'gemini',name:'Gemini',url:'https://gemini.google.com',desc:'구글 AI',icon:'✨',cat:'AI',color:'#1a1a2a'},
@@ -135,7 +142,7 @@ const DEFAULT_LINKS = [
 
   // 음악
   {id:'suno',name:'Suno',url:'https://suno.com',desc:'AI 음악 생성',icon:'🎵',cat:'음악',color:'#2a1a2a'},
-  {id:'music_gen',name:'음악생성기',url:'suno-generator.html',desc:'MUSICASE 음악 제작 툴',icon:'🎼',cat:'음악',color:'#2a1a2a'},
+  {id:'music_gen',name:'음악생성기 (구버전)',url:'suno-generator.html',desc:'MUSICASE 음악 제작 툴',icon:'🎼',cat:'음악',color:'#2a1a2a'},
 
   // 블로그
   {id:'naver_blog',name:'네이버 블로그',url:'https://blog.naver.com/reelpop',desc:'네이버 블로그 보기',icon:'📝',cat:'블로그',color:'#1a2a1a'},
@@ -169,10 +176,12 @@ const DEFAULT_LINKS = [
 ];
 
 function loadLinks() {
-  try { const s = localStorage.getItem('reelLinks_v2'); return s ? JSON.parse(s) : DEFAULT_LINKS; }
-  catch { return DEFAULT_LINKS; }
+  try {
+    const s = localStorage.getItem('reelLinks_v3');
+    return s ? JSON.parse(s) : DEFAULT_LINKS;
+  } catch { return DEFAULT_LINKS; }
 }
-function saveLinks(links) { localStorage.setItem('reelLinks_v2', JSON.stringify(links)); }
+function saveLinks(links) { localStorage.setItem('reelLinks_v3', JSON.stringify(links)); }
 let links = loadLinks();
 
 function render() {
@@ -188,13 +197,13 @@ function render() {
     catLinks.forEach(link => {
       const card = document.createElement('a');
       card.href = link.url;
-      card.target = link.url.startsWith('file://') ? '_self' : '_blank';
-      card.className = 'link-card';
+      card.target = link.url.startsWith('http') ? '_blank' : '_self';
+      card.className = 'link-card' + (link.featured ? ' featured' : '');
       card.style.background = link.color || '#1c1c1c';
       card.innerHTML = `
         <div class="link-icon">${link.icon||'🔗'}</div>
         <div class="link-info">
-          <div class="link-name">${link.name}</div>
+          <div class="link-name">${link.name}${link.featured ? '<span class="badge">NEW</span>' : ''}</div>
           <div class="link-desc">${link.desc||''}</div>
         </div>
         <button class="delete-btn" onclick="deleteLink(event,'${link.id}')">✕</button>`;
@@ -224,7 +233,13 @@ function saveLink() {
   const name = document.getElementById('inp-name').value.trim();
   const url = document.getElementById('inp-url').value.trim();
   if (!name || !url) { alert('이름과 URL은 필수예요!'); return; }
-  links.push({ id:'link_'+Date.now(), name, url, desc:document.getElementById('inp-desc').value.trim(), icon:document.getElementById('inp-icon').value.trim()||'🔗', cat:document.getElementById('inp-cat').value, color:'#1c1c1c' });
+  links.push({
+    id:'link_'+Date.now(), name, url,
+    desc: document.getElementById('inp-desc').value.trim(),
+    icon: document.getElementById('inp-icon').value.trim()||'🔗',
+    cat: document.getElementById('inp-cat').value,
+    color:'#1c1c1c'
+  });
   saveLinks(links); render(); closeModal();
 }
 
