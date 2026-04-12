@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUSICASE Suno 풀패키지</title>
+<style>
+  :root {
+    --bg: #0f0f0f; --bg2: #181818; --bg3: #222222;
+    --border: #2a2a2a; --border2: #333;
+    --text: #e8e8e8; --text2: #999; --text3: #666;
+    --accent: #c8a96e; --accent2: #e8c98e;
+    --green: #4caf7d; --blue: #5b9bd5;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; min-height: 100vh; }
+  .site-header { border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+  .site-logo { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+  .api-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border2); border-radius: 20px; background: transparent; transition: border-color .2s; }
+  .api-badge:hover { border-color: var(--accent); color: var(--text); }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+  .api-dot.connected { background: var(--green); }
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 24px; background: var(--bg); overflow-x: auto; }
+  .tab { padding: 14px 18px; font-size: 13px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .main { max-width: 900px; margin: 0 auto; padding: 28px 24px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; width: 420px; max-width: 90vw; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.6; }
+  .modal input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); font-size: 13px; margin-bottom: 12px; font-family: monospace; }
+  .modal input:focus { outline: none; border-color: var(--accent); }
+  label.field-label { display: block; font-size: 12px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
+  input[type="text"], input[type="password"], textarea, select { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); font-size: 14px; font-family: inherit; transition: border-color .2s; }
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  select option { background: var(--bg2); }
+  textarea { resize: vertical; line-height: 1.6; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; cursor: pointer; transition: all .15s; border: 1px solid transparent; font-weight: 500; }
+  .btn-primary { background: var(--accent); color: #1a1200; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: var(--text2); border-color: var(--border2); }
+  .btn-outline:hover { border-color: var(--text2); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--text3); border: 1px solid var(--border); font-size: 12px; padding: 5px 10px; }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+  .btn-copy { background: transparent; color: var(--text3); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; padding: 3px 8px; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.ok { border-color: var(--green); color: var(--green); }
+  .btn-more { background: transparent; color: var(--blue); border: 1px solid var(--blue); border-radius: 20px; font-size: 12px; padding: 5px 14px; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .btn-more:hover { background: rgba(91,155,213,.1); }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--bg3); color: var(--text3); }
+  .badge-gold { background: rgba(200,169,110,.15); color: var(--accent); }
+  .sec { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; margin-top: 14px; }
+  .sec:first-child { margin-top: 0; }
+  .codebox { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; color: var(--accent); font-family: 'Courier New', monospace; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+  .lyrics-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px; }
+  .lyrics-item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .lyrics-title { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .lyrics-body { font-size: 13px; color: var(--text2); line-height: 1.9; white-space: pre-wrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-group { margin-bottom: 14px; }
+  .meta-content { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 13px; color: var(--text2); line-height: 1.8; white-space: pre-wrap; }
+  .loading { display: inline-flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; padding: 8px 0; }
+  .spinner { width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .shorts-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px; }
+  .shorts-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .pin-tag { display: inline-block; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 12px; color: var(--text2); margin: 4px 4px 4px 0; cursor: pointer; transition: all .15s; }
+  .pin-tag:hover { border-color: var(--accent); color: var(--accent); }
+  .empty { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; border: 1px dashed var(--border); border-radius: var(--radius); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .ctrl-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+  .ctrl-row .field-group { margin-bottom: 0; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(200,169,110,.15); color: var(--accent); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-title { font-size: 15px; font-weight: 600; }
+  .scroll-x { overflow-x: auto; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .main { padding: 20px 16px 80px; } }
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>🔑 API 키 설정</h3>
+    <p>입력하면 이 브라우저에 저장돼요. 릴스허브에서 이미 입력한 키는 자동으로 불러와요.</p>
+    <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Claude API 키</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="margin-bottom:10px;" />
+    <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Gemini API 키 (선택)</label>
+    <input type="password" id="geminiKeyInput" placeholder="AIza..." style="margin-bottom:14px;" />
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1;">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1;">취소</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <span class="site-logo">🎵 MUSICASE Suno 풀패키지</span>
+  <button class="api-badge" onclick="openModal()" id="apiBadge">
+    <span class="api-dot" id="apiDot"></span>
+    <span id="apiStatus">API 키 설정</span>
+  </button>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" onclick="switchTab('trend', this)">📊 트렌드 분석</div>
+  <div class="tab" onclick="switchTab('suno', this)">Suno 프롬프트</div>
+  <div class="tab" onclick="switchTab('meta', this)">롱폼 메타데이터</div>
+  <div class="tab" onclick="switchTab('shorts', this)">숏츠 메타데이터</div>
+  <div class="tab" onclick="switchTab('pinterest', this)">핀터레스트 검색어</div>
+</nav>
+
+<main class="main">
+
+<!-- TREND TAB -->
+<div class="tab-content active" id="tab-trend">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header" style="margin-bottom:14px;"><span class="card-title">API 키 설정</span></div>
+    <div class="grid2" style="gap:12px;margin-bottom:12px;">
+      <div class="field-group" style="margin-bottom:0;">
+        <label class="field-label">YouTube Data API 키</label>
+        <input type="password" id="ytApiKey" placeholder="AIza..." oninput="saveYtKey(this.value)" />
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label class="field-label">분석 채널 선택</label>
+        <select id="channelMode" onchange="toggleChannelInput()">
+          <option value="mine">내 채널 (MUSICASE)</option>
+          <option value="competitor">경쟁 채널</option>
+          <option value="both">둘 다</option>
+        </select>
+      </div>
+    </div>
+    <div id="competitorRow" style="display:none;">
+      <label class="field-label">채널 검색</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="channelSearchQuery" placeholder="예: 카페음악, lofi playlist..." style="flex:1;" onkeydown="if(event.key==='Enter') searchChannels()" />
+        <button class="btn btn-outline" onclick="searchChannels()" id="searchChannelBtn" style="white-space:nowrap;">검색</button>
+      </div>
+      <div id="channelSearchResult" style="display:none;"><div id="channelList" style="display:grid;gap:8px;margin-bottom:10px;"></div></div>
+      <div id="selectedChannelBox" style="display:none;background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.25);border-radius:6px;padding:10px 12px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font-size:12px;color:var(--text3);margin-bottom:2px;">선택된 채널</div><div style="font-size:13px;font-weight:600;color:var(--accent);" id="selectedChannelName"></div></div>
+          <button class="btn-copy" onclick="clearSelectedChannel()">변경</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <button class="btn btn-primary" onclick="analyzeTrend()" id="trendBtn" style="width:100%;justify-content:center;padding:12px;">📊 내 채널 / 경쟁채널 분석 시작</button>
+  </div>
+  <div id="trendResult"></div>
+  <div id="themeRecommend" style="display:none;">
+    <hr style="margin:24px 0;">
+    <div class="step-header"><div class="step-num">AI</div><div class="step-title">테마 추천</div></div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">분석 결과를 바탕으로 AI가 추천한 테마예요. 클릭하면 Suno 탭으로 바로 연결돼요.</p>
+    <div id="themeCards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;"></div>
+    <button class="btn btn-outline" onclick="reRecommend()" id="reRecommendBtn" style="width:100%;justify-content:center;">🔄 다시 추천받기</button>
+  </div>
+
+  <hr style="margin:32px 0;">
+  <div class="step-header"><div class="step-num">🎬</div><div class="step-title">스카우터 영상 → Suno 스타일 변환</div></div>
+  <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">
+    ① 스카우터에서 영상 링크 복사 → ② <a href="https://gemini.google.com" target="_blank" style="color:var(--blue);">gemini.google.com</a> 에서 "이 영상의 음악 스타일 분석해줘" → ③ 결과 붙여넣기
+  </p>
+  <div style="margin-bottom:10px;">
+    <label class="field-label">제미나이 분석 결과 붙여넣기</label>
+    <textarea id="geminiAnalysisInput" rows="7" placeholder="제미나이가 분석해준 내용을 여기에 붙여넣으세요..."></textarea>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <input type="text" id="videoLinkInput" placeholder="유튜브 링크 (선택사항)" style="flex:1;">
+  </div>
+  <button class="btn btn-primary" onclick="analyzeVideoLink()" id="analyzeVideoBtn" style="width:100%;justify-content:center;">Suno 프롬프트로 변환 →</button>
+  <div id="videoAnalysisResult" style="display:none;margin-top:14px;"></div>
+</div>
+
+<!-- SUNO TAB -->
+<div class="tab-content" id="tab-suno">
+  <div class="ctrl-row">
+    <div class="field-group" style="flex:2;min-width:200px;">
+      <label class="field-label">테마 키워드</label>
+      <input type="text" id="sunoTheme" placeholder="예: 카페 봄 감성, 새벽 lo-fi..." />
+    </div>
+    <div class="field-group" style="min-width:110px;">
+      <label class="field-label">트랙 수</label>
+      <select id="sunoCount">
+        <option value="5">5곡</option>
+        <option value="10">10곡</option>
+        <option value="15" selected>15곡</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="generateSuno()" id="sunoBtn">AI 생성 ↗</button>
+  </div>
+  <div id="sunoCards"><div class="empty">테마를 입력하고 AI 생성 버튼을 눌러주세요.</div></div>
+</div>
+
+<!-- META TAB -->
+<div class="tab-content" id="tab-meta">
+  <div class="ctrl-row">
+    <div class="field-group" style="flex:2;min-width:200px;">
+      <label class="field-label">영상 테마 / 주제</label>
+      <input type="text" id="metaTheme" placeholder="예: 카페 봄 감성 플레이리스트..." />
+    </div>
+    <button class="btn btn-primary" onclick="generateMeta()" id="metaBtn">메타데이터 생성 ↗</button>
+  </div>
+  <div id="metaResult"><div class="empty">테마를 입력하고 생성하면 제목·설명·해시태그·숨은태그·서브타이틀이 한 번에 나와요.</div></div>
+</div>
+
+<!-- SHORTS TAB -->
+<div class="tab-content" id="tab-shorts">
+  <div class="ctrl-row">
+    <div class="field-group" style="flex:2;min-width:200px;">
+      <label class="field-label">기본 테마</label>
+      <input type="text" id="shortsTheme" placeholder="예: 카페 봄 감성, lo-fi 작업..." />
+    </div>
+    <button class="btn btn-primary" onclick="generateShorts()" id="shortsBtn">첫 숏츠 생성 ↗</button>
+  </div>
+  <div id="shortsCards"><div class="empty">기본 테마를 입력하고 생성하면 숏츠용 메타데이터가 나와요.</div></div>
+  <div id="shortsMoreArea" style="display:none; margin-top:16px;">
+    <hr>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="field-group" style="flex:2;min-width:180px;margin-bottom:0;">
+        <label class="field-label">추가 키워드 (선택)</label>
+        <input type="text" id="shortsExtra" placeholder="예: 일요일 아침용, 강아지 산책..." />
+      </div>
+      <button class="btn btn-more" onclick="addShorts()">+ 숏츠 더 뽑기</button>
+    </div>
+  </div>
+</div>
+
+<!-- PINTEREST TAB -->
+<div class="tab-content" id="tab-pinterest">
+  <div class="ctrl-row">
+    <div class="field-group" style="flex:2;min-width:200px;">
+      <label class="field-label">테마</label>
+      <input type="text" id="pinTheme" placeholder="예: 카페 봄 감성, 새벽 lo-fi..." />
+    </div>
+    <button class="btn btn-primary" onclick="generatePin()" id="pinBtn">검색어 생성 ↗</button>
+  </div>
+  <div id="pinResult"><div class="empty">테마를 입력하면 핀터레스트 검색어를 공간/오브젝트/분위기 3가지 카테고리로 뽑아줘요.</div></div>
+</div>
+
+</main>
+
+<script>
+// ===== API KEYS =====
+let API_KEY = localStorage.getItem('claude_api_key') || '';
+let GEMINI_KEY = localStorage.getItem('gemini_api_key') || '';
+let YT_KEY = localStorage.getItem('yt_api_key') || '';
+const MUSICASE_CHANNEL_ID = 'UC-kP6g0AiUuXFNGsGpp_1vg';
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateApiStatus();
+  if (YT_KEY) document.getElementById('ytApiKey').value = YT_KEY;
+});
+
+function saveYtKey(v) { YT_KEY = v.trim(); localStorage.setItem('yt_api_key', YT_KEY); }
+function updateApiStatus() {
+  const dot = document.getElementById('apiDot');
+  const st = document.getElementById('apiStatus');
+  if (API_KEY) { dot.className='api-dot connected'; st.textContent='API 연결됨'; }
+  else { dot.className='api-dot'; st.textContent='API 키 설정'; }
+}
+function openModal() {
+  document.getElementById('apiModal').classList.add('open');
+  document.getElementById('apiKeyInput').value = API_KEY;
+  document.getElementById('geminiKeyInput').value = GEMINI_KEY;
+}
+function closeModal() { document.getElementById('apiModal').classList.remove('open'); }
+function saveApiKey() {
+  const c = document.getElementById('apiKeyInput').value.trim();
+  const g = document.getElementById('geminiKeyInput').value.trim();
+  if (c) { API_KEY=c; localStorage.setItem('claude_api_key',c); }
+  if (g) { GEMINI_KEY=g; localStorage.setItem('gemini_api_key',g); }
+  updateApiStatus(); closeModal();
+}
+
+// ===== TABS =====
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function goToTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const map = {'trend':'트렌드','suno':'Suno','meta':'롱폼','shorts':'숏츠','pinterest':'핀터레스트'};
+  document.querySelectorAll('.tab').forEach(t => { if(t.textContent.includes(map[id])) t.classList.add('active'); });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ===== CLAUDE API =====
+async function callClaude(prompt, maxTokens=2000) {
+  if (!API_KEY) { openModal(); throw new Error('API 키를 입력해주세요'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.json().catch(()=>({}));
+    throw new Error(`Claude API 오류: ${res.status} — ${errBody?.error?.message||''}`);
+  }
+  const d = await res.json();
+  return d.content[0].text;
+}
+
+// ===== COPY =====
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1a1200;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ===== CHANNEL SEARCH =====
+let selectedCompetitorId='', selectedCompetitorName='';
+function toggleChannelInput() {
+  const mode = document.getElementById('channelMode').value;
+  document.getElementById('competitorRow').style.display = (mode==='competitor'||mode==='both') ? 'block' : 'none';
+}
+async function searchChannels() {
+  const query = document.getElementById('channelSearchQuery').value.trim();
+  if (!query) { alert('검색어를 입력해주세요'); return; }
+  if (!YT_KEY) { alert('YouTube API 키를 먼저 입력해주세요'); return; }
+  const btn = document.getElementById('searchChannelBtn');
+  btn.disabled=true; btn.textContent='검색 중...';
+  const list = document.getElementById('channelList');
+  list.innerHTML='<div class="loading"><div class="spinner"></div>채널 검색 중...</div>';
+  document.getElementById('channelSearchResult').style.display='block';
+  try {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=8&key=${YT_KEY}`);
+    const data = await res.json();
+    if (!data.items?.length) { list.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0;">검색 결과가 없어요.</div>'; return; }
+    const ids = data.items.map(i=>i.snippet.channelId).join(',');
+    const statRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${ids}&key=${YT_KEY}`);
+    const statData = await statRes.json();
+    const statMap = {}; statData.items?.forEach(i=>{ statMap[i.id]=i.statistics; });
+    list.innerHTML = data.items.map(item => {
+      const cid=item.snippet.channelId, stats=statMap[cid]||{};
+      const subs=stats.subscriberCount ? parseInt(stats.subscriberCount).toLocaleString()+'명' : '비공개';
+      const thumb=item.snippet.thumbnails?.default?.url||'';
+      const name=item.snippet.channelTitle;
+      return `<div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;" onclick="selectChannel('${cid}','${name.replace(/'/g,"\\'")}')">
+        ${thumb?`<img src="${thumb}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`:''}
+        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);">${name}</div><div style="font-size:11px;color:var(--text3);">구독자 ${subs}</div></div>
+        <span style="font-size:11px;color:var(--accent);">선택 →</span></div>`;
+    }).join('');
+  } catch(e) { list.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='검색';
+}
+function selectChannel(id, name) {
+  selectedCompetitorId=id; selectedCompetitorName=name;
+  document.getElementById('selectedChannelName').textContent=name;
+  document.getElementById('selectedChannelBox').style.display='block';
+  document.getElementById('channelSearchResult').style.display='none';
+  document.getElementById('channelSearchQuery').value='';
+}
+function clearSelectedChannel() {
+  selectedCompetitorId=''; selectedCompetitorName='';
+  document.getElementById('selectedChannelBox').style.display='none';
+}
+
+// ===== TREND ANALYSIS =====
+let analyzedVideos=[];
+async function fetchPopularVideos(channelId, label) {
+  if (!YT_KEY) throw new Error('YouTube API 키를 입력해주세요');
+  const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id=${channelId}&key=${YT_KEY}`);
+  if (!chRes.ok) throw new Error(`YouTube API 오류: ${chRes.status}`);
+  const chData = await chRes.json();
+  if (!chData.items?.length) throw new Error(`채널을 찾을 수 없어요: ${channelId}`);
+  const channelTitle = chData.items[0].snippet.title;
+  const uploadsId = chData.items[0].contentDetails.relatedPlaylists.uploads;
+  const plRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=50&key=${YT_KEY}`);
+  const plData = await plRes.json();
+  const videoIds = plData.items.map(i=>i.contentDetails.videoId).join(',');
+  const statRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}&key=${YT_KEY}`);
+  const statData = await statRes.json();
+  const sorted = statData.items.map(v=>({title:v.snippet.title,views:parseInt(v.statistics.viewCount||0),published:v.snippet.publishedAt?.slice(0,10),channelLabel:label||channelTitle})).sort((a,b)=>b.views-a.views).slice(0,10);
+  return { channelTitle, videos: sorted };
+}
+
+async function analyzeTrend() {
+  if (!YT_KEY) { alert('YouTube API 키를 입력해주세요'); return; }
+  const mode = document.getElementById('channelMode').value;
+  if ((mode==='competitor'||mode==='both') && !selectedCompetitorId) { alert('경쟁 채널을 선택해주세요'); return; }
+  const btn = document.getElementById('trendBtn');
+  btn.disabled=true; btn.textContent='분석 중...';
+  document.getElementById('themeRecommend').style.display='none';
+  const result = document.getElementById('trendResult');
+  result.innerHTML='<div class="loading"><div class="spinner"></div>YouTube 데이터 수집 중...</div>';
+  try {
+    let allVideos=[], tableHTML='';
+    if (mode==='mine'||mode==='both') {
+      const {channelTitle,videos} = await fetchPopularVideos(MUSICASE_CHANNEL_ID,'MUSICASE');
+      allVideos=allVideos.concat(videos); tableHTML+=renderVideoTable(channelTitle,videos,'badge-gold');
+    }
+    if (mode==='competitor'||mode==='both') {
+      const {channelTitle,videos} = await fetchPopularVideos(selectedCompetitorId,selectedCompetitorName);
+      allVideos=allVideos.concat(videos); tableHTML+=renderVideoTable(channelTitle,videos,'');
+    }
+    analyzedVideos=allVideos; result.innerHTML=tableHTML;
+    result.innerHTML+='<div class="loading" id="aiLoading"><div class="spinner"></div>Claude AI가 테마를 분석하는 중...</div>';
+    await recommendThemes(allVideos);
+    document.getElementById('aiLoading')?.remove();
+  } catch(e) { result.innerHTML=`<div class="empty" style="color:#e57373;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='📊 내 채널 / 경쟁채널 분석 시작';
+}
+
+function renderVideoTable(channelTitle, videos, badgeClass) {
+  const rows = videos.map((v,i)=>`<tr><td style="padding:8px 10px;color:var(--text3);font-size:12px;">${i+1}</td><td style="padding:8px 10px;font-size:13px;color:var(--text);max-width:340px;">${v.title}</td><td style="padding:8px 10px;font-size:13px;color:var(--accent);text-align:right;">${v.views.toLocaleString()}</td><td style="padding:8px 10px;font-size:12px;color:var(--text3);text-align:right;">${v.published}</td></tr>`).join('');
+  return `<div class="card" style="margin-bottom:16px;"><div class="card-header"><span class="card-title">${channelTitle}</span><span class="badge ${badgeClass}">TOP 10</span></div><div class="scroll-x"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;">#</th><th style="padding:6px 10px;font-size:11px;color:var(--text3);text-align:left;">제목</th><th style="padding:6px 10px;font-size:11px;color:var(--text3);text-align:right;">조회수</th><th style="padding:6px 10px;font-size:11px;color:var(--text3);text-align:right;">업로드일</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+async function recommendThemes(videos, isRetry=false) {
+  const titleList = videos.map((v,i)=>`${i+1}. "${v.title}" — ${v.views.toLocaleString()}회`).join('\n');
+  const raw = await callClaude(`당신은 MUSICASE 유튜브 채널 콘텐츠 전략가입니다. MUSICASE는 유럽 도시 감성 + 세련된 앰비언트/인스트루멘탈 채널이에요.
+
+인기 영상 TOP:
+${titleList}
+
+${isRetry?'이전과 다른 새로운 관점으로 추천해주세요.':''}
+
+JSON만 출력:
+{"keywords":["핵심키워드5-7개"],"themes":[{"theme":"테마명","reason":"추천이유2줄","expected":"예상반응"},{"theme":"...","reason":"...","expected":"..."},{"theme":"...","reason":"...","expected":"..."}]}`, 1500);
+  const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+  renderThemeRecommend(data);
+}
+
+function renderThemeRecommend(data) {
+  const kwHTML = data.keywords.map(k=>`<span style="display:inline-block;background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);border-radius:4px;padding:3px 10px;font-size:12px;color:var(--accent);margin:3px;">${k}</span>`).join('');
+  document.getElementById('trendResult').innerHTML+=`<div class="card" style="margin-top:4px;"><div class="sec" style="margin-top:0;">분석된 핵심 키워드</div><div style="margin-top:6px;">${kwHTML}</div></div>`;
+  document.getElementById('themeCards').innerHTML = data.themes.map((t,i)=>`
+    <div class="card" style="cursor:pointer;" onclick="selectTheme('${t.theme.replace(/'/g,"\\'")}')">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">추천 ${i+1}</div>
+      <div style="font-size:15px;font-weight:600;color:var(--accent);margin-bottom:10px;">${t.theme}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:8px;">${t.reason}</div>
+      <div style="font-size:11px;color:var(--text3);background:var(--bg3);padding:6px 8px;border-radius:4px;">${t.expected}</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--accent);text-align:right;">이 테마로 생성 →</div>
+    </div>`).join('');
+  document.getElementById('themeRecommend').style.display='block';
+}
+
+function selectTheme(theme) {
+  ['sunoTheme','metaTheme','shortsTheme','pinTheme'].forEach(id=>{ document.getElementById(id).value=theme; });
+  goToTab('suno');
+  showToast(`"${theme}" 테마 설정됨! AI 생성 버튼을 눌러주세요.`);
+}
+
+async function reRecommend() {
+  const btn=document.getElementById('reRecommendBtn'); btn.disabled=true; btn.textContent='추천 중...';
+  document.getElementById('themeCards').innerHTML='<div class="loading"><div class="spinner"></div>새로운 테마 추천 중...</div>';
+  try { await recommendThemes(analyzedVideos,true); } catch(e) { document.getElementById('themeCards').innerHTML=`<div style="color:#e57373;font-size:13px;">${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='🔄 다시 추천받기';
+}
+
+// ===== VIDEO ANALYSIS =====
+async function analyzeVideoLink() {
+  const geminiText=document.getElementById('geminiAnalysisInput').value.trim();
+  const url=document.getElementById('videoLinkInput').value.trim();
+  if (!geminiText) { alert('제미나이 분석 결과를 붙여넣어주세요'); return; }
+  const btn=document.getElementById('analyzeVideoBtn');
+  btn.disabled=true; btn.textContent='변환 중...';
+  const result=document.getElementById('videoAnalysisResult');
+  result.innerHTML='<div class="loading"><div class="spinner"></div>Claude가 Suno 프롬프트로 변환하는 중...</div>';
+  result.style.display='block';
+  try {
+    const raw = await callClaude(`아래는 유튜브 영상 음악 스타일 분석 결과예요. Suno에서 바로 쓸 수 있는 스타일 프롬프트로 변환해주세요.
+
+[제미나이 분석 결과]
+${geminiText}
+
+중요: 원본 분석 결과의 장르/분위기/에너지를 그대로 반영하세요. 임의로 바꾸지 마세요.
+
+JSON만 출력:
+{"analysis":{"genre":"장르","vocal":"보컬","instruments":"악기","bpm":"BPM","mood":["키워드4-5개"],"key":"조성","summary":"한줄요약"},"suno_style":"Suno 스타일 프롬프트 (영문, 콤마구분, 원본스타일 그대로)","theme_suggestion":"테마제안(한글,원본분위기그대로)"}`, 1500);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderVideoAnalysis(data, url);
+  } catch(e) { result.innerHTML=`<div style="color:#e57373;font-size:13px;padding:12px;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='Suno 프롬프트로 변환 →';
+}
+
+function renderVideoAnalysis(data, url) {
+  const a=data.analysis;
+  const moodTags=a.mood.map(m=>`<span style="display:inline-block;background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.2);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--accent);margin:2px;">${m}</span>`).join('');
+  document.getElementById('videoAnalysisResult').innerHTML=`
+    <div class="card" style="margin-top:0;">
+      <div class="card-header"><span class="card-title">영상 음악 스타일 분석</span>${url?`<a href="${url}" target="_blank" style="font-size:11px;color:var(--blue);">영상 보기 →</a>`:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">장르</div><div style="font-size:13px;color:var(--text);">${a.genre}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">보컬</div><div style="font-size:13px;color:var(--text);">${a.vocal}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">악기</div><div style="font-size:13px;color:var(--text);">${a.instruments}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">BPM · 조성</div><div style="font-size:13px;color:var(--text);">${a.bpm} · ${a.key}</div></div>
+      </div>
+      <div style="margin-bottom:12px;"><div style="font-size:11px;color:var(--text3);margin-bottom:6px;">분위기</div>${moodTags}</div>
+      <div style="background:var(--bg3);border-radius:6px;padding:10px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">한 줄 요약</div><div style="font-size:13px;color:var(--text2);">${a.summary}</div></div>
+      <div class="sec" style="margin-top:0;">SUNO 스타일 프롬프트</div>
+      <div class="codebox" id="videoStylePrompt" style="margin-bottom:10px;">${data.suno_style}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-copy" onclick="copyText(document.getElementById('videoStylePrompt').textContent,this)">스타일 복사</button>
+        <button class="btn btn-primary" style="font-size:12px;padding:5px 14px;" id="applyStyleBtn">이 스타일로 Suno 생성 →</button>
+      </div>
+    </div>`;
+  // 따옴표 꼬임 방지 — addEventListener로 별도 등록
+  const savedStyle=data.suno_style, savedTheme=data.theme_suggestion;
+  document.getElementById('applyStyleBtn').addEventListener('click', ()=>applyVideoStyle(savedStyle,savedTheme));
+}
+
+function applyVideoStyle(style, theme) {
+  ['sunoTheme','metaTheme','shortsTheme','pinTheme'].forEach(id=>{ document.getElementById(id).value=theme; });
+  goToTab('suno');
+  showToast(`"${theme}" 테마 설정됨! AI 생성 버튼을 눌러주세요.`);
+}
+
+// ===== SUNO =====
+let sunoCardData=[];
+async function generateSuno() {
+  const theme=document.getElementById('sunoTheme').value.trim();
+  const count=parseInt(document.getElementById('sunoCount').value);
+  if (!theme) { alert('테마를 입력해주세요'); return; }
+  const btn=document.getElementById('sunoBtn'); btn.disabled=true; btn.textContent='생성 중...';
+  const area=document.getElementById('sunoCards');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>AI가 테마를 분석하고 프롬프트를 만들고 있어요...</div>';
+  try {
+    const raw = await callClaude(`MUSICASE 유튜브 채널 전용 Suno 음악 생성 전문가입니다.
+테마: "${theme}" / 트랙 수: ${count}곡
+규칙: MUSICASE는 유럽 도시 감성 + 세련된 앰비언트/인스트루멘탈 채널 / 3가지 타입 반복: ①어쿠스틱 소프트 보컬 ②로파이 인스트루멘탈 ③시네마틱 스트링스 / 가사는 영어, 장면 묘사 중심 / Verse1→Pre-Chorus→Chorus→Verse2→Pre-Chorus→Chorus→Bridge→Chorus→Outro / bossa nova와 일본풍 제외
+JSON만 출력: {"tracks":[{"num":1,"title":"영문제목","type":"①어쿠스틱 보컬","style":"Suno style prompt 영문 콤마구분","lyrics":"전체가사(섹션태그포함)"}]}`, 4000);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    sunoCardData=data.tracks; renderSunoCards();
+  } catch(e) { area.innerHTML=`<div class="empty" style="color:#e57373;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='AI 생성 ↗';
+}
+
+function renderSunoCards() {
+  const area=document.getElementById('sunoCards'); area.innerHTML='';
+  sunoCardData.forEach((track,i)=>{ if(!track.extraLyrics) track.extraLyrics=[]; area.appendChild(buildSunoCard(track,i)); });
+}
+
+function buildSunoCard(track, i) {
+  const div=document.createElement('div'); div.className='card'; div.id='suno-card-'+i;
+  const fullPrompt=`[Suno Style Prompt]\n${track.style}\n\n${track.lyrics}`;
+  let extraHTML=track.extraLyrics.map(ex=>{
+    const fp=`[Suno Style Prompt]\n${track.style}\n\n${ex.lyrics}`;
+    return `<div class="lyrics-item" style="margin-top:8px;"><div class="lyrics-item-head"><span class="lyrics-title">${ex.title}</span><div style="display:flex;gap:5px;"><button class="btn-copy" onclick="copyText(${JSON.stringify(ex.title)},this)">제목</button><button class="btn-copy" onclick="copyText(${JSON.stringify(fp)},this)">전체</button><button class="btn-copy" onclick="copyText(${JSON.stringify(ex.lyrics)},this)">가사</button></div></div><div class="lyrics-body">${ex.lyrics}</div></div>`;
+  }).join('');
+  div.innerHTML=`
+    <div class="card-header"><span class="card-title">곡 ${track.num}. ${track.title}</span><span class="badge badge-gold">${track.type}</span></div>
+    <div class="sec">Style Prompt (고정)</div>
+    <div class="codebox">${track.style}<div style="margin-top:8px;display:flex;gap:6px;"><button class="btn-copy" onclick="copyText(${JSON.stringify(track.style)},this)">스타일 복사</button></div></div>
+    <div class="sec" style="margin-top:14px;">가사</div>
+    <div class="lyrics-item"><div class="lyrics-item-head"><span class="lyrics-title">${track.title}</span><div style="display:flex;gap:5px;"><button class="btn-copy" onclick="copyText(${JSON.stringify(track.title)},this)">제목</button><button class="btn-copy" onclick="copyText(${JSON.stringify(fullPrompt)},this)">전체</button><button class="btn-copy" onclick="copyText(${JSON.stringify(track.lyrics)},this)">가사</button></div></div><div class="lyrics-body">${track.lyrics}</div></div>
+    ${extraHTML}
+    <div style="margin-top:10px;"><button class="btn-more" onclick="addSunoLyrics(${i})">+ 가사 더 뽑기</button></div>`;
+  return div;
+}
+
+async function addSunoLyrics(i) {
+  const track=sunoCardData[i], card=document.getElementById('suno-card-'+i), btn=card.querySelector('.btn-more');
+  btn.textContent='생성 중...'; btn.disabled=true;
+  try {
+    const raw=await callClaude(`MUSICASE 채널용 Suno 가사 1곡 추가. 테마: "${document.getElementById('sunoTheme').value.trim()}" / 스타일: ${track.style} / 기존제목: ${track.title}
+JSON만: {"title":"새영문제목","lyrics":"전체가사(섹션태그포함,Verse1→Pre-Chorus→Chorus→Verse2→Pre-Chorus→Chorus→Bridge→Chorus→Outro)"}`);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if(!track.extraLyrics) track.extraLyrics=[];
+    track.extraLyrics.push(data);
+    card.replaceWith(buildSunoCard(track,i));
+  } catch(e) { btn.textContent='+ 가사 더 뽑기'; btn.disabled=false; alert('오류: '+e.message); }
+}
+
+// ===== META =====
+async function generateMeta() {
+  const theme=document.getElementById('metaTheme').value.trim();
+  if (!theme) { alert('테마를 입력해주세요'); return; }
+  const btn=document.getElementById('metaBtn'); btn.disabled=true; btn.textContent='생성 중...';
+  const area=document.getElementById('metaResult');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>메타데이터 생성 중...</div>';
+  try {
+    const raw=await callClaude(`MUSICASE 유튜브 채널 롱폼 영상 메타데이터. 채널: 유럽 도시 감성, 세련된 앰비언트/인스트루멘탈, 20-40대 카페/작업/드라이브 BGM. 테마: "${theme}"
+JSON만: {"titles":["감성형","검색최적화형","미니멀영문형"],"subtitle":"서브타이틀(30자이내)","description":"설명글(500자이내,첫2줄키워드,분위기묘사,구독CTA)","hashtags":["#태그30개이상","#샵포함"],"hidden_tags":"숨은태그(500자이내,쉼표구분,실제검색어,경쟁채널포함:SISO Wave,감성뮤직,카페음악,lofi hip hop)"}`, 2000);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const titlesHTML=data.titles.map((t,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text);flex:1;margin-right:12px;">${['①','②','③'][i]} ${t}</span><button class="btn-copy" onclick="copyText(${JSON.stringify(t)},this)">복사</button></div>`).join('');
+    area.innerHTML=`
+      <div class="card"><div class="step-header"><div class="step-num">1</div><div class="step-title">제목 옵션 3개</div></div>${titlesHTML}</div>
+      <div class="card"><div class="step-header"><div class="step-num">2</div><div class="step-title">서브타이틀</div></div><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;color:var(--accent);">${data.subtitle}</span><button class="btn-copy" onclick="copyText(${JSON.stringify(data.subtitle)},this)">복사</button></div></div>
+      <div class="card"><div class="step-header"><div class="step-num">3</div><div class="step-title">설명글</div></div><div class="meta-content">${data.description}</div><div style="margin-top:8px;"><button class="btn-copy" onclick="copyText(${JSON.stringify(data.description)},this)">복사</button></div></div>
+      <div class="card"><div class="step-header"><div class="step-num">4</div><div class="step-title">해시태그</div></div><div class="meta-content">${data.hashtags.join(' ')}</div><div style="margin-top:8px;"><button class="btn-copy" onclick="copyText(${JSON.stringify(data.hashtags.join(' '))},this)">복사</button></div></div>
+      <div class="card"><div class="step-header"><div class="step-num">5</div><div class="step-title">숨은태그 <span style="font-size:11px;color:var(--text3);">(500자, 쉼표구분)</span></div></div><div class="meta-content">${data.hidden_tags}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;"><span style="font-size:12px;color:var(--text3);">${data.hidden_tags.length}자</span><button class="btn-copy" onclick="copyText(${JSON.stringify(data.hidden_tags)},this)">복사</button></div></div>`;
+  } catch(e) { area.innerHTML=`<div class="empty" style="color:#e57373;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='메타데이터 생성 ↗';
+}
+
+// ===== SHORTS =====
+let shortsCount=0;
+async function generateShorts() {
+  const theme=document.getElementById('shortsTheme').value.trim();
+  if (!theme) { alert('테마를 입력해주세요'); return; }
+  shortsCount=0; document.getElementById('shortsCards').innerHTML=''; document.getElementById('shortsMoreArea').style.display='none';
+  await addShortsItem(theme,'');
+  document.getElementById('shortsMoreArea').style.display='block';
+}
+async function addShorts() { await addShortsItem(document.getElementById('shortsTheme').value.trim(), document.getElementById('shortsExtra').value.trim()); }
+
+async function addShortsItem(theme, extra) {
+  const btn=extra?document.querySelector('#shortsMoreArea .btn-more'):document.getElementById('shortsBtn');
+  const origText=btn.textContent; btn.disabled=true; btn.textContent='생성 중...';
+  const area=document.getElementById('shortsCards');
+  const loadDiv=document.createElement('div'); loadDiv.className='loading'; loadDiv.innerHTML='<div class="spinner"></div>숏츠 풀패키지 생성 중...';
+  area.appendChild(loadDiv);
+  try {
+    const raw=await callClaude(`MUSICASE 유튜브 숏츠 풀패키지. 채널: 유럽 도시 감성, 세련된 앰비언트/인스트루멘탈, 20-40대 카페/작업/드라이브. 기본테마: "${theme}"${extra?`\n추가키워드: "${extra}"`:''}
+JSON만 출력:
+{"title":"숏츠제목(이모지포함,감성적,클릭유도)","hook":"첫3초화면표시후킹문구(짧고강렬)","description":"유튜브숏츠설명(150자이내,감성키워드)","hashtags":"#shorts #musicase #감성음악 포함 총15개","pinned_comment":"고정댓글(이모지포함,플레이리스트소개+구독유도+채널안내,3-4줄)","instagram":"인스타그램게시글(감성적2-3줄+줄바꿈+해시태그20개)","tiktok":"틱톡게시글(짧고트렌디,1-2줄+해시태그10개)","threads":"스레드게시글(자연스럽게,2-3줄,해시태그5개이내)"}`, 2000);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    loadDiv.remove(); shortsCount++;
+    const item=document.createElement('div'); item.className='shorts-item';
+
+    // 각 필드를 안전하게 렌더링
+    const fields = [
+      {label:'제목', key:'title', accent:false},
+      {label:'후킹 문구 (첫 3초)', key:'hook', accent:true},
+    ];
+
+    let html=`<div class="shorts-head"><span style="font-size:13px;font-weight:600;color:var(--accent);">숏츠 #${shortsCount}${extra?` · ${extra}`:''}</span></div>`;
+
+    // 제목
+    html+=`<div class="sec">제목</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;"><span style="font-size:13px;color:var(--text);flex:1;margin-right:10px;" id="s${shortsCount}_title"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_title').textContent,this)">복사</button></div>`;
+    // 후킹
+    html+=`<div class="sec">후킹 문구 (첫 3초)</div><div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.2);border-radius:6px;padding:10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;color:var(--accent);font-weight:600;flex:1;margin-right:10px;" id="s${shortsCount}_hook"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_hook').textContent,this)">복사</button></div>`;
+    // 설명+해시태그
+    html+=`<div class="sec">설명 + 해시태그</div><div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;"><span style="font-size:13px;color:var(--text2);line-height:1.7;flex:1;" id="s${shortsCount}_desc"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_desc').textContent,this)">복사</button></div><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--text3);flex:1;" id="s${shortsCount}_hash"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_hash').textContent,this)">복사</button></div></div>`;
+    // 고정댓글
+    html+=`<div class="sec">📌 고정댓글</div><div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;"><span style="font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;" id="s${shortsCount}_pin"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_pin').textContent,this)">복사</button></div>`;
+    // 인스타
+    html+=`<div class="sec">📸 인스타그램</div><div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;"><span style="font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;" id="s${shortsCount}_insta"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_insta').textContent,this)">복사</button></div>`;
+    // 틱톡
+    html+=`<div class="sec">🎵 틱톡</div><div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;"><span style="font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;" id="s${shortsCount}_tiktok"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_tiktok').textContent,this)">복사</button></div>`;
+    // 스레드
+    html+=`<div class="sec">🧵 스레드</div><div style="background:var(--bg2);padding:10px;border-radius:6px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;"><span style="font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;" id="s${shortsCount}_threads"></span><button class="btn-copy" onclick="copyText(document.getElementById('s${shortsCount}_threads').textContent,this)">복사</button></div>`;
+
+    item.innerHTML=html; area.appendChild(item);
+
+    // textContent로 안전하게 삽입 (XSS 방지 + 따옴표 꼬임 방지)
+    const n=shortsCount;
+    document.getElementById(`s${n}_title`).textContent=data.title||'';
+    document.getElementById(`s${n}_hook`).textContent=data.hook||'';
+    document.getElementById(`s${n}_desc`).textContent=data.description||'';
+    document.getElementById(`s${n}_hash`).textContent=data.hashtags||'';
+    document.getElementById(`s${n}_pin`).textContent=data.pinned_comment||'';
+    document.getElementById(`s${n}_insta`).textContent=data.instagram||'';
+    document.getElementById(`s${n}_tiktok`).textContent=data.tiktok||'';
+    document.getElementById(`s${n}_threads`).textContent=data.threads||'';
+
+  } catch(e) {
+    loadDiv.remove();
+    const errDiv=document.createElement('div'); errDiv.style.cssText='color:#e57373;font-size:13px;padding:8px 0;'; errDiv.textContent='오류: '+e.message; area.appendChild(errDiv);
+  }
+  btn.disabled=false; btn.textContent=origText;
+}
+
+// ===== PINTEREST =====
+async function generatePin() {
+  const theme=document.getElementById('pinTheme').value.trim();
+  if (!theme) { alert('테마를 입력해주세요'); return; }
+  const btn=document.getElementById('pinBtn'); btn.disabled=true; btn.textContent='생성 중...';
+  const area=document.getElementById('pinResult');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>핀터레스트 검색어 생성 중...</div>';
+  try {
+    const raw=await callClaude(`MUSICASE 유튜브 채널 썸네일용 핀터레스트 검색어. 테마: "${theme}". 썸네일스타일: 사람없거나뒷모습, 공간중심(카페창가/유럽골목), 따뜻한자연광, 아날로그감성, 가로형16:9
+JSON만: {"space":["공간/배경7개(영문)"],"object":["오브젝트/소품7개(영문)"],"mood":["분위기/색감7개(영문)"],"tips":"썸네일제작팁2줄"}`);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const makeTagsHTML=arr=>arr.map(t=>`<span class="pin-tag" id="pin_${Math.random().toString(36).slice(2)}">${t}</span>`).join('');
+    area.innerHTML=`
+      <div class="card"><div class="card-header"><span class="card-title">🏙 공간 / 배경</span><button class="btn-copy" onclick="copyText(${JSON.stringify(data.space.join('\n'))},this)">전체 복사</button></div><div>${makeTagsHTML(data.space)}</div></div>
+      <div class="card"><div class="card-header"><span class="card-title">☕ 오브젝트 / 소품</span><button class="btn-copy" onclick="copyText(${JSON.stringify(data.object.join('\n'))},this)">전체 복사</button></div><div>${makeTagsHTML(data.object)}</div></div>
+      <div class="card"><div class="card-header"><span class="card-title">🎨 분위기 / 색감</span><button class="btn-copy" onclick="copyText(${JSON.stringify(data.mood.join('\n'))},this)">전체 복사</button></div><div>${makeTagsHTML(data.mood)}</div></div>
+      <div class="card" style="background:rgba(200,169,110,.05);border-color:rgba(200,169,110,.2);"><div class="sec">썸네일 제작 팁</div><p style="font-size:13px;color:var(--text2);line-height:1.7;">${data.tips}</p></div>`;
+    // 핀태그 클릭 이벤트
+    area.querySelectorAll('.pin-tag').forEach(tag=>{
+      tag.addEventListener('click', ()=>{ copyText(tag.textContent, tag); });
+    });
+  } catch(e) { area.innerHTML=`<div class="empty" style="color:#e57373;">오류: ${e.message}</div>`; }
+  btn.disabled=false; btn.textContent='검색어 생성 ↗';
+}
+</script>
+</body>
+</html>
