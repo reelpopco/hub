@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>다알 타로 작업실</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0b14;
+  --bg2: #161020;
+  --bg3: #1e1830;
+  --border: #2a2040;
+  --border2: #3a3060;
+  --text: #e8e0f0;
+  --text2: #9988bb;
+  --text3: #554477;
+  --gold: #c8a96e;
+  --gold2: #e8c98e;
+  --purple: #9b7fd4;
+  --purple2: #b89de8;
+  --green: #4caf7d;
+  --radius: 12px;
+  --radius-sm: 7px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
+
+/* HEADER */
+.header { border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+.logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; color: var(--gold); letter-spacing: 0.08em; }
+.logo span { font-style: italic; }
+.api-btn { font-size: 12px; color: var(--text3); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border2); border-radius: 20px; background: transparent; font-family: inherit; transition: all .2s; }
+.api-btn:hover { border-color: var(--gold); color: var(--text); }
+.api-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text3); margin-right: 5px; vertical-align: middle; }
+.api-dot.on { background: var(--green); }
+
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 24px; background: var(--bg); overflow-x: auto; }
+.tab { padding: 13px 16px; font-size: 12px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; letter-spacing: 0.03em; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* MAIN */
+.main { max-width: 820px; margin: 0 auto; padding: 28px 24px 80px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; width: 400px; max-width: 90vw; }
+.modal h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; color: var(--gold); margin-bottom: 16px; }
+.modal input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); font-size: 13px; margin-bottom: 10px; font-family: monospace; }
+.modal input:focus { outline: none; border-color: var(--gold); }
+
+/* FORM */
+label.lbl { display: block; font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+input[type="text"], input[type="date"], textarea, select {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; color: var(--text); font-size: 13px; font-family: inherit; transition: border-color .2s;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--gold); }
+select option { background: var(--bg2); }
+textarea { resize: vertical; line-height: 1.7; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; cursor: pointer; border: 1px solid transparent; transition: all .15s; font-weight: 500; }
+.btn-gold { background: var(--gold); color: #1a1000; border-color: var(--gold); }
+.btn-gold:hover { background: var(--gold2); }
+.btn-gold:disabled { opacity: .5; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--text2); border-color: var(--border2); }
+.btn-outline:hover { border-color: var(--text2); color: var(--text); }
+.btn-ghost { background: transparent; color: var(--text3); border: 1px solid var(--border); font-size: 12px; padding: 5px 10px; border-radius: 20px; }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+.btn-copy { background: transparent; color: var(--text3); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; padding: 3px 8px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; }
+.btn-copy:hover { border-color: var(--gold); color: var(--gold); }
+.btn-copy.ok { border-color: var(--green); color: var(--green); }
+
+/* CARDS */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+.card-title { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; color: var(--gold); margin-bottom: 14px; letter-spacing: 0.03em; }
+
+/* CHOICE CARDS */
+.choice-grid { display: grid; gap: 10px; }
+.choice-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; cursor: pointer; transition: all .15s; }
+.choice-card:hover { border-color: var(--purple); }
+.choice-card.selected { border-color: var(--gold); background: rgba(200,169,110,.06); }
+.choice-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.04em; }
+.choice-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+.choice-sub { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+/* TAROT CARD GRID */
+.tarot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tarot-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 12px; cursor: pointer; text-align: center; transition: all .15s; }
+.tarot-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+.tarot-card.selected { border-color: var(--gold); background: rgba(200,169,110,.06); }
+.tarot-card-num { font-family: 'Cormorant Garamond', serif; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.tarot-card-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.tarot-card-keyword { font-size: 11px; color: var(--purple2); }
+.tarot-card-emoji { font-size: 20px; margin-bottom: 6px; }
+
+/* SCRIPT BOX */
+.script-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; font-size: 13px; line-height: 2; color: var(--text2); white-space: pre-wrap; }
+.pause-mark { color: var(--purple2); font-style: italic; }
+
+/* META BOX */
+.meta-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+.meta-text { font-size: 13px; color: var(--text2); line-height: 1.8; flex: 1; white-space: pre-wrap; }
+
+/* SECTION LABEL */
+.sec { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; margin-top: 16px; }
+
+/* LOADING */
+.loading { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; padding: 10px 0; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* CTA EDITOR */
+.cta-options { display: grid; gap: 8px; margin-bottom: 12px; }
+.cta-opt { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all .15s; }
+.cta-opt:hover { border-color: var(--purple); }
+.cta-opt.selected { border-color: var(--gold); background: rgba(200,169,110,.05); }
+.cta-opt-label { font-size: 10px; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.05em; }
+.cta-opt-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+
+/* MISC */
+.field { margin-bottom: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.empty { text-align: center; padding: 40px 24px; color: var(--text3); font-size: 13px; border: 1px dashed var(--border); border-radius: var(--radius); font-family: 'Cormorant Garamond', serif; font-style: italic; letter-spacing: 0.03em; }
+.mystical { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--purple2); }
+.step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(200,169,110,.15); color: var(--gold); font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
+
+@media(max-width:600px){ .tarot-grid{grid-template-columns:repeat(2,1fr);} .grid2{grid-template-columns:1fr;} .main{padding:16px 14px 80px;} }
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="modal-bg" id="apiModal">
+  <div class="modal">
+    <h3>🔑 API 키 설정</h3>
+    <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px;">Claude API 키</label>
+    <input type="password" id="claudeKey" placeholder="sk-ant-api03-..." />
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-gold" onclick="saveKeys()" style="flex:1;">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1;">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">다알 <span>타로</span> 작업실</div>
+  <button class="api-btn" onclick="openModal()" id="apiBadge">
+    <span class="api-dot" id="apiDot"></span>
+    <span id="apiStatus">API 설정</span>
+  </button>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <div class="tab active" onclick="switchTab('setup',this)">📅 날짜 · 주제 · 카드</div>
+  <div class="tab" onclick="switchTab('shorts',this)">⚡ 숏츠 대본</div>
+  <div class="tab" onclick="switchTab('longform',this)">📖 롱폼 대본</div>
+  <div class="tab" onclick="switchTab('meta',this)">📋 메타데이터</div>
+</nav>
+
+<main class="main">
+
+<!-- ===== TAB 0: SETUP ===== -->
+<div class="tab-content active" id="tab-setup">
+
+  <!-- STEP 1: 날짜 + CTA 설정 -->
+  <div class="card">
+    <div class="card-title"><span class="step-badge">1</span>날짜 · CTA 문구 설정</div>
+
+    <div class="grid2" style="margin-bottom:16px;">
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">업로드 날짜</label>
+        <input type="date" id="workDate">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">콘텐츠 유형</label>
+        <select id="contentType">
+          <option value="both">숏츠 + 롱폼 둘 다</option>
+          <option value="shorts">숏츠만</option>
+          <option value="longform">롱폼만</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="lbl">CTA 문구 선택 (클릭 후 수정 가능)</label>
+    <div class="cta-options" id="ctaOptions">
+      <div class="cta-opt selected" onclick="selectCta(0)">
+        <div class="cta-opt-label">A안 — 공감 중심</div>
+        <div class="cta-opt-text">당신의 마음을 다 아는 다알 타로.\n뭔가 막히는 느낌, 혼자 끙끙 앓고 계신 거 있으시죠?\n프로필 링크에서 가장 궁금한 질문 하나, 무료로 꺼내보세요.</div>
+      </div>
+      <div class="cta-opt" onclick="selectCta(1)">
+        <div class="cta-opt-label">B안 — 따뜻하게</div>
+        <div class="cta-opt-text">당신의 마음을 다 아는 다알 타로.\n말 못 하고 혼자 담아두고 있는 것들, 여기서는 꺼내도 괜찮아요.\n프로필 링크 눌러서 궁금한 거 하나만 물어봐요. 첫 질문은 무료예요.</div>
+      </div>
+      <div class="cta-opt" onclick="selectCta(2)">
+        <div class="cta-opt-label">C안 — 직접적</div>
+        <div class="cta-opt-text">당신의 마음을 다 아는 다알 타로.\n혼자 삼키고 있는 질문 있으면 가져오세요.\n프로필 링크에서 첫 질문 무료로 물어볼 수 있어요.</div>
+      </div>
+      <div class="cta-opt" onclick="selectCta(3)">
+        <div class="cta-opt-label">D안 — 감성적</div>
+        <div class="cta-opt-text">당신의 마음을 다 아는 다알 타로.\n요즘 마음 한켠에 자꾸 걸리는 게 있나요?\n프로필 링크에서 그 질문 꺼내보세요. 첫 번째는 무료예요.</div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label class="lbl">✏️ 직접 수정</label>
+      <textarea id="ctaText" rows="4" placeholder="CTA 문구를 직접 수정할 수 있어요"></textarea>
+    </div>
+  </div>
+
+  <!-- STEP 2: 주제 추천 -->
+  <div class="card">
+    <div class="card-title"><span class="step-badge">2</span>오늘의 주제 선정</div>
+    <div id="topicArea">
+      <button class="btn btn-gold" onclick="loadTopics()" id="topicBtn" style="width:100%;justify-content:center;padding:12px;">✨ 오늘의 주제 3가지 추천받기</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 카드 선택 -->
+  <div class="card" id="cardStep" style="display:none;">
+    <div class="card-title"><span class="step-badge">3</span>타로 카드 선택</div>
+    <div id="cardArea"></div>
+  </div>
+
+  <!-- GO BUTTONS -->
+  <div id="goButtons" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn btn-gold" onclick="goGenerate('shorts')" style="justify-content:center;padding:12px;">⚡ 숏츠 대본 생성</button>
+      <button class="btn btn-outline" onclick="goGenerate('longform')" style="justify-content:center;padding:12px;">📖 롱폼 대본 생성</button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-ghost" onclick="goGenerate('both')" style="width:100%;justify-content:center;padding:10px;">둘 다 생성</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== TAB 1: SHORTS ===== -->
+<div class="tab-content" id="tab-shorts">
+  <div id="shortsContent">
+    <div class="empty">날짜·주제·카드 탭에서 먼저 설정을 완료해주세요 🔮</div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: LONGFORM ===== -->
+<div class="tab-content" id="tab-longform">
+  <div id="longformContent">
+    <div class="empty">날짜·주제·카드 탭에서 먼저 설정을 완료해주세요 🔮</div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: META ===== -->
+<div class="tab-content" id="tab-meta">
+  <div id="metaContent">
+    <div class="empty">대본을 먼저 생성하면 메타데이터를 뽑을 수 있어요 🔮</div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===== 22 MAJOR ARCANA =====
+const TAROT_CARDS = [
+  {num:'0', name:'바보', en:'The Fool', emoji:'🌟', keywords:'새로운 시작, 자유, 무한한 가능성'},
+  {num:'I', name:'마법사', en:'The Magician', emoji:'🪄', keywords:'의지력, 창조, 실현'},
+  {num:'II', name:'여사제', en:'The High Priestess', emoji:'🌙', keywords:'직관, 내면의 지혜, 신비'},
+  {num:'III', name:'여황제', en:'The Empress', emoji:'🌸', keywords:'풍요, 모성, 창조적 에너지'},
+  {num:'IV', name:'황제', en:'The Emperor', emoji:'👑', keywords:'안정, 권위, 구조'},
+  {num:'V', name:'교황', en:'The Hierophant', emoji:'🏛', keywords:'전통, 믿음, 정신적 지도'},
+  {num:'VI', name:'연인', en:'The Lovers', emoji:'💫', keywords:'선택, 사랑, 가치관'},
+  {num:'VII', name:'전차', en:'The Chariot', emoji:'⚡', keywords:'의지, 승리, 방향성'},
+  {num:'VIII', name:'힘', en:'Strength', emoji:'🦁', keywords:'용기, 인내, 내면의 힘'},
+  {num:'IX', name:'은둔자', en:'The Hermit', emoji:'🕯', keywords:'내면 탐구, 고독, 지혜'},
+  {num:'X', name:'운명의 수레바퀴', en:'Wheel of Fortune', emoji:'☯️', keywords:'변화, 순환, 운명'},
+  {num:'XI', name:'정의', en:'Justice', emoji:'⚖️', keywords:'균형, 진실, 결과'},
+  {num:'XII', name:'매달린 사람', en:'The Hanged Man', emoji:'🙃', keywords:'멈춤, 전환, 새로운 시각'},
+  {num:'XIII', name:'죽음', en:'Death', emoji:'🌑', keywords:'변화, 끝과 시작, 전환'},
+  {num:'XIV', name:'절제', en:'Temperance', emoji:'🌊', keywords:'균형, 조화, 치유'},
+  {num:'XV', name:'악마', en:'The Devil', emoji:'🔗', keywords:'집착, 욕망, 속박'},
+  {num:'XVI', name:'탑', en:'The Tower', emoji:'⚡', keywords:'갑작스러운 변화, 해방, 재건'},
+  {num:'XVII', name:'별', en:'The Star', emoji:'⭐', keywords:'희망, 치유, 영감'},
+  {num:'XVIII', name:'달', en:'The Moon', emoji:'🌕', keywords:'불안, 환상, 무의식'},
+  {num:'XIX', name:'태양', en:'The Sun', emoji:'☀️', keywords:'기쁨, 성공, 활력'},
+  {num:'XX', name:'심판', en:'Judgement', emoji:'🎺', keywords:'각성, 용서, 새로운 삶'},
+  {num:'XXI', name:'세계', en:'The World', emoji:'🌍', keywords:'완성, 통합, 성취'},
+];
+
+const CTA_TEXTS = [
+  '당신의 마음을 다 아는 다알 타로.\n뭔가 막히는 느낌, 혼자 끙끙 앓고 계신 거 있으시죠?\n프로필 링크에서 가장 궁금한 질문 하나, 무료로 꺼내보세요.',
+  '당신의 마음을 다 아는 다알 타로.\n말 못 하고 혼자 담아두고 있는 것들, 여기서는 꺼내도 괜찮아요.\n프로필 링크 눌러서 궁금한 거 하나만 물어봐요. 첫 질문은 무료예요.',
+  '당신의 마음을 다 아는 다알 타로.\n혼자 삼키고 있는 질문 있으면 가져오세요.\n프로필 링크에서 첫 질문 무료로 물어볼 수 있어요.',
+  '당신의 마음을 다 아는 다알 타로.\n요즘 마음 한켠에 자꾸 걸리는 게 있나요?\n프로필 링크에서 그 질문 꺼내보세요. 첫 번째는 무료예요.',
+];
+
+// ===== STATE =====
+let API_KEY = localStorage.getItem('claude_api_key') || '';
+let selectedCtaIdx = 0;
+let selectedTopic = '';
+let selectedCard = null;
+let generatedShorts = '';
+let generatedLongform = '';
+
+// ===== INIT =====
+const today = new Date();
+document.getElementById('workDate').value = today.toISOString().slice(0,10);
+document.getElementById('ctaText').value = CTA_TEXTS[0];
+updateApiStatus();
+
+// ===== API =====
+function updateApiStatus() {
+  const dot = document.getElementById('apiDot'), st = document.getElementById('apiStatus');
+  if (API_KEY) { dot.className='api-dot on'; st.textContent='Claude 연결됨'; }
+  else { dot.className='api-dot'; st.textContent='API 설정'; }
+}
+function openModal() { document.getElementById('apiModal').classList.add('open'); document.getElementById('claudeKey').value=API_KEY; }
+function closeModal() { document.getElementById('apiModal').classList.remove('open'); }
+function saveKeys() {
+  const c=document.getElementById('claudeKey').value.trim();
+  if(c){ API_KEY=c; localStorage.setItem('claude_api_key',c); }
+  updateApiStatus(); closeModal(); showToast('저장됐어요');
+}
+
+async function callClaude(prompt, maxTokens=2000) {
+  if (!API_KEY) { openModal(); throw new Error('API 키를 입력해주세요'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(`API 오류: ${res.status} — ${e?.error?.message||''}`); }
+  const d=await res.json(); return d.content[0].text;
+}
+
+// ===== TABS =====
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ===== COPY =====
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+
+function showToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1000;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;';
+  t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2500);
+}
+
+// ===== CTA =====
+function selectCta(idx) {
+  selectedCtaIdx=idx;
+  document.querySelectorAll('.cta-opt').forEach((el,i)=>el.classList.toggle('selected',i===idx));
+  document.getElementById('ctaText').value=CTA_TEXTS[idx];
+}
+
+function getCta() { return document.getElementById('ctaText').value.trim(); }
+
+// ===== STEP 2: TOPICS =====
+async function loadTopics() {
+  const btn=document.getElementById('topicBtn');
+  if(btn){ btn.disabled=true; btn.textContent='추천받는 중...'; }
+  const dateStr=document.getElementById('workDate').value;
+  const area=document.getElementById('topicArea');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>오늘의 주제를 추천하는 중...</div>';
+  try {
+    const raw=await callClaude(`다알 타로 유튜브 채널의 오늘 숏츠/롱폼 주제를 추천해주세요.
+
+채널: 다알 타로 (20대 여성 타깃, 신비롭고 따뜻한 감성, 일상 고민 + 타로 연결)
+날짜: ${dateStr}
+계절/시기를 반영해서 공감가는 주제로. 이전에 추천한 것과 다른 신선한 주제로.
+
+JSON만 출력:
+{"topics":[
+  {"theme":"주제 한 줄","desc":"어떤 감정/상황의 사람에게 닿는지 (1줄)","hook":"예상 훅 첫문장"},
+  {"theme":"...","desc":"...","hook":"..."},
+  {"theme":"...","desc":"...","hook":"..."}
+]}`, 1000);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderTopics(data.topics);
+  } catch(e) {
+    area.innerHTML=`<div style="color:#e57373;font-size:13px;margin-bottom:8px;">오류: ${e.message}</div>`;
+    const retryBtn=document.createElement('button');
+    retryBtn.className='btn btn-outline'; retryBtn.textContent='다시 시도';
+    retryBtn.addEventListener('click', loadTopics);
+    area.appendChild(retryBtn);
+  }
+  if(btn){ btn.disabled=false; btn.textContent='✨ 오늘의 주제 3가지 추천받기'; }
+}
+
+function renderTopics(topics) {
+  const area=document.getElementById('topicArea');
+  selectedTopic='';
+
+  const grid=document.createElement('div');
+  grid.className='choice-grid'; grid.id='topicGrid';
+
+  topics.forEach((t,i)=>{
+    const card=document.createElement('div');
+    card.className='choice-card'; card.id=`tc${i}`;
+    card.innerHTML=`
+      <div class="choice-label">주제 ${i+1}</div>
+      <div class="choice-text"></div>
+      <div class="choice-sub"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic;"></div>`;
+    card.querySelectorAll('div')[1].textContent=t.theme;
+    card.querySelectorAll('div')[2].textContent=t.desc;
+    card.querySelectorAll('div')[3].textContent=`"${t.hook}"`;
+    card.addEventListener('click', ()=>selectTopic(i, t.theme));
+    grid.appendChild(card);
+  });
+
+  const btnRow=document.createElement('div');
+  btnRow.className='btn-row';
+
+  const reBtn=document.createElement('button');
+  reBtn.className='btn btn-outline'; reBtn.textContent='🔄 다시 추천';
+  reBtn.addEventListener('click', loadTopics);
+
+  const nextBtn=document.createElement('button');
+  nextBtn.className='btn btn-gold'; nextBtn.id='topicNextBtn';
+  nextBtn.textContent='카드 선택 →'; nextBtn.disabled=true;
+  nextBtn.addEventListener('click', showCardStep);
+
+  btnRow.appendChild(reBtn); btnRow.appendChild(nextBtn);
+  area.innerHTML='';
+  area.appendChild(grid); area.appendChild(btnRow);
+}
+
+function selectTopic(i, theme) {
+  document.querySelectorAll('#topicGrid .choice-card').forEach((el,idx)=>el.classList.toggle('selected',idx===i));
+  selectedTopic=theme;
+  document.getElementById('topicNextBtn').disabled=false;
+}
+
+// ===== STEP 3: CARD SELECTION =====
+function showCardStep() {
+  if (!selectedTopic) return;
+  document.getElementById('cardStep').style.display='block';
+  renderCardGrid();
+  document.getElementById('cardStep').scrollIntoView({behavior:'smooth'});
+}
+
+function renderCardGrid() {
+  const area=document.getElementById('cardArea');
+  area.innerHTML=`
+    <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">22장 메이저 아르카나 중 오늘의 카드를 선택하세요.</p>
+    <div class="tarot-grid">
+      ${TAROT_CARDS.map((c,i)=>`
+        <div class="tarot-card" id="card${i}" onclick="selectCard(${i})">
+          <div class="tarot-card-emoji">${c.emoji}</div>
+          <div class="tarot-card-num">${c.num}</div>
+          <div class="tarot-card-name">${c.name}</div>
+          <div class="tarot-card-keyword">${c.keywords.split(',')[0]}</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:14px;display:none;" id="cardSelectedInfo"></div>`;
+}
+
+function selectCard(i) {
+  document.querySelectorAll('.tarot-card').forEach((el,idx)=>el.classList.toggle('selected',idx===i));
+  selectedCard=TAROT_CARDS[i];
+  const info=document.getElementById('cardSelectedInfo');
+  info.style.display='block';
+  info.innerHTML=`<div style="background:rgba(200,169,110,.06);border:1px solid rgba(200,169,110,.2);border-radius:8px;padding:12px 14px;">
+    <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:4px;">${selectedCard.emoji} ${selectedCard.name} (${selectedCard.en})</div>
+    <div style="font-size:12px;color:var(--text2);">${selectedCard.keywords}</div>
+  </div>`;
+  document.getElementById('goButtons').style.display='block';
+  document.getElementById('goButtons').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== GENERATE =====
+async function goGenerate(type) {
+  if (!selectedTopic || !selectedCard) { alert('주제와 카드를 먼저 선택해주세요'); return; }
+  const cta=getCta();
+  if (type==='shorts' || type==='both') await generateShorts(cta);
+  if (type==='longform' || type==='both') await generateLongform(cta);
+  if (type==='shorts') switchTab('shorts', document.querySelector('.tab:nth-child(2)'));
+  if (type==='longform') switchTab('longform', document.querySelector('.tab:nth-child(3)'));
+  if (type==='both') switchTab('shorts', document.querySelector('.tab:nth-child(2)'));
+}
+
+async function generateShorts(cta) {
+  const area=document.getElementById('shortsContent');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>숏츠 대본 생성 중...</div>';
+  switchTab('shorts', document.querySelector('.tab:nth-child(2)'));
+  try {
+    const raw=await callClaude(`다알 타로 유튜브 숏츠 대본을 작성해주세요.
+
+채널: 다알 타로 (20대 여성 타깃, 신비롭고 따뜻한 감성)
+오늘의 주제/고민: ${selectedTopic}
+오늘의 카드: ${selectedCard.name} (${selectedCard.en}) — ${selectedCard.keywords}
+
+[대본 구조 — 반드시 이 순서로]
+① 공감 훅: "혹시 지금 ~하고 계신가요?" 형식으로 주제에 맞게 (2-3줄)
+② 행동 유도: "화면을 두 번 톡톡 두드려 카드를 열어보세요."
+③ [3초 pause]
+④ 카드 공개: "${selectedCard.name} 카드가 나왔네요."
+⑤ 카드 의미: 주제에 연결해서 따뜻하게 해석 (3-4줄)
+⑥ CTA: (아래 제공)
+
+CTA 문구:
+${cta}
+
+규칙:
+- 전체 60초 이내 (약 200-230자)
+- 말투: 20대 여성에게 말 걸듯, 따뜻하고 신비롭게
+- "[3초 pause]" 표시 반드시 포함
+- 순수 대본만 출력 (설명, 지시문 없이)`, 1500);
+
+    generatedShorts=raw;
+
+    // 이미지 프롬프트 생성
+    area.innerHTML='<div class="loading"><div class="spinner"></div>이미지 프롬프트 4장 생성 중...</div>';
+    const imgRaw=await callClaude(`다알 타로 유튜브 숏츠 영상용 AI 이미지 프롬프트 4장을 만들어주세요.
+
+카드: ${selectedCard.name} (${selectedCard.keywords})
+주제/고민: ${selectedTopic}
+대본 첫 줄: ${raw.split('\n')[0]}
+
+[다알 타로 이미지 톤 — 반드시 준수]
+- 색감: 딥 네이비, 보라, 골드, 달빛 실버, 촛불 오렌지
+- 카드 프레임: navy blue background with intricate gold border frame, tarot card style
+- 인물: 20대 한국 여성, 뒷모습 또는 손만 (얼굴 없게)
+- 소품: 크리스탈, 촛불, 꽃잎, 타로카드 뒷면, 빈티지 오브젝트
+- 스타일: cinematic, mystical, soft bokeh, film grain, vertical 9:16
+- 금지: 카드 앞면 텍스트/심볼 직접 노출
+
+[4장 구성]
+1. 도입부 공감 — 주제에 맞는 감성 공간 (뒷모습 여성 + 계절/상황 반영)
+2. 카드 등장 암시 — 손이 타로카드 뒷면을 쥔 신비로운 장면
+3. 카드 메시지 — 전환/희망/위로 분위기 감성 공간
+4. CTA 마무리 — 따뜻하고 신비로운 오브젝트 배치
+
+JSON만 출력:
+{"images":[{"num":1,"scene":"장면 설명 (한글)","prompt":"영어 프롬프트 (세로형 9:16 비율 명시)"}]}`, 2000);
+
+    const imgData=JSON.parse(imgRaw.replace(/```json|```/g,'').trim());
+    renderShortsResult(raw, cta, imgData.images);
+  } catch(e) {
+    area.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+function renderShortsResult(script, cta, images) {
+  const area=document.getElementById('shortsContent');
+  const displayScript=script.replace(/\[3초 pause\]/g,'<span class="pause-mark">[3초 pause]</span>');
+  area.innerHTML=`
+    <div class="card">
+      <div class="card-title">⚡ 숏츠 대본</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">
+        ${selectedCard.emoji} ${selectedCard.name} · ${selectedTopic}
+      </div>
+      <div class="script-box">${displayScript}</div>
+      <div class="btn-row">
+        <button class="btn-copy" id="scriptCopyBtn">대본 복사</button>
+        <button class="btn btn-outline" id="regenShortsBtn">🔄 재생성</button>
+        <button class="btn btn-outline" id="feedbackToggleBtn">✏️ 수정 요청</button>
+      </div>
+      <div id="feedbackArea" style="display:none;margin-top:12px;">
+        <textarea id="feedbackText" rows="2" placeholder="예: 훅을 더 강하게, 카드 설명을 더 신비롭게..."></textarea>
+        <button class="btn btn-gold" id="regenFeedbackBtn" style="margin-top:8px;width:100%;justify-content:center;">반영해서 재생성</button>
+      </div>
+    </div>
+
+    ${images ? `
+    <div class="card" id="shortsImgCard">
+      <div class="card-title">🖼 이미지 프롬프트 4장</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">제미나이에 복사해서 세로형(9:16) 이미지 생성하세요. 다알 카드 프레임(네이비+골드)에 맞게 뽑아보세요.</div>
+      <div id="shortsImgList"></div>
+      <button class="btn btn-outline" id="regenShortsImgBtn" style="margin-top:8px;width:100%;justify-content:center;">🔄 이미지 프롬프트 재생성</button>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-title" style="cursor:pointer;" id="metaToggleBtn">📋 메타데이터 생성 <span style="font-size:12px;color:var(--text3);">▼ 클릭</span></div>
+      <div id="shortsMeta" style="display:none;">
+        <button class="btn btn-gold" id="genMetaBtn" style="width:100%;justify-content:center;padding:12px;">메타데이터 생성 →</button>
+        <div id="shortsMetaResult"></div>
+      </div>
+    </div>`;
+
+  // 모든 버튼 addEventListener로 등록
+  document.getElementById('scriptCopyBtn').addEventListener('click', function() {
+    copyText(generatedShorts, this);
+  });
+  document.getElementById('regenShortsBtn').addEventListener('click', regenShorts);
+  document.getElementById('feedbackToggleBtn').addEventListener('click', showFeedback);
+  document.getElementById('regenFeedbackBtn').addEventListener('click', regenWithFeedback);
+  document.getElementById('metaToggleBtn').addEventListener('click', ()=>toggleMeta('shortsMeta'));
+  document.getElementById('genMetaBtn').addEventListener('click', generateShortsMetaInline);
+
+  // 이미지 프롬프트 렌더링
+  if (images) {
+    renderShortsImages('shortsImgList', images);
+    document.getElementById('regenShortsImgBtn').addEventListener('click', regenShortsImages);
+  }
+}
+
+function renderShortsImages(containerId, images) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  images.forEach((img, i) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:11px;color:var(--text3);font-weight:500;';
+    label.textContent = `${img.num}. ${img.scene}`;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy';
+    copyBtn.textContent = '복사';
+
+    const promptDiv = document.createElement('div');
+    promptDiv.style.cssText = 'font-size:12px;color:var(--gold);font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;';
+    promptDiv.textContent = img.prompt || '';
+
+    copyBtn.addEventListener('click', () => copyText(promptDiv.textContent, copyBtn));
+
+    header.appendChild(label);
+    header.appendChild(copyBtn);
+    itemDiv.appendChild(header);
+    itemDiv.appendChild(promptDiv);
+    container.appendChild(itemDiv);
+  });
+}
+
+async function regenShortsImages() {
+  const list = document.getElementById('shortsImgList');
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>이미지 프롬프트 재생성 중...</div>';
+  try {
+    const imgRaw = await callClaude(`다알 타로 숏츠 영상용 AI 이미지 프롬프트 4장. 이전과 다른 장면으로.
+카드: ${selectedCard.name} (${selectedCard.keywords}) / 주제: ${selectedTopic}
+톤: 딥 네이비+골드+에메랄드, 20대 한국 여성 뒷모습/손만, cinematic, mystical, film grain, 세로 9:16.
+구성: ①도입 공감장면 ②카드 등장 암시(타로카드뒷면+손) ③전환/희망 분위기 ④CTA 마무리 오브젝트
+JSON만: {"images":[{"num":1,"scene":"장면설명(한글)","prompt":"영어프롬프트(9:16명시)"}]}`, 2000);
+    const imgData = JSON.parse(imgRaw.replace(/```json|```/g,'').trim());
+    renderShortsImages('shortsImgList', imgData.images);
+  } catch(e) {
+    list.innerHTML = `<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+function toggleMeta(id) {
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function showFeedback() {
+  const fa=document.getElementById('feedbackArea');
+  fa.style.display=fa.style.display==='none'?'block':'none';
+}
+
+async function regenShorts() {
+  const cta=getCta();
+  await generateShorts(cta);
+}
+
+async function regenWithFeedback() {
+  const feedback=document.getElementById('feedbackText').value.trim();
+  if (!feedback) { alert('수정 요청 내용을 입력해주세요'); return; }
+  const area=document.getElementById('shortsContent');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>수정 반영 중...</div>';
+  try {
+    const raw=await callClaude(`아래 다알 타로 숏츠 대본을 수정 요청을 반영해서 다시 써주세요.
+
+기존 대본:
+${generatedShorts}
+
+수정 요청: ${feedback}
+
+카드: ${selectedCard.name} / 주제: ${selectedTopic}
+[3초 pause] 반드시 포함. 순수 대본만 출력.`, 1500);
+    generatedShorts=raw;
+    renderShortsResult(raw, getCta(), null);
+  } catch(e) {
+    area.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+async function generateShortsMetaInline() {
+  const result=document.getElementById('shortsMetaResult');
+  result.innerHTML='<div class="loading"><div class="spinner"></div>메타데이터 생성 중...</div>';
+  try {
+    const raw=await callClaude(`다알 타로 유튜브 숏츠 메타데이터 풀패키지를 만들어주세요.
+
+주제/고민: ${selectedTopic}
+대본 첫 줄: ${generatedShorts.split('\n')[0]}
+
+[중요 규칙]
+- 카드 이름(${selectedCard.name}) 절대 직접 언급 금지 — 설명글, 고정댓글, 인스타, 틱톡, 스레드 모두
+- "영상을 봐야 카드가 열린다" 는 궁금증 유발 방식으로
+- 이모지 적극 활용
+- 20대 여성 타깃, 신비롭고 따뜻한 톤
+
+[설명글 구성]
+공감 유도 (주제로 마음 건드리기) → 오늘의 카드가 마음에 와닿으셨다면 구독하고 매일 타로 이야기 함께하자는 구독 유도 → 핵심 샵태그 5개 (SEO 최적화, 실제 검색어 기반)
+→ 유튜브 설명란에 바로 붙여쓸 수 있게 완성형으로
+
+[각 플랫폼 규칙]
+- 고정댓글: 이모지 포함, 영상 속 카드가 궁금하면 다시 보라는 식, 무료 상담 안내, 카드명 언급 금지
+- 인스타: 감성적 문장 2-3줄 + 영상 봐야 알 수 있다는 궁금증 유발 + 해시태그 20개
+- 틱톡: 짧고 트렌디, 1-2줄 + 카드 공개는 영상에서 + 해시태그 10개
+- 스레드: 일상적이고 자연스럽게, 2-3줄, 해시태그 5개 이내
+
+JSON만 출력:
+{"title":"숏츠제목(이모지포함,20대여성공감,클릭유도,카드명언급금지)","hook":"첫3초화면표시문구","description":"유튜브설명글(공감유도+구독유도+핵심샵태그5개,이모지포함,완성형)","hidden_tags":"숨은태그(500자,쉼표구분,가급적한글,실제검색어,타로/감성/주제관련,카드명언급금지)","pinned_comment":"고정댓글(이모지포함,카드명언급금지,3-4줄)","instagram":"인스타게시글(카드명언급금지,감성적2-3줄+줄바꿈+해시태그20개)","tiktok":"틱톡게시글(카드명언급금지,트렌디1-2줄+해시태그10개)","threads":"스레드게시글(카드명언급금지,자연스럽게2-3줄,해시태그5개이내)"}`, 2000);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderMetaCards(result, data);
+  } catch(e) {
+    result.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+function renderMetaCards(container, data) {
+  const fields = [
+    {label:'제목', key:'title'},
+    {label:'후킹 문구 (첫 3초)', key:'hook'},
+    {label:'설명', key:'description'},
+    {label:'📌 고정댓글', key:'pinned_comment'},
+    {label:'📸 인스타그램', key:'instagram'},
+    {label:'🎵 틱톡', key:'tiktok'},
+    {label:'🧵 스레드', key:'threads'},
+  ];
+
+  container.innerHTML = '';
+
+  // 일반 필드 렌더링
+  fields.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.marginTop = '10px';
+
+    const secEl = document.createElement('div');
+    secEl.className = 'sec';
+    secEl.textContent = f.label;
+
+    const row = document.createElement('div');
+    row.className = 'meta-row';
+
+    const textEl = document.createElement('span');
+    textEl.className = 'meta-text';
+    textEl.textContent = data[f.key] || '';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy';
+    copyBtn.textContent = '복사';
+    copyBtn.addEventListener('click', () => copyText(textEl.textContent, copyBtn));
+
+    row.appendChild(textEl);
+    row.appendChild(copyBtn);
+    wrap.appendChild(secEl);
+    wrap.appendChild(row);
+    container.appendChild(wrap);
+  });
+
+  // 숨은태그 섹션 (추가생성 포함)
+  const hiddenWrap = document.createElement('div');
+  hiddenWrap.style.marginTop = '14px';
+  hiddenWrap.innerHTML = `
+    <div class="sec" style="margin-top:0;">숨은태그 <span style="color:var(--text3);font-size:10px;" id="hiddenCharCount"></span></div>
+    <div class="meta-row" style="margin-bottom:8px;">
+      <span class="meta-text" id="hiddenTagsText"></span>
+      <button class="btn-copy" id="hiddenCopyBtn">복사</button>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 숨은태그 점수가 낮으면 추가 생성</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="hiddenAddSelect" style="width:auto;flex:none;font-size:12px;padding:6px 10px;">
+          <option value="100">+100자</option>
+          <option value="150">+150자</option>
+          <option value="200">+200자</option>
+          <option value="300">+300자</option>
+          <option value="400">+400자</option>
+        </select>
+        <button class="btn btn-outline" id="hiddenAddBtn" style="font-size:12px;padding:6px 14px;">추가 생성 →</button>
+      </div>
+      <div id="hiddenAddResult" style="display:none;margin-top:10px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">추가된 태그 (복사해서 기존에 붙여넣으세요)</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--accent);line-height:1.7;white-space:pre-wrap;" id="hiddenAddText"></div>
+        <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;color:var(--text3);" id="hiddenAddCount"></span>
+          <button class="btn-copy" id="hiddenAddCopyBtn">추가분만 복사</button>
+        </div>
+      </div>
+    </div>`;
+
+  container.appendChild(hiddenWrap);
+
+  // 숨은태그 값 삽입
+  const hiddenTextEl = hiddenWrap.querySelector('#hiddenTagsText');
+  const hiddenCharCountEl = hiddenWrap.querySelector('#hiddenCharCount');
+  const hiddenVal = data['hidden_tags'] || '';
+  hiddenTextEl.textContent = hiddenVal;
+  hiddenCharCountEl.textContent = `(${hiddenVal.length}자 / 500자)`;
+
+  // 복사 버튼
+  hiddenWrap.querySelector('#hiddenCopyBtn').addEventListener('click', function() {
+    copyText(hiddenTextEl.textContent, this);
+  });
+
+  // 추가 생성
+  hiddenWrap.querySelector('#hiddenAddBtn').addEventListener('click', async function() {
+    const addChars = parseInt(hiddenWrap.querySelector('#hiddenAddSelect').value);
+    const resultDiv = hiddenWrap.querySelector('#hiddenAddResult');
+    const addTextEl = hiddenWrap.querySelector('#hiddenAddText');
+    const addCountEl = hiddenWrap.querySelector('#hiddenAddCount');
+    const addCopyBtn = hiddenWrap.querySelector('#hiddenAddCopyBtn');
+
+    this.disabled = true; this.textContent = '생성 중...';
+    resultDiv.style.display = 'none';
+
+    try {
+      const raw = await callClaude(`다알 타로 유튜브 숏츠 숨은태그를 ${addChars}자 추가로 만들어주세요.
+
+주제: ${selectedTopic}
+기존 태그: ${hiddenTextEl.textContent}
+
+규칙:
+- 기존 태그와 중복 없이 새로운 태그만
+- 가급적 한글로, 쉼표 구분
+- 실제 검색어 기반 (타로, 감성, 오늘의운세, 주제 관련)
+- 카드 이름(${selectedCard.name}) 직접 언급 금지
+- 정확히 ${addChars}자 내외로
+
+추가 태그만 출력 (설명 없이, 쉼표 구분):`, 600);
+
+      const addedText = raw.trim();
+      addTextEl.textContent = addedText;
+      addCountEl.textContent = `${addedText.length}자`;
+      resultDiv.style.display = 'block';
+
+      addCopyBtn.addEventListener('click', () => copyText(addedText, addCopyBtn));
+    } catch(e) {
+      addTextEl.textContent = '오류: ' + e.message;
+      resultDiv.style.display = 'block';
+    }
+    this.disabled = false; this.textContent = '추가 생성 →';
+  });
+}
+
+// ===== LONGFORM =====
+async function generateLongform(cta) {
+  const area=document.getElementById('longformContent');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>롱폼 대본 + 이미지 프롬프트 생성 중... (1-2분 소요)</div>';
+  switchTab('longform', document.querySelector('.tab:nth-child(3)'));
+
+  const FIXED_ENDING = `혹시 지금 마음이 답답하거나 궁금한 게 있다면
+프로필 링크 클릭, 다알 상담실로 들어오세요.
+당신의 편이 되어 기다리고 있을게요.
+
+오늘 이 영상이 여러분의 마음속 텅 빈 자리에 작은 빛 한 줄기가 되었길 바랍니다.
+
+오늘 영상이 좋으셨다면 구독과 좋아요, 그리고 알림 설정까지 부탁드려요.
+여러분의 응원이 다알에게는 가장 큰 후광이 됩니다.
+
+혹시 지금 여러분을 가장 공허하게 만드는 고민이 있다면 아래 댓글로 짧게 남겨주세요.
+제가 하나하나 읽어보며 여러분의 내일에 행운의 기운을 보낼게요.
+
+지금까지 여러분의 마음을 다 아는, 다알 타로였습니다.
+우리 다음 영상에서 더 밝은 모습으로 만나요. 안녕!`;
+
+  try {
+    const raw=await callClaude(`다알 타로 유튜브 롱폼 대본을 작성해주세요.
+
+채널: 다알 타로 (20대 여성 타깃, 신비롭고 따뜻한 감성)
+오늘의 주제/고민: ${selectedTopic}
+오늘의 카드: ${selectedCard.name} (${selectedCard.en}) — ${selectedCard.keywords}
+
+[대본 구조 — 반드시 이 순서와 비중으로]
+
+① 오프닝 훅 (약 1분, 공백제외 400자 이상)
+- 시청자의 상황/감정을 장면으로 묘사하며 시작 ("지금 이런 느낌 드시는 분 계세요?")
+- 구체적인 일상 장면 묘사로 강한 공감 형성
+- "오늘 이 카드가 나온 게 우연이 아닐 수 있어요" 식으로 카드 예고
+- 절대 밋밋하게 시작 금지 — 첫 문장부터 마음을 건드려야 함
+
+② 카드 소개 (약 1-2분, 공백제외 600자 이상)
+- 카드 이름과 이미지 묘사 (그림 속 장면을 감성적으로 설명)
+- 카드의 핵심 에너지와 전통적 의미
+- "이 카드가 지금 당신에게 온 이유"로 자연스럽게 연결
+
+③ 카드 정방향 의미 (약 1-2분, 공백제외 700자 이상)
+- 오늘 주제와 연결해서 구체적으로
+- "이게 당신 상황이라면 이렇게 읽힐 수 있어요" 식으로 적용
+- 희망적이고 따뜻한 관점 유지
+
+④ 카드 역방향 의미 (약 1분, 공백제외 500자 이상)
+- 다른 시각/경고의 메시지
+- 역방향도 부정적으로만 읽지 말고 성장의 신호로 따뜻하게
+
+⑤ 실생활 적용 (약 2-3분, 공백제외 900자 이상)
+- 오늘 주제(${selectedTopic})에 맞는 구체적인 상황 예시 2-3가지
+- "만약 ~한 상황이라면" 식으로 시청자가 자기 이야기처럼 느끼게
+- 오늘 할 수 있는 작은 실천 미션 1가지
+
+⑥ 오늘의 메시지 (약 1분, 공백제외 400자 이상)
+- 카드와 주제를 아우르는 핵심 메시지
+- 시적이고 여운 있게, 계절감/자연 비유 활용
+- 시청자에게 직접 건네는 따뜻한 한마디로 마무리
+
+[엔딩 — 아래 문구를 반드시 그대로 사용]
+${FIXED_ENDING}
+
+[전체 규칙]
+- 공백 제외 3,500자 이상 (각 섹션 분량 반드시 지킬 것)
+- 말투: 따뜻하고 신비로운 톤, "~요" 체, 20대 여성에게 말 걸듯
+- TTS 순수 텍스트만 (구분선 --- 헤더 # 지시문 절대 금지)
+- 섹션 간 자연스러운 연결 (갑자기 주제 바뀌지 않게)
+- 첫 문장: 반드시 공감 장면 묘사로 시작`, 8000);
+
+    generatedLongform=raw;
+
+    // 이미지 프롬프트 + 썸네일 별도 생성
+    area.innerHTML='<div class="loading"><div class="spinner"></div>이미지 프롬프트 10장 + 썸네일 생성 중...</div>';
+    const imgRaw=await callClaude(`다알 타로 유튜브 롱폼 영상용 AI 이미지 프롬프트 10장 + 썸네일 1장을 만들어주세요.
+
+카드: ${selectedCard.name} (${selectedCard.keywords})
+주제/고민: ${selectedTopic}
+채널 분위기: 20대 여성 타깃, 신비롭고 따뜻한 감성
+
+[공통 이미지 톤 규칙]
+- 색감: 딥 네이비, 보라, 골드, 달빛 실버, 촛불 오렌지
+- 인물: 20대 한국 여성 뒷모습 또는 손만 (얼굴 없게)
+- 스타일: cinematic, mystical, soft bokeh, film grain
+- 금지: 배경에 카드 테두리/프레임 없이 순수 감성 장면만, 카드 앞면 텍스트 노출 금지
+- 배경 이미지에는 절대 타로카드 프레임/테두리 넣지 말 것
+
+[영상용 이미지 10장 — 16:9 landscape]
+1. 오프닝 — 신비로운 분위기 (달빛/촛불/안개)
+2. 오프닝2 — 주제 관련 감성 공간 (계절/상황 반영)
+3. 카드 등장 — 손이 타로카드 뒷면을 살짝 쥔 장면 (카드 아웃포커싱)
+4. 카드 의미1 — 정방향 분위기
+5. 카드 의미2 — 주제 연관 감성 이미지
+6. 역방향 — 대비되는 분위기
+7. 실생활 적용1 — 주제에 맞는 일상 장면 (20대 여성 뒷모습)
+8. 실생활 적용2 — 주제에 맞는 감성 공간
+9. 마무리 메시지 — 희망적/따뜻한 이미지
+10. CTA — 따뜻하고 신비로운 오브젝트 배치
+
+[썸네일 — 16:9 landscape, 별도]
+- 20대 한국 여성 뒷모습 + 타로카드 뒷면을 손에 살짝 쥔 장면
+- 카드는 아웃포커싱으로 흐릿하게 (주인공은 여성과 배경)
+- 주제/계절에 맞는 감성 배경 (창가, 공원, 달밤 등)
+- 네이비+골드 색감 유지
+- 텍스트 오버레이 공간 확보 (상단 or 하단 여백)
+- No card border frame, no text in image
+
+JSON만 출력:
+{"images":[{"num":1,"scene":"장면 설명 (한글)","prompt":"영어 프롬프트 (16:9 landscape)"}],"thumbnail":{"scene":"썸네일 장면 설명 (한글)","prompt":"영어 썸네일 프롬프트 (16:9 landscape)","text_suggestion":"텍스트 오버레이 제안 2가지 (한글, 짧고 강한 훅)"}}`, 4000);
+
+    const imgData=JSON.parse(imgRaw.replace(/```json|```/g,'').trim());
+    renderLongformResult(raw, imgData.images, imgData.thumbnail);
+  } catch(e) {
+    area.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+function renderLongformResult(script, images, thumbnail) {
+  const area=document.getElementById('longformContent');
+  const charCount=script.replace(/\s/g,'').length;
+
+  area.innerHTML=`
+    <div class="card">
+      <div class="card-title">📖 롱폼 대본</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">${selectedCard.emoji} ${selectedCard.name} · ${selectedTopic}</div>
+      <div class="script-box" id="longformScript"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right;">공백제외 ${charCount.toLocaleString()}자</div>
+      <div class="btn-row">
+        <button class="btn-copy" id="longCopyBtn">대본 복사</button>
+        <button class="btn btn-outline" id="regenLongBtn">🔄 재생성</button>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <textarea id="longFeedback" rows="2" placeholder="예: 실생활 예시를 더 구체적으로, 오프닝을 더 강렬하게..."></textarea>
+        <button class="btn btn-gold" id="regenLongFeedbackBtn" style="margin-top:8px;width:100%;justify-content:center;">수정 반영해서 재생성</button>
+      </div>
+    </div>
+
+    ${thumbnail ? `
+    <div class="card" id="thumbnailCard">
+      <div class="card-title">🖼 썸네일 프롬프트</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">제미나이에 복사해서 16:9 가로형으로 생성하세요.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;" id="thumbSceneLabel"></div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--accent);font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;" id="thumbPromptText"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn-copy" id="thumbCopyBtn">프롬프트 복사</button>
+      </div>
+      <div style="background:rgba(200,169,110,.06);border:1px solid rgba(200,169,110,.2);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">✍️ 텍스트 오버레이 제안 (미리캔버스/Canva에서 추가)</div>
+        <div style="font-size:13px;color:var(--gold);line-height:1.9;white-space:pre-wrap;" id="thumbTextSuggestion"></div>
+        <button class="btn-copy" id="thumbTextCopyBtn" style="margin-top:8px;">텍스트 복사</button>
+      </div>
+    </div>` : ''}
+
+    ${images ? `
+    <div class="card" id="imgPromptsCard">
+      <div class="card-title">🎬 영상용 이미지 프롬프트 10장</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">각 복사 버튼 눌러서 제미나이에 붙여넣으세요. 가로형 16:9 비율로 생성하세요.</div>
+      <div id="imgPromptList"></div>
+      <button class="btn btn-outline" id="regenImgBtn" style="margin-top:8px;width:100%;justify-content:center;">🔄 이미지 프롬프트 재생성</button>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-title" style="cursor:pointer;" id="longMetaToggle">📋 롱폼 메타데이터 생성 <span style="font-size:12px;color:var(--text3);">▼ 클릭</span></div>
+      <div id="longMeta" style="display:none;">
+        <button class="btn btn-gold" id="genLongMetaBtn" style="width:100%;justify-content:center;padding:12px;">메타데이터 생성 →</button>
+        <div id="longMetaResult"></div>
+      </div>
+    </div>`;
+
+  // 대본 삽입
+  document.getElementById('longformScript').textContent = script;
+
+  // 버튼 이벤트
+  document.getElementById('longCopyBtn').addEventListener('click', function() { copyText(generatedLongform, this); });
+  document.getElementById('regenLongBtn').addEventListener('click', regenLongform);
+  document.getElementById('regenLongFeedbackBtn').addEventListener('click', regenLongWithFeedback);
+  document.getElementById('longMetaToggle').addEventListener('click', ()=>toggleMeta('longMeta'));
+  document.getElementById('genLongMetaBtn').addEventListener('click', generateLongformMeta);
+
+  // 썸네일 삽입
+  if (thumbnail) {
+    document.getElementById('thumbSceneLabel').textContent = `📍 ${thumbnail.scene}`;
+    document.getElementById('thumbPromptText').textContent = thumbnail.prompt || '';
+    document.getElementById('thumbTextSuggestion').textContent = thumbnail.text_suggestion || '';
+    document.getElementById('thumbCopyBtn').addEventListener('click', function() {
+      copyText(document.getElementById('thumbPromptText').textContent, this);
+    });
+    document.getElementById('thumbTextCopyBtn').addEventListener('click', function() {
+      copyText(document.getElementById('thumbTextSuggestion').textContent, this);
+    });
+  }
+
+  // 이미지 프롬프트
+  if (images) {
+    renderImagePrompts('imgPromptList', images);
+    document.getElementById('regenImgBtn').addEventListener('click', regenImages);
+  }
+}
+
+function renderImagePrompts(containerId, images) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  images.forEach((img, i) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:11px;color:var(--text3);';
+    label.textContent = `${img.num}. ${img.scene}`;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy';
+    copyBtn.textContent = '복사';
+
+    const promptDiv = document.createElement('div');
+    promptDiv.style.cssText = 'font-size:12px;color:var(--accent);font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;';
+    promptDiv.textContent = img.prompt || '';
+
+    // addEventListener로 복사 — 클로저로 prompt 값 캡처
+    copyBtn.addEventListener('click', () => copyText(promptDiv.textContent, copyBtn));
+
+    header.appendChild(label);
+    header.appendChild(copyBtn);
+    itemDiv.appendChild(header);
+    itemDiv.appendChild(promptDiv);
+    container.appendChild(itemDiv);
+  });
+}
+
+async function regenImages() {
+  const card = document.getElementById('imgPromptsCard');
+  if (!card) return;
+  const list = document.getElementById('imgPromptList');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>이미지 프롬프트 재생성 중...</div>';
+  try {
+    const imgRaw = await callClaude(`다알 타로 롱폼 영상용 AI 이미지 프롬프트 10장. 이전과 다른 장면으로.
+카드: ${selectedCard.name} (${selectedCard.keywords}) / 주제: ${selectedTopic}
+톤: 딥 네이비, 보라, 골드, 달빛. 소품: 크리스탈, 촛불, 꽃잎, 타로카드뒷면, 빈티지. 인물: 뒷모습/손만. cinematic, mystical, soft bokeh, film grain.
+비율: 가로형 16:9 landscape orientation — 유튜브 롱폼 영상 규격
+JSON만: {"images":[{"num":1,"scene":"장면설명(한글)","prompt":"영어프롬프트(16:9 landscape 명시)"}]}`, 3000);
+    const imgData = JSON.parse(imgRaw.replace(/```json|```/g,'').trim());
+    renderImagePrompts('imgPromptList', imgData.images);
+  } catch(e) {
+    list.innerHTML = `<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+async function regenLongform() { await generateLongform(getCta()); }
+
+async function regenLongWithFeedback() {
+  const feedback=document.getElementById('longFeedback').value.trim();
+  if (!feedback) { alert('수정 내용을 입력해주세요'); return; }
+  const area=document.getElementById('longformContent');
+  area.innerHTML='<div class="loading"><div class="spinner"></div>수정 반영 중...</div>';
+  try {
+    const raw=await callClaude(`다알 타로 롱폼 대본 수정 요청을 반영해서 전체를 다시 써주세요.
+
+기존 대본:
+${generatedLongform}
+
+수정 요청: ${feedback}
+카드: ${selectedCard.name} / 주제: ${selectedTopic}
+2500자 이상, TTS 순수 텍스트만`, 5000);
+    generatedLongform=raw;
+    renderLongformResult(raw);
+  } catch(e) {
+    area.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+async function generateLongformMeta() {
+  const result=document.getElementById('longMetaResult');
+  result.innerHTML='<div class="loading"><div class="spinner"></div>롱폼 메타데이터 생성 중...</div>';
+  try {
+    const raw=await callClaude(`다알 타로 유튜브 롱폼 메타데이터를 만들어주세요.
+
+주제/고민: ${selectedTopic}
+(카드: ${selectedCard.name} — 단, 아래 모든 항목에서 카드 이름 직접 언급 금지)
+
+[중요 규칙]
+- 카드 이름 절대 직접 언급 금지 — 제목 포함 모든 항목
+- "오늘의 카드", "이 카드" 처럼 간접적으로만 표현
+- "영상에서 확인하세요" 식으로 궁금증 유발
+- 이모지 적극 활용
+- 20대 여성 타깃, 신비롭고 따뜻한 톤
+
+[설명글 구성]
+공감 유도 (주제로 마음 건드리기) → 오늘의 카드가 전하는 메시지가 궁금하다면 영상에서 확인 → 구독 유도 → 핵심 샵태그 5개 (SEO 최적화)
+→ 유튜브 설명란에 바로 붙여쓸 수 있게 완성형으로
+
+[각 플랫폼 규칙]
+- 고정댓글: 이모지, 영상 속 카드 메시지 언급(카드명 금지), 무료 상담 안내
+- 인스타: 감성적 3-4줄, 영상 봐야 카드 알 수 있다는 궁금증, 해시태그 20개
+- 틱톡: 짧고 트렌디, 2줄, 해시태그 10개
+- 스레드: 자연스럽게 2-3줄, 해시태그 5개 이내
+
+JSON만 출력:
+{"titles":["감성형제목(카드명금지)","검색최적화형(카드명금지)","질문형제목(카드명금지)"],"description":"유튜브설명글(공감유도+구독유도+핵심샵태그5개,이모지포함,완성형,카드명금지)","hashtags":"#다알타로 #타로 포함 총30개","hidden_tags":"숨은태그(500자이내,쉼표구분,실제검색어위주)","pinned_comment":"고정댓글(이모지포함,카드명금지,3-4줄)","instagram":"인스타게시글(카드명금지,감성적3-4줄+해시태그20개)","tiktok":"틱톡게시글(카드명금지,트렌디2줄+해시태그10개)","threads":"스레드게시글(카드명금지,자연스럽게2-3줄,해시태그5개이내)"}`, 2500);
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    // 제목 3개 따로
+    let titlesHTML=data.titles.map((t,i)=>{
+      const elId=`lt_${i}_${Date.now()}`;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;flex:1;margin-right:10px;" id="${elId}"></span><button class="btn-copy" onclick="copyText(document.getElementById('${elId}').textContent,this)">복사</button></div>`;
+    }).join('');
+    result.innerHTML=`<div style="margin-top:10px;"><div class="sec">제목 3개</div>${titlesHTML}</div>`;
+    data.titles.forEach((t,i)=>{ result.querySelectorAll('[id^="lt_"]')[i].textContent=`${['①','②','③'][i]} ${t}`; });
+
+    const fields=[
+      {label:'설명글',key:'description'},{label:'해시태그',key:'hashtags'},
+      {label:'숨은태그(500자)',key:'hidden_tags'},{label:'📌 고정댓글',key:'pinned_comment'},
+      {label:'📸 인스타그램',key:'instagram'},{label:'🎵 틱톡',key:'tiktok'},{label:'🧵 스레드',key:'threads'}
+    ];
+    fields.forEach((f,i)=>{
+      const elId=`lm_${i}_${Date.now()}`;
+      const div=document.createElement('div');
+      div.innerHTML=`<div style="margin-top:10px;"><div class="sec">${f.label}</div><div class="meta-row"><span class="meta-text" id="${elId}"></span><button class="btn-copy" onclick="copyText(document.getElementById('${elId}').textContent,this)">복사</button></div></div>`;
+      result.appendChild(div);
+      div.querySelector(`#${elId}`).textContent=data[f.key]||'';
+    });
+  } catch(e) {
+    result.innerHTML=`<div style="color:#e57373;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
