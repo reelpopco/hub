@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 340px; min-height: 200px;
+  background: #0e0c08; color: #f0e8d0;
+  font-family: 'Apple SD Gothic Neo', sans-serif;
+  padding: 16px;
+}
+.logo {
+  font-size: 14px; font-weight: 700; color: #e8c060;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+.status-box {
+  background: #1e1810; border: 1px solid #3a3018;
+  border-radius: 8px; padding: 12px; margin-bottom: 12px;
+  font-size: 12px; color: #b8a878; line-height: 1.8;
+}
+.status-box .count { color: #e8c060; font-weight: 700; font-size: 14px; }
+.btn {
+  width: 100%; padding: 10px; border-radius: 6px;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  font-weight: 600; border: none; margin-bottom: 8px;
+  transition: all .15s;
+}
+.btn-start {
+  background: linear-gradient(135deg, #c8a040, #e8c060);
+  color: #1a1000;
+}
+.btn-start:hover { background: linear-gradient(135deg, #e8c060, #f8e098); }
+.btn-start:disabled { opacity: .4; cursor: not-allowed; }
+.btn-stop {
+  background: transparent; border: 1px solid #c84040;
+  color: #e06060;
+}
+.btn-stop:hover { background: rgba(200,64,64,.1); }
+.btn-clear {
+  background: transparent; border: 1px solid #3a3018;
+  color: #6a5838; font-size: 11px; padding: 6px;
+}
+.btn-clear:hover { color: #b8a878; border-color: #6a5838; }
+.progress-bar {
+  height: 4px; background: #2a2010;
+  border-radius: 2px; overflow: hidden; margin-bottom: 10px;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #c8a040, #e8c060);
+  transition: width .3s; border-radius: 2px;
+}
+.log-box {
+  background: #141008; border: 1px solid #2a2010;
+  border-radius: 6px; padding: 8px; max-height: 120px;
+  overflow-y: auto; font-size: 11px; color: #6a5838;
+  line-height: 1.7; margin-bottom: 8px;
+}
+.log-box .ok { color: #4caf7d; }
+.log-box .err { color: #e06060; }
+.log-box .info { color: #e8c060; }
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; font-size: 12px; color: #b8a878;
+}
+select, input[type=number] {
+  background: #1e1810; border: 1px solid #3a3018;
+  border-radius: 4px; padding: 4px 8px; color: #f0e8d0;
+  font-size: 12px; font-family: inherit;
+}
+.no-prompts {
+  text-align: center; padding: 20px; color: #6a5838; font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="logo">🗝 릴팝 Flow 자동화</div>
+
+<div id="noPrompts" class="no-prompts" style="display:none;">
+  📋 작업실에서 이미지 프롬프트를<br>생성한 후 사용해주세요.<br><br>
+  <small style="color:#3a3018;">든든백세 → 대본 생성 → 이미지 프롬프트</small>
+</div>
+
+<div id="mainArea">
+  <div class="status-box">
+    <div>채널: <span id="channelName" style="color:#e8c060;">—</span></div>
+    <div>프롬프트: <span class="count" id="promptCount">0</span>개 대기 중</div>
+    <div>진행: <span id="progressText">0 / 0</span></div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <div class="setting-row">
+    <span>이미지 대기 시간</span>
+    <select id="waitTime">
+      <option value="15">15초</option>
+      <option value="20" selected>20초</option>
+      <option value="30">30초</option>
+      <option value="45">45초</option>
+    </select>
+  </div>
+
+  <div class="setting-row">
+    <span>스타일</span>
+    <select id="styleSelect">
+      <option value="">스타일 없음</option>
+      <option value="한국 웹툰">한국 웹툰</option>
+      <option value="시네마틱">시네마틱</option>
+      <option value="수채화">수채화</option>
+      <option value="치비">치비</option>
+      <option value="수묵화">수묵화</option>
+    </select>
+  </div>
+
+  <button class="btn btn-start" id="startBtn" onclick="startFlow()">
+    ▶ Flow 자동화 시작
+  </button>
+  <button class="btn btn-stop" id="stopBtn" onclick="stopFlow()" style="display:none;">
+    ■ 중지
+  </button>
+
+  <div class="log-box" id="logBox">
+    <span class="info">프롬프트 로드 대기 중...</span>
+  </div>
+
+  <button class="btn btn-clear" onclick="clearPrompts()">🗑 프롬프트 초기화</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
