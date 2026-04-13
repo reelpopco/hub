@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>든든백세 작업실</title>
+<style>
+:root {
+  --bg:#0f0f0f; --bg2:#181818; --bg3:#222; --border:#2a2a2a; --border2:#333;
+  --text:#e8e8e8; --text2:#999; --text3:#555;
+  --accent:#f5c842; --accent2:#f7d46a; --green:#4caf7d; --blue:#5b9bd5; --red:#e57373;
+  --radius:10px; --radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh;}
+
+/* HEADER */
+.site-header{border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:100;}
+.site-logo{font-size:16px;font-weight:700;color:var(--accent);}
+.site-logo span{font-size:12px;color:var(--text3);font-weight:400;margin-left:8px;}
+.api-badge{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);cursor:pointer;padding:6px 12px;border:1px solid var(--border2);border-radius:20px;background:transparent;}
+.api-badge:hover{border-color:var(--accent);color:var(--text);}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
+.api-dot.on{background:var(--green);}
+
+/* MAIN */
+.main{max-width:860px;margin:0 auto;padding:28px 24px 80px;}
+
+/* STEP INDICATOR */
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;}
+.step-item{display:flex;align-items:center;gap:0;flex-shrink:0;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);transition:all .2s;}
+.step-dot.active{background:var(--accent);border-color:var(--accent);color:#111;}
+.step-dot.done{background:var(--green);border-color:var(--green);color:#fff;}
+.step-line{width:24px;height:1px;background:var(--border2);}
+.step-label{font-size:10px;color:var(--text3);margin-top:4px;text-align:center;width:28px;}
+.step-wrap{display:flex;flex-direction:column;align-items:center;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text);}
+.card-sub{font-size:12px;color:var(--text3);margin-bottom:14px;}
+
+/* FORM */
+label.lbl{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .2s;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;line-height:1.7;}
+.field{margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;cursor:pointer;border:1px solid transparent;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#111;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--text2);border-color:var(--border2);}
+.btn-outline:hover{border-color:var(--text2);color:var(--text);}
+.btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border);font-size:12px;padding:5px 10px;}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+.btn-copy{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent);}
+.btn-copy.ok{border-color:var(--green);color:var(--green);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* TOPIC CARDS */
+.topic-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+.topic-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;}
+.topic-card:hover{border-color:var(--accent);}
+.topic-card.selected{border-color:var(--accent);background:rgba(245,200,66,.06);}
+.topic-text{font-size:13px;color:var(--text);}
+.topic-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg2);color:var(--text3);}
+
+/* THUMBNAIL CARDS */
+.thumb-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+.thumb-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;transition:all .15s;}
+.thumb-card:hover{border-color:var(--accent);}
+.thumb-card.selected{border-color:var(--accent);background:rgba(245,200,66,.06);}
+.thumb-main{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.thumb-sub{font-size:12px;color:var(--text2);}
+
+/* SCRIPT BOX */
+.script-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:480px;overflow-y:auto;}
+.char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
+.char-count.ok{color:var(--green);}
+.char-count.ng{color:var(--red);}
+
+/* IMAGE PROMPT */
+.img-prompt-grid{display:grid;gap:10px;}
+.img-prompt-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;}
+.img-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.img-prompt-num{font-size:11px;color:var(--text3);}
+.img-prompt-text{font-size:12px;color:var(--text2);line-height:1.7;font-family:monospace;}
+
+/* META BOX */
+.meta-item{margin-bottom:16px;}
+.meta-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+.meta-content{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap;}
+.char-bar{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.char-bar span{font-size:11px;color:var(--text3);}
+
+/* LOADING */
+.loading{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px;padding:10px 0;}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:26px;width:400px;max-width:90vw;}
+.modal h3{font-size:14px;font-weight:700;margin-bottom:6px;}
+.modal p{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;}
+
+/* SECTION DIVIDER */
+.sec-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+
+/* PROGRESS STEPS (content) */
+.content-step{display:none;}
+.content-step.active{display:block;}
+
+/* NEXT DATE BOX */
+.next-box{background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;}
+.next-date{font-size:18px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.next-info{font-size:12px;color:var(--text2);}
+
+/* BACK BUTTON */
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);cursor:pointer;padding:5px 10px;border:1px solid var(--border);border-radius:20px;background:transparent;margin-bottom:14px;}
+.back-btn:hover{color:var(--text);border-color:var(--border2);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#111;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity .2s;}
+.toast.show{opacity:1;}
+
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}.main{padding:16px 14px 80px;}}
+</style>
+</head>
+<body>
+
+<!-- API MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>🔑 API 키 설정</h3>
+    <p>릴스허브에서 입력한 키가 있으면 자동으로 불러와요.</p>
+    <div class="field"><label class="lbl">Claude API 키</label><input type="password" id="claudeKey" placeholder="sk-ant-api03-..."></div>
+    <div class="field"><label class="lbl">Gemini API 키</label><input type="password" id="geminiKey" placeholder="AIza..."></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="saveKeys()" style="flex:1;">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1;">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="site-logo">든든백세 작업실 <span>콘텐츠 풀패키지 생성기</span></div>
+  <button class="api-badge" onclick="openModal()" id="apiBadge">
+    <span class="api-dot" id="apiDot"></span>
+    <span id="apiStatus">API 설정</span>
+  </button>
+</header>
+
+<main class="main">
+
+<!-- STEP BAR -->
+<div class="step-bar" id="stepBar"></div>
+
+<!-- STEP 0: 날짜/카테고리 -->
+<div class="content-step active" id="step0">
+  <!-- 저장 상태 바 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div id="saveStatus" style="font-size:11px;color:var(--text3);">💾 저장된 작업 없음</div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-copy" onclick="saveWork()" style="padding:4px 10px;font-size:11px;">💾 중간저장</button>
+      <button class="btn-copy" onclick="saveFinal()" style="padding:4px 10px;font-size:11px;color:var(--green);">📄 구글독스</button>
+      <button class="btn-copy" onclick="clearWork()" style="padding:4px 10px;font-size:11px;color:var(--text3);">🗑</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 다음 작업 일정</div>
+    <div class="next-box" id="nextDateBox"></div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">작업 날짜 직접 선택</label>
+        <input type="date" id="workDate" onchange="updateDateInfo()">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">카테고리 (자동 분류)</label>
+        <input type="text" id="catDisplay" readonly style="background:var(--bg3);color:var(--accent);font-weight:700;">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(1)" style="width:100%;justify-content:center;padding:12px;">주제 추천 받기 →</button>
+
+    <!-- 구분선 -->
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 0;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <span style="font-size:11px;color:var(--text3);">또는</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+
+    <!-- 대본 직접 입력 -->
+    <div style="background:rgba(245,200,66,.04);border:1px solid rgba(245,200,66,.15);border-radius:8px;padding:14px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">📋 대본 직접 입력 → 이미지 프롬프트 바로 생성</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">기존 대본이 있으면 여기 붙여넣고 바로 이미지 작업으로 넘어가요</div>
+      <textarea id="scriptDirectHome" rows="4" placeholder="대본을 여기에 붙여넣으세요..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;line-height:1.6;"></textarea>
+      <button class="btn btn-primary" onclick="goDirectScriptHome()" style="width:100%;justify-content:center;padding:10px;margin-top:8px;background:linear-gradient(135deg,#8a6a00,var(--accent));font-size:13px;">
+        ⚡ 이미지 프롬프트 바로 생성 →
+      </button>
+    </div>
+  </div>
+
+  <!-- 불러오기 가능한 저장 작업 -->
+  <div id="savedWorkCard" style="display:none;" class="card">
+    <div class="card-title" style="font-size:13px;">📂 저장된 작업 불러오기</div>
+    <div id="savedWorkInfo" style="font-size:12px;color:var(--text2);margin-bottom:10px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="loadWork()">↩ 이어서 작업</button>
+      <button class="btn-copy" onclick="clearWork()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1: 주제 추천 -->
+<div class="content-step" id="step1">
+  <button class="back-btn" onclick="goBack(1)">← 날짜 변경</button>
+  <div class="card">
+    <div class="card-title">💡 주제 추천</div>
+    <div class="card-sub" id="step1Info"></div>
+    <div id="topicLoading" class="loading"><div class="spinner"></div>Claude AI가 주제를 추천하는 중...</div>
+    <div id="topicArea" style="display:none;">
+      <div class="topic-grid" id="topicGrid"></div>
+
+      <!-- 직접 입력 -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">✏️ 직접 입력 (추천 주제 대신 사용)</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="topicDirect" placeholder="예: 노인 낙상 예방하는 5가지 방법" style="flex:1;">
+          <button class="btn btn-outline" onclick="applyDirectTopic()" style="white-space:nowrap;padding:8px 14px;">이 주제로</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="loadTopics()">🔄 다시 추천</button>
+        <button class="btn btn-primary" id="topicNextBtn" onclick="goStep(2)" disabled>이 주제로 진행 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 썸네일 문구 -->
+<div class="content-step" id="step2">
+  <button class="back-btn" onclick="goBack(2)">← 주제 다시 선택</button>
+  <div class="card">
+    <div class="card-title">🎯 썸네일 문구 선택</div>
+    <div class="card-sub">메인 카피(2-6자) + 서브 카피(6-15자) + 숫자/충격 키워드 조합</div>
+    <div id="thumbLoading" class="loading"><div class="spinner"></div>썸네일 문구 생성 중...</div>
+    <div id="thumbArea" style="display:none;">
+      <div class="thumb-grid" id="thumbGrid"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="loadThumbs()">🔄 다시 추천</button>
+        <button class="btn btn-primary" id="thumbNextBtn" onclick="goStep(25)" disabled>선택 완료 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2.5: 팩트/참고자료 입력 -->
+<div class="content-step" id="step25">
+  <button class="back-btn" onclick="goBack(25)">← 썸네일 다시 선택</button>
+  <div class="card">
+    <div class="card-title">📋 팩트 · 참고자료 입력</div>
+    <div class="card-sub">노트북LM이나 다른 곳에서 수집한 팩트를 붙여넣으세요. 없으면 비워두고 진행해도 돼요.</div>
+
+    <div class="field">
+      <label class="lbl">핵심 팩트 / 통계 / 수치</label>
+      <textarea id="factData" rows="6" placeholder="예: 65세 이상 노인의 87%가 수면 문제를 경험 / 수면 부족 시 치매 위험 40% 증가 / 국내 수면장애 환자 109만 명(2023년 기준)..."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="lbl">주요 사례 / 연구 출처 (선택)</label>
+      <textarea id="factSource" rows="3" placeholder="예: 서울대학교 병원 수면센터 연구 / 보건복지부 노인실태조사 2023..."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="lbl">추가로 강조하고 싶은 메시지 (선택)</label>
+      <textarea id="factMessage" rows="2" placeholder="예: 수면제에 의존하지 않고 자연스럽게 해결할 수 있다는 희망 전달..."></textarea>
+    </div>
+
+    <div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.7;">
+      💡 <strong style="color:var(--accent);">댄 하먼 8단계 구조</strong>로 대본이 작성돼요<br>
+      편안함 → 욕망 → 낯선 세계 → 탐색 → 발견 → 대가 → 귀환 → 변화<br>
+      팩트가 있으면 훨씬 설득력 있는 대본이 나와요!
+    </div>
+
+    <button class="btn btn-primary" onclick="goStep(3)" style="width:100%;justify-content:center;padding:12px;">대본 생성 →</button>
+  </div>
+</div>
+
+<!-- STEP 3: 대본 생성 -->
+<div class="content-step" id="step3">
+  <button class="back-btn" onclick="goBack(3)">← 팩트 입력으로</button>
+
+  <!-- 전반부 -->
+  <div class="card">
+    <div class="card-title">📝 대본 전반부 <span style="font-size:11px;color:var(--text3);">① 편안함 → ② 욕망 → ③ 낯선세계 → ④ 탐색</span></div>
+    <div id="script1Loading" class="loading" style="display:none;"><div class="spinner"></div>전반부 작성 중... (1-2분)</div>
+    <div id="script1Area" style="display:none;">
+      <div class="script-box" id="script1Box"></div>
+      <div class="char-count" id="charCount1"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-copy" onclick="copyEl('script1Box',this)">전반부 복사</button>
+        <button class="btn btn-outline" onclick="regenScript(1)">🔄 재생성</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="genScript1Btn" onclick="genScriptPart(1)" style="width:100%;justify-content:center;padding:12px;margin-top:4px;">
+      📝 전반부 생성
+    </button>
+  </div>
+
+  <!-- 후반부 -->
+  <div class="card" id="script2Card" style="opacity:.4;pointer-events:none;">
+    <div class="card-title">📝 대본 후반부 <span style="font-size:11px;color:var(--text3);">⑤ 발견 → ⑥ 대가 → ⑦ 귀환 → ⑧ 변화</span></div>
+    <div id="script2Loading" class="loading" style="display:none;"><div class="spinner"></div>후반부 작성 중... (1-2분)</div>
+    <div id="script2Area" style="display:none;">
+      <div class="script-box" id="script2Box"></div>
+      <div class="char-count" id="charCount2"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-copy" onclick="copyEl('script2Box',this)">후반부 복사</button>
+        <button class="btn btn-outline" onclick="regenScript(2)">🔄 재생성</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="genScript2Btn" onclick="genScriptPart(2)" style="width:100%;justify-content:center;padding:12px;margin-top:4px;">
+      📝 후반부 생성
+    </button>
+  </div>
+
+  <!-- 합치기 + 보완 -->
+  <div class="card" id="scriptMergeCard" style="display:none;">
+    <div class="card-title">📋 전체 대본</div>
+    <div class="script-box" id="scriptBox"></div>
+    <div class="char-count" id="charCount"></div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
+      <div class="sec-title" style="margin-bottom:8px;">✏️ 보완 후 재생성</div>
+      <textarea id="scriptFeedback" rows="3" placeholder="예: 도입부 후킹을 더 강하게 / 해결책 3번을 더 구체적으로 / 실천 미션 추가..."></textarea>
+      <button class="btn btn-outline" onclick="regenWithFeedback()" style="margin-top:8px;width:100%;justify-content:center;">💬 반영해서 재생성</button>
+    </div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:10px;">
+      <div class="sec-title" style="margin-bottom:8px;">🔧 부분 재생성</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn btn-ghost" onclick="regenPart('도입부')">도입부만</button>
+        <button class="btn btn-ghost" onclick="regenPart('본문')">본문만</button>
+        <button class="btn btn-ghost" onclick="regenPart('엔딩')">엔딩만</button>
+      </div>
+      <div id="partResult" style="display:none;">
+        <div class="meta-label" style="margin-bottom:4px;" id="partLabel"></div>
+        <div class="script-box" id="partBox" style="max-height:240px;"></div>
+        <div class="btn-row">
+          <button class="btn-copy" onclick="copyEl('partBox',this)">복사</button>
+          <button class="btn btn-ghost" onclick="applyPart()">전체 대본에 적용</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn-copy" onclick="copyEl('scriptBox',this)">대본 전체 복사</button>
+      <button class="btn btn-primary" onclick="goStep(4)">확인 완료 → 이미지 프롬프트</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: 이미지 프롬프트 (롱폼 8장) -->
+<div class="content-step" id="step4">
+  <button class="back-btn" onclick="goBack(4)">← 대본으로</button>
+  <div class="card">
+    <div class="card-title">🖼 이미지 프롬프트 — 롱폼 8장</div>
+    <div class="card-sub">제미나이에 복사하거나 Flow 자동화를 사용하세요.</div>
+
+    <!-- 대본 직접 입력 (테스트/빠른 진행용) -->
+    <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📋 대본 직접 붙여넣기 (대본 단계 건너뛰고 바로 이미지 생성)</div>
+      <textarea id="scriptDirect" rows="4" placeholder="기존 대본이나 다른 곳에서 만든 대본을 붙여넣으면 이미지 프롬프트 바로 생성해요..."></textarea>
+      <button class="btn btn-outline" onclick="applyDirectScript()" style="margin-top:8px;width:100%;justify-content:center;font-size:12px;">
+        📋 이 대본으로 이미지 프롬프트 생성
+      </button>
+    </div>
+    <div id="imgLoading" class="loading"><div class="spinner"></div>이미지 프롬프트 생성 중...</div>
+    <div id="imgArea" style="display:none;">
+      <div class="img-prompt-grid" id="imgGrid"></div>
+      <div class="field" style="margin-top:14px;">
+        <label class="lbl">추가 생성 — 원하는 장면 직접 입력</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="extraScene" placeholder="예: 어르신이 병원에서 의사와 상담하는 장면..." style="flex:1;">
+          <button class="btn btn-outline" onclick="addImgPrompt()">+ 추가 생성</button>
+        </div>
+      </div>
+
+      <!-- Flow 자동화 섹션 -->
+      <div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;">🎬 Flow 자동화</div>
+        <div class="grid2" style="margin-bottom:10px;">
+          <div class="field" style="margin-bottom:0;">
+            <label class="lbl">이미지 스타일</label>
+            <select id="flowStyle">
+              <option value="한국 웹툰">한국 웹툰</option>
+              <option value="시네마틱 (영화풍)">시네마틱 (영화풍)</option>
+              <option value="수채화">수채화</option>
+              <option value="일러스트">일러스트</option>
+              <option value="치비 (귀여운)">치비 (귀여운)</option>
+              <option value="포토리얼 (실사)">포토리얼 (실사)</option>
+              <option value="수묵화">수묵화</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="lbl">비율</label>
+            <select id="flowRatio">
+              <option value="16:9">16:9 (롱폼)</option>
+              <option value="9:16">9:16 (숏츠)</option>
+              <option value="1:1">1:1 (정방형)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="sendToFlow()" style="width:100%;justify-content:center;">
+          🚀 Flow 자동화 시작 (크롬 확장 필요)
+        </button>
+        <button class="btn btn-outline" onclick="sendToFlowTest()" style="width:100%;justify-content:center;margin-top:8px;font-size:12px;">
+          🧪 샘플 3장으로 빠른 테스트
+        </button>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center;">
+          릴팝 Flow 자동화 확장프로그램이 설치되어 있어야 해요
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="goStep(5)" style="width:100%;justify-content:center;">메타데이터 생성 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: 메타데이터 -->
+<div class="content-step" id="step5">
+  <button class="back-btn" onclick="goBack(5)">← 이미지 프롬프트로</button>
+  <div class="card">
+    <div class="card-title">📋 메타데이터</div>
+    <div id="metaLoading" class="loading"><div class="spinner"></div>메타데이터 생성 중...</div>
+    <div id="metaArea" style="display:none;">
+
+      <div class="meta-item">
+        <div class="meta-label">제목 3개 옵션</div>
+        <div id="metaTitles"></div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">설명글 (500자)</div>
+        <div class="meta-content" id="metaDesc"></div>
+        <div class="char-bar"><span id="descCount"></span><button class="btn-copy" onclick="copyId('metaDesc',this)">복사</button></div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">해시태그 (#포함)</div>
+        <div class="meta-content" id="metaHash"></div>
+        <div class="char-bar"><span></span><button class="btn-copy" onclick="copyId('metaHash',this)">복사</button></div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">숨은태그 (500자 엄수, 쉼표 구분)</div>
+        <div class="meta-content" id="metaHidden"></div>
+        <div class="char-bar">
+          <span id="hiddenCount"></span>
+          <button class="btn-copy" onclick="copyId('metaHidden',this)">복사</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <input type="number" id="addTagChars" placeholder="추가 글자수 입력 (예: 100)" style="width:180px;">
+          <button class="btn btn-ghost" onclick="addHiddenTags()">태그 추가생성</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="goStep(6)" style="width:100%;justify-content:center;margin-top:6px;">숏츠1 작업 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6: 숏츠1 -->
+<div class="content-step" id="step6">
+  <button class="back-btn" onclick="goBack(6)">← 메타데이터로</button>
+  <div class="card">
+    <div class="card-title">⚡ 숏츠 #1</div>
+    <div id="shorts1Loading" class="loading"><div class="spinner"></div>숏츠 1 생성 중...</div>
+    <div id="shorts1Area" style="display:none;">
+      <div class="meta-item">
+        <div class="meta-label">숏츠 대본 (30초)</div>
+        <div class="meta-content" id="s1Script"></div>
+        <div class="char-bar"><span></span><button class="btn-copy" onclick="copyId('s1Script',this)">복사</button></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">제목</div>
+        <div id="s1Titles"></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">설명 + 해시태그</div>
+        <div class="meta-content" id="s1Meta"></div>
+        <div class="char-bar"><span></span><button class="btn-copy" onclick="copyId('s1Meta',this)">복사</button></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">이미지 프롬프트 2장</div>
+        <div class="img-prompt-grid" id="s1ImgGrid"></div>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(7)" style="width:100%;justify-content:center;margin-top:6px;">숏츠2 작업 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 7: 숏츠2 -->
+<div class="content-step" id="step7">
+  <button class="back-btn" onclick="goBack(7)">← 숏츠1로</button>
+  <div class="card">
+    <div class="card-title">⚡ 숏츠 #2</div>
+    <div id="shorts2Loading" class="loading"><div class="spinner"></div>숏츠 2 생성 중...</div>
+    <div id="shorts2Area" style="display:none;">
+      <div class="meta-item">
+        <div class="meta-label">숏츠 대본 (30초)</div>
+        <div class="meta-content" id="s2Script"></div>
+        <div class="char-bar"><span></span><button class="btn-copy" onclick="copyId('s2Script',this)">복사</button></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">제목</div>
+        <div id="s2Titles"></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">설명 + 해시태그</div>
+        <div class="meta-content" id="s2Meta"></div>
+        <div class="char-bar"><span></span><button class="btn-copy" onclick="copyId('s2Meta',this)">복사</button></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">이미지 프롬프트 2장</div>
+        <div class="img-prompt-grid" id="s2ImgGrid"></div>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(8)" style="width:100%;justify-content:center;margin-top:6px;">✅ 전체 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 8: 완료 -->
+<div class="content-step" id="step8">
+  <div class="card" style="text-align:center;padding:32px;">
+    <div style="font-size:36px;margin-bottom:12px;">🎉</div>
+    <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:8px;">작업 완료!</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;" id="doneMsg"></div>
+    <button class="btn btn-primary" onclick="resetAll()" style="margin:0 auto;">새 작업 시작</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===== STATE =====
+let CLAUDE = localStorage.getItem('claude_api_key') || '';
+let GEMINI = localStorage.getItem('gemini_api_key') || '';
+let currentStep = 0;
+let selectedTopic = '';
+let selectedTopicIdx = -1;
+let selectedThumb = null;
+let selectedThumbIdx = -1;
+let generatedScript = '';
+let workDate = null;
+let workCat = '';
+let hiddenTagCurrent = '';
+
+const STEPS = ['날짜','주제','썸네일','대본','이미지','메타','숏츠1','숏츠2','완료'];
+const CAT_MAP = {1:'마음·심리',3:'건강·밥상',5:'정보·생활'};
+
+// ===== INIT =====
+updateApiStatus();
+initDate();
+renderStepBar();
+checkSavedWork();
+
+function initDate() {
+  const today = new Date();
+  // 다음 업로드 날짜 계산 (월/수/금)
+  const days = [1,3,5];
+  let next = new Date(today);
+  next.setDate(next.getDate() + 1);
+  while (!days.includes(next.getDay())) next.setDate(next.getDate() + 1);
+  workDate = next;
+  document.getElementById('workDate').value = next.toISOString().slice(0,10);
+  updateDateInfo();
+}
+
+function updateDateInfo() {
+  const val = document.getElementById('workDate').value;
+  if (!val) return;
+  workDate = new Date(val);
+  const dow = workDate.getDay();
+  workCat = CAT_MAP[dow] || '정보·생활';
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const dateStr = `${workDate.getFullYear()}.${String(workDate.getMonth()+1).padStart(2,'0')}.${String(workDate.getDate()).padStart(2,'0')} (${dayNames[dow]})`;
+  document.getElementById('nextDateBox').innerHTML = `<div class="next-date">${dateStr}</div><div class="next-info">카테고리: <strong style="color:var(--accent)">${workCat}</strong> 계열 콘텐츠</div>`;
+  document.getElementById('catDisplay').value = workCat;
+}
+
+// ===== STEP BAR =====
+function renderStepBar() {
+  const bar = document.getElementById('stepBar');
+  bar.innerHTML = STEPS.map((s,i) => `
+    <div class="step-item">
+      ${i>0?'<div class="step-line"></div>':''}
+      <div class="step-wrap">
+        <div class="step-dot ${i<currentStep?'done':i===currentStep?'active':''}">${i<currentStep?'✓':i+1}</div>
+        <div class="step-label" style="white-space:nowrap;width:auto;min-width:28px;">${s}</div>
+      </div>
+    </div>`).join('');
+}
+
+function goStep(n) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n===1) loadTopics();
+  if (n===2) loadThumbs();
+  if (n===25) { /* 팩트 입력 단계 */ }
+  if (n===3) { /* 대본 직접 버튼으로 생성 */ }
+  if (n===4) genImgPrompts();
+  if (n===5) genMeta();
+  if (n===6) genShorts(1);
+  if (n===7) genShorts(2);
+  if (n===8) showDone();
+}
+
+// ===== API =====
+updateApiStatus();
+function updateApiStatus() {
+  const dot = document.getElementById('apiDot');
+  const st = document.getElementById('apiStatus');
+  if (CLAUDE && GEMINI) { dot.className='api-dot on'; st.textContent='API 연결됨'; }
+  else if (CLAUDE) { dot.className='api-dot on'; st.textContent='Claude만 연결'; }
+  else { dot.className='api-dot'; st.textContent='API 설정'; }
+}
+function openModal() {
+  document.getElementById('apiModal').classList.add('open');
+  document.getElementById('claudeKey').value = CLAUDE;
+  document.getElementById('geminiKey').value = GEMINI;
+}
+function closeModal() { document.getElementById('apiModal').classList.remove('open'); }
+function saveKeys() {
+  const c = document.getElementById('claudeKey').value.trim();
+  const g = document.getElementById('geminiKey').value.trim();
+  if (c) { CLAUDE=c; localStorage.setItem('claude_api_key',c); }
+  if (g) { GEMINI=g; localStorage.setItem('gemini_api_key',g); }
+  updateApiStatus(); closeModal(); toast('API 키 저장됨');
+}
+
+async function callClaude(prompt, maxTokens=2000) {
+  if (!CLAUDE) { openModal(); throw new Error('Claude API 키 없음'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':CLAUDE,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) {
+    const errBody = await res.json().catch(()=>({}));
+    throw new Error(`Claude API 오류: ${res.status} — ${errBody?.error?.message||'상세 오류 없음'}`);
+  }
+  const d = await res.json();
+  return d.content[0].text;
+}
+
+// ===== STEP 1: TOPICS =====
+function applyDirectTopic() {
+  const val = document.getElementById('topicDirect').value.trim();
+  if (!val) { toast('주제를 입력해주세요'); return; }
+  selectedTopic = val;
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('topicNextBtn').disabled = false;
+  toast(`"${val}" 선택됐어요!`);
+}
+
+async function loadTopics() {
+  document.getElementById('topicLoading').style.display='flex';
+  document.getElementById('topicArea').style.display='none';
+  document.getElementById('step1Info').textContent = `${workDate?.toLocaleDateString('ko-KR')} · ${workCat} 계열`;
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 채널 주제 5개를 추천해주세요.
+
+채널 정보: 60-80대 어르신 타깃, 신뢰감 있는 건강/생활 정보
+오늘 날짜: ${workDate?.toLocaleDateString('ko-KR')}
+카테고리: ${workCat}
+
+카테고리별 방향:
+- 마음·심리: 외로움, 우울, 가족관계, 감정, 심리적 안정
+- 건강·밥상: 만성질환 관리, 제철음식, 영양, 증상별 건강법
+- 정보·생활: 복지혜택, 생활꿀팁, 제도, 절약, 안전
+
+요청:
+- 시즌성(계절, 사회이슈) 반영
+- 조회수 잘 나오는 충격/손해/모르면 손해 스타일 주제 포함
+- 각 주제는 실제 유튜브 영상 제목처럼 구체적으로
+
+JSON만 출력:
+{"topics":[{"title":"주제명","hook":"첫 10초 훅 포인트 한 줄","why":"왜 잘 될지 이유 한 줄"}]}`);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    selectedTopicIdx = -1;
+    selectedTopic = '';
+    document.getElementById('topicNextBtn').disabled = true;
+
+    document.getElementById('topicGrid').innerHTML = data.topics.map((t,i) => `
+      <div class="topic-card" id="tc${i}" onclick="selectTopic(${i},'${t.title.replace(/'/g,"\\'")}')">
+        <div>
+          <div class="topic-text">${t.title}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">${t.hook}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">💡 ${t.why}</div>
+        </div>
+        <div class="topic-badge">${i+1}</div>
+      </div>`).join('');
+
+    document.getElementById('topicLoading').style.display='none';
+    document.getElementById('topicArea').style.display='block';
+  } catch(e) {
+    document.getElementById('topicLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function selectTopic(i, title) {
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('tc'+i).classList.add('selected');
+  selectedTopicIdx = i; selectedTopic = title;
+  document.getElementById('topicNextBtn').disabled = false;
+}
+
+// ===== STEP 2: THUMBNAILS =====
+async function loadThumbs() {
+  document.getElementById('thumbLoading').style.display='flex';
+  document.getElementById('thumbArea').style.display='none';
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 썸네일 문구 3안을 만들어주세요.
+
+주제: ${selectedTopic}
+타깃: 60-80대 어르신
+썸네일 스타일: 흰색 굵은 메인 카피 + 노란색 굵은 서브 카피, 숫자/충격/손해 키워드 필수
+
+참고 예시:
+- 메인: "모르면 매달 수십만원 손해" / 서브: "건강보험 완전정복"
+- 메인: "근육 줄어들면 마음도 무너진다" / 서브: "우울감 3배"
+- 메인: "나이들수록 이 말" / 서브: "절대 조심하세요"
+
+JSON만 출력:
+{"thumbs":[{"main":"메인카피(2-8자)","sub":"서브카피(6-15자)","concept":"느낌 한 줄"}]}`);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    selectedThumbIdx = -1; selectedThumb = null;
+    document.getElementById('thumbNextBtn').disabled = true;
+
+    document.getElementById('thumbGrid').innerHTML = data.thumbs.map((t,i) => `
+      <div class="thumb-card" id="tbc${i}" onclick="selectThumb(${i},'${t.main.replace(/'/g,"\\'")}','${t.sub.replace(/'/g,"\\'")}')">
+        <div class="thumb-main">${t.main}</div>
+        <div class="thumb-sub">${t.sub}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">${t.concept}</div>
+      </div>`).join('');
+
+    document.getElementById('thumbLoading').style.display='none';
+    document.getElementById('thumbArea').style.display='block';
+  } catch(e) {
+    document.getElementById('thumbLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function selectThumb(i, main, sub) {
+  document.querySelectorAll('.thumb-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('tbc'+i).classList.add('selected');
+  selectedThumbIdx = i; selectedThumb = {main, sub};
+  document.getElementById('thumbNextBtn').disabled = false;
+}
+
+// ===== STEP 3: SCRIPT (전반부/후반부 분리) =====
+let script1 = '', script2 = '';
+
+const INTRO_FORMULA = `[든든백세 도입부 공식 — 반드시 이 순서로]
+① 후킹 (공백제외 500자 이상):
+   - 계절감/시기 + 어르신들 공감 장면 묘사
+   - 문제 구체적으로 묘사 ("허리가 끊어질 것 같다", "새벽에 깨면 다시 못 잠든다")
+   - "그거 ~탓 아닙니다" 반전 + 충격 수치/사실
+   - "이 이야기 오늘 꼭 끝까지 들어주세요"
+② 인사 + 구독유도:
+   - "안녕하세요, 든든백세입니다"
+   - 오늘 영상으로 얻을 혜택 예고 ("오늘 이 영상 하나면 ~하실 수 있어요")
+   - 구독/좋아요 유도
+   - "자, 바로 시작할게요"`;
+
+function getFactPrompt() {
+  const factData = document.getElementById('factData')?.value.trim() || '';
+  const factSource = document.getElementById('factSource')?.value.trim() || '';
+  const factMessage = document.getElementById('factMessage')?.value.trim() || '';
+  if (!factData && !factSource && !factMessage) return '';
+  return `
+[참고 팩트 — 반드시 녹여낼 것, 단 특정 병원명/의사명/약품명 절대 언급 금지]
+팩트 사용 규칙:
+- "최근 연구에 따르면", "전문가들에 따르면", "한 대학병원 연구팀" 등 포괄적 표현 사용
+- 구체적 수치는 유지하되 출처 기관명은 "국내 연구팀", "보건당국" 등으로 대체
+${factData ? `핵심 팩트/통계:\n${factData}` : ''}
+${factSource ? `연구 배경:\n${factSource}` : ''}
+${factMessage ? `강조 메시지:\n${factMessage}` : ''}`;
+}
+
+async function genScriptPart(part) {
+  const factPrompt = getFactPrompt();
+  const loadingEl = document.getElementById(`script${part}Loading`);
+  const areaEl = document.getElementById(`script${part}Area`);
+  const boxEl = document.getElementById(`script${part}Box`);
+  const countEl = document.getElementById(`charCount${part}`);
+  const btnEl = document.getElementById(`genScript${part}Btn`);
+
+  loadingEl.style.display = 'flex';
+  areaEl.style.display = 'none';
+  btnEl.style.display = 'none';
+
+  try {
+    let prompt = '';
+
+    if (part === 1) {
+      prompt = `너는 "든든백세" 유튜브 채널 전문 대본 작가야.
+오늘 대본의 전반부(①~④단계)를 작성해줘.
+
+[기본 정보]
+주제: ${selectedTopic}
+카테고리: ${workCat}
+썸네일: ${selectedThumb?.main} / ${selectedThumb?.sub}
+${factPrompt}
+
+${INTRO_FORMULA}
+
+[댄 하먼 전반부 — 반드시 이 순서]
+① 편안함 (You): 어르신들 일상 공감 장면 + 문제 묘사 (위 도입부 공식 적용)
+② 욕망 (Need): 충격 수치/사실로 긴장감 + "모르면 큰일난다" + 구독/좋아요 유도
+③ 낯선 세계 (Go): "그런데 이런 방법/사실이 있습니다" — 해결책 세계로 안내
+④ 탐색 (Search): 원인 메커니즘 깊이 분석 (왜 이런 일이 벌어지는가, 구체적으로)
+
+[규칙]
+- 공백 제외 5,000자 이상 (반드시 지킬 것 — 부족하면 각 단계를 더 풍부하게 확장)
+- 호칭: "어르신들" 고정
+- 말투: ~하십니다, ~하세요, ~거든요
+- 특정 병원명/의사명/약품명 절대 금지 → "최근 연구에 따르면", "전문가들에 따르면"으로
+- TTS 순수 텍스트만 — 구분선(---), 헤더(##), 별표(**), 지시문, 괄호 안 지시어 절대 금지
+- 후반부가 이어진다는 걸 고려해서 ④단계 끝에서 자연스럽게 마무리
+
+지금 바로 전반부 전문을 출력하세요.`;
+
+    } else {
+      prompt = `너는 "든든백세" 유튜브 채널 전문 대본 작가야.
+아래 전반부에 이어서 후반부(⑤~⑧단계)를 작성해줘.
+
+[전반부 내용 요약]
+주제: ${selectedTopic}
+전반부 마지막 부분: ${script1.slice(-300)}
+${factPrompt}
+
+[댄 하먼 후반부 — 반드시 이 순서]
+⑤ 발견 (Find): 실질적 해결책 3~5가지 — 각각 충분한 설명 + 구체적 예시 포함
+⑥ 대가 (Take): 주의사항, 함정, 잘못 알려진 것들, 부작용 솔직하게
+⑦ 귀환 (Return): 오늘부터 바로 할 수 있는 실천 미션 (구체적 행동 지침)
+⑧ 변화 (Change): 이 영상 본 후 달라진 어르신 모습 + 엔딩
+
+[엔딩 공식]
+- 핵심 요약 (3줄 이내)
+- "오늘의 실천 미션: ~"
+- 구독/좋아요/공유/댓글 CTA
+- "든든백세가 응원합니다"
+
+[규칙]
+- 공백 제외 5,000자 이상 (반드시 지킬 것 — 해결책 각각 충분히, 엔딩도 풍부하게)
+- 특정 병원명/의사명/약품명 절대 금지
+- TTS 순수 텍스트만 — 구분선(---), 헤더(##), 별표(**), 지시문, 괄호 안 지시어 절대 금지
+- 전반부와 자연스럽게 이어지게
+
+지금 바로 후반부 전문을 출력하세요.`;
+    }
+
+    const raw = await callClaude(prompt, 8000);
+
+    if (part === 1) {
+      script1 = raw;
+      // 후반부 활성화
+      const card2 = document.getElementById('script2Card');
+      card2.style.opacity = '1';
+      card2.style.pointerEvents = 'auto';
+    } else {
+      script2 = raw;
+      // 전체 합치기
+      mergeScript();
+    }
+
+    boxEl.textContent = raw;
+    const cnt = raw.replace(/\s/g,'').length;
+    countEl.textContent = `공백제외 ${cnt.toLocaleString()}자`;
+    countEl.className = 'char-count ' + (cnt >= 4500 ? 'ok' : 'ng');
+
+    loadingEl.style.display = 'none';
+    areaEl.style.display = 'block';
+    btnEl.style.display = 'block';
+    btnEl.textContent = `🔄 ${part === 1 ? '전반부' : '후반부'} 재생성`;
+
+  } catch(e) {
+    loadingEl.innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+    btnEl.style.display = 'block';
+  }
+}
+
+function mergeScript() {
+  generatedScript = script1 + '\n\n' + script2;
+  const box = document.getElementById('scriptBox');
+  const cc = document.getElementById('charCount');
+  const card = document.getElementById('scriptMergeCard');
+
+  box.textContent = generatedScript;
+  const cnt = generatedScript.replace(/\s/g,'').length;
+  cc.textContent = `공백제외 ${cnt.toLocaleString()}자 (전반부 + 후반부 합산)`;
+  cc.className = 'char-count ' + (cnt >= 9000 ? 'ok' : 'ng');
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+}
+
+async function regenScript(part) {
+  if (part) {
+    await genScriptPart(part);
+  } else {
+    script1 = ''; script2 = '';
+    document.getElementById('script1Area').style.display = 'none';
+    document.getElementById('script2Area').style.display = 'none';
+    document.getElementById('scriptMergeCard').style.display = 'none';
+    document.getElementById('script2Card').style.opacity = '0.4';
+    document.getElementById('script2Card').style.pointerEvents = 'none';
+    document.getElementById('genScript1Btn').textContent = '📝 전반부 생성';
+    document.getElementById('genScript2Btn').textContent = '📝 후반부 생성';
+    await genScriptPart(1);
+  }
+}
+
+async function regenWithFeedback() {
+  const feedback = document.getElementById('scriptFeedback').value.trim();
+  if (!feedback) { alert('보완할 내용을 입력해주세요'); return; }
+  document.getElementById('scriptArea').style.display='none';
+  document.getElementById('scriptLoading').style.display='flex';
+  document.getElementById('scriptLoading').innerHTML='<div class="spinner"></div>보완 사항 반영해서 재생성 중...';
+
+  try {
+    const raw = await callClaude(`아래는 기존 든든백세 대본이에요. 보완 지시를 반영해서 전체를 다시 작성해주세요.
+
+기존 대본:
+${generatedScript}
+
+보완 지시:
+${feedback}
+
+[반드시 준수]
+- 공백 제외 6,500자 이상
+- "어르신들" 호칭 유지
+- 도입부→인사→본문→엔딩 구조 유지
+- TTS 순수 텍스트만 (구분선, 헤더, 지시문 금지)
+- 보완 지시 내용을 반드시 반영할 것
+
+전체 대본을 다시 출력하세요.`, 8000);
+
+    generatedScript = raw;
+    document.getElementById('scriptBox').textContent = raw;
+    const cnt = raw.replace(/\s/g,'').length;
+    const cc = document.getElementById('charCount');
+    cc.textContent = `공백제외 ${cnt.toLocaleString()}자`;
+    cc.className = 'char-count '+(cnt>=6000?'ok':'ng');
+    document.getElementById('scriptFeedback').value = '';
+    document.getElementById('scriptLoading').style.display='none';
+    document.getElementById('scriptArea').style.display='block';
+  } catch(e) {
+    document.getElementById('scriptLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+let partType = '';
+async function regenPart(part) {
+  partType = part;
+  document.getElementById('partResult').style.display='none';
+  document.getElementById('partLabel').textContent = part + ' 재생성 중...';
+  document.getElementById('partResult').style.display='block';
+  document.getElementById('partBox').textContent = '생성 중...';
+
+  const partGuide = {
+    '도입부': '공감 장면 묘사 → 감정 공략 → 충격 질문/통계 → "오늘 이 영상 끝까지 보시면 ~하실 겁니다" → 든든백세 인사 + 구독유도',
+    '본문': '이유 설명(과학적 근거) → 자가진단 체크리스트 → 해결책 5가지 이상 (각 항목 충분한 설명 포함)',
+    '엔딩': '핵심 요약 → 오늘의 실천 미션 → 구독/좋아요/공유 CTA → "든든백세가 응원합니다"'
+  };
+
+  try {
+    const raw = await callClaude(`든든백세 대본의 "${part}" 부분만 새로 써주세요.
+
+주제: ${selectedTopic}
+카테고리: ${workCat}
+
+[${part} 구조]
+${partGuide[part]}
+
+[규칙]
+- "어르신들" 호칭
+- 따뜻한 존댓말
+- TTS 순수 텍스트만
+- ${part==='본문'?'2,000자 이상':'500자 이상'}
+
+${part}만 출력하세요.`, 3000);
+
+    document.getElementById('partBox').textContent = raw;
+    document.getElementById('partLabel').textContent = `✅ ${part} 재생성 완료 — 복사하거나 전체 대본에 적용`;
+  } catch(e) {
+    document.getElementById('partBox').textContent = '오류: ' + e.message;
+  }
+}
+
+function applyPart() {
+  const partText = document.getElementById('partBox').textContent;
+  if (!partText || partText === '생성 중...') return;
+
+  // 기존 대본에서 해당 파트 교체
+  let updated = generatedScript;
+  if (partType === '도입부') {
+    // 인사말 이전까지를 교체
+    const introEnd = updated.indexOf('안녕하세요 든든백세');
+    if (introEnd > -1) {
+      updated = partText + '\n\n' + updated.slice(introEnd);
+    }
+  } else if (partType === '엔딩') {
+    // 마지막 구독 유도 이후를 교체
+    const endStart = updated.lastIndexOf('오늘 영상');
+    if (endStart > -1) {
+      updated = updated.slice(0, endStart) + partText;
+    }
+  } else {
+    // 본문은 전체 대본 + 안내
+    toast('본문 복사 후 수동으로 교체해주세요');
+    return;
+  }
+
+  generatedScript = updated;
+  document.getElementById('scriptBox').textContent = updated;
+  const cnt = updated.replace(/\s/g,'').length;
+  const cc = document.getElementById('charCount');
+  cc.textContent = `공백제외 ${cnt.toLocaleString()}자`;
+  cc.className = 'char-count '+(cnt>=6000?'ok':'ng');
+  document.getElementById('partResult').style.display='none';
+  toast(`${partType} 적용 완료!`);
+}
+
+async function regenScript() {
+  document.getElementById('scriptArea').style.display='none';
+  document.getElementById('scriptLoading').style.display='flex';
+  await genScript();
+}
+
+// ===== STEP 4: IMAGE PROMPTS =====
+// ===== Flow 자동화 =====
+// ===== 대본 직접입력 바로가기 =====
+function goDirectScriptHome() {
+  const val = document.getElementById('scriptDirectHome').value.trim();
+  if (!val) { toast('대본을 먼저 붙여넣어주세요'); return; }
+  // generatedScript에 저장
+  generatedScript = val;
+  // STEP 4로 이동
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = 4;
+  document.getElementById('step4').classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  // 자동으로 이미지 프롬프트 생성 시작
+  toast('대본 적용됨! 이미지 프롬프트 생성 중...');
+  setTimeout(() => genImgPrompts(), 400);
+}
+
+function goDirectScript() {
+  // 모든 스텝 비활성화 후 STEP 4로 바로 이동
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = 4;
+  document.getElementById('step4').classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  // 대본 직접입력 textarea 포커스
+  setTimeout(() => {
+    const ta = document.getElementById('scriptDirect');
+    if (ta) ta.focus();
+  }, 300);
+  toast('대본을 붙여넣고 이미지 프롬프트 생성 버튼을 눌러주세요!');
+}
+
+// ===== 중간저장 =====
+function saveWork() {
+  const data = {
+    topic: selectedTopic,
+    cat: workCat,
+    date: document.getElementById('workDate')?.value || '',
+    thumb: selectedThumb,
+    script1: script1,
+    script2: script2,
+    generatedScript: generatedScript,
+    savedAt: new Date().toISOString(),
+    step: currentStep
+  };
+  localStorage.setItem('deundeun_save', JSON.stringify(data));
+  const el = document.getElementById('saveStatus');
+  const t = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
+  if (el) { el.textContent = `💾 ${t} 저장됨`; el.style.color='var(--green)'; }
+  toast('✅ 중간저장 완료!');
+  setTimeout(() => { if(el) el.style.color='var(--text3)'; }, 2000);
+}
+
+// ===== 불러오기 =====
+function loadWork() {
+  const saved = localStorage.getItem('deundeun_save');
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    selectedTopic = data.topic || '';
+    workCat = data.cat || '';
+    selectedThumb = data.thumb || null;
+    script1 = data.script1 || '';
+    script2 = data.script2 || '';
+    generatedScript = data.generatedScript || '';
+
+    if (data.date) {
+      document.getElementById('workDate').value = data.date;
+      updateDateInfo();
+    }
+
+    // 대본 복원
+    if (generatedScript) {
+      const box = document.getElementById('scriptBox');
+      if (box) box.textContent = generatedScript;
+      const cc = document.getElementById('charCount');
+      const cnt = generatedScript.replace(/\s/g,'').length;
+      if (cc) { cc.textContent = `공백제외 ${cnt.toLocaleString()}자`; cc.className='char-count ok'; }
+      document.getElementById('scriptMergeCard').style.display = 'block';
+    }
+
+    // 저장된 스텝으로 이동
+    document.getElementById('step'+currentStep).classList.remove('active');
+    currentStep = data.step || 0;
+    document.getElementById('step'+currentStep).classList.add('active');
+    renderStepBar();
+
+    toast(`✅ 불러왔어요! (${new Date(data.savedAt).toLocaleString('ko-KR')})`);
+    document.getElementById('savedWorkCard').style.display = 'none';
+  } catch(e) {
+    toast('불러오기 실패: ' + e.message);
+  }
+}
+
+// ===== 저장 작업 삭제 =====
+function clearWork() {
+  if (!confirm('저장된 작업을 삭제할까요?')) return;
+  localStorage.removeItem('deundeun_save');
+  document.getElementById('savedWorkCard').style.display = 'none';
+  document.getElementById('saveStatus').textContent = '💾 저장된 작업 없음';
+  toast('삭제됐어요');
+}
+
+// ===== 구글독스 저장 =====
+function saveFinal() {
+  if (!generatedScript && !script1) {
+    toast('저장할 대본이 없어요. 먼저 대본을 생성해주세요.'); return;
+  }
+  const topic = selectedTopic || '제목 없음';
+  const date = document.getElementById('workDate')?.value || '';
+  let text = `든든백세 — ${topic}\n날짜: ${date}\n생성: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(50)}\n\n`;
+
+  if (generatedScript) {
+    text += `【전체 대본】\n\n${generatedScript}\n\n`;
+  } else {
+    if (script1) text += `【전반부】\n\n${script1}\n\n`;
+    if (script2) text += `【후반부】\n\n${script2}\n\n`;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    toast('📋 대본 복사됨! 구글독스 새 문서에 붙여넣기 하세요.');
+    setTimeout(() => window.open('https://docs.google.com/document/create','_blank'), 500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('📋 복사됨! 구글독스에 붙여넣기 하세요.');
+    window.open('https://docs.google.com/document/create','_blank');
+  });
+}
+
+// ===== 저장 작업 확인 (페이지 로드 시) =====
+function checkSavedWork() {
+  const saved = localStorage.getItem('deundeun_save');
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    const card = document.getElementById('savedWorkCard');
+    const info = document.getElementById('savedWorkInfo');
+    const statusEl = document.getElementById('saveStatus');
+    if (card && info) {
+      const t = new Date(data.savedAt).toLocaleString('ko-KR');
+      info.innerHTML = `<strong style="color:var(--accent)">${data.topic || '제목없음'}</strong> · STEP ${data.step} · ${t}`;
+      card.style.display = 'block';
+    }
+    if (statusEl) {
+      statusEl.textContent = `💾 저장된 작업 있음 — 불러오기 가능`;
+      statusEl.style.color = 'var(--accent)';
+    }
+  } catch(e) {}
+}
+
+function applyDirectScript() {
+  const val = document.getElementById('scriptDirect').value.trim();
+  if (!val) { toast('대본을 붙여넣어주세요'); return; }
+  generatedScript = val;
+  document.getElementById('scriptDirect').style.borderColor = 'var(--green)';
+  toast('✅ 대본 적용됨! 이미지 프롬프트 생성 중...');
+  setTimeout(() => genImgPrompts(), 300);
+}
+
+function sendToFlowTest() {
+  // 샘플 프롬프트 3개로 빠른 테스트
+  const testPrompts = [
+    {
+      num: 1,
+      scene: '테스트 1 - 어르신 아침 풍경',
+      prompt: '2026년 현재 한국, 70대 한국 할머니가 아파트 거실 창가에서 따뜻한 햇살을 받으며 앉아있는 장면, 시네마틱, 따뜻한 조명, 16:9'
+    },
+    {
+      num: 2,
+      scene: '테스트 2 - 공원 산책',
+      prompt: '2026년 현재 한국, 60대 한국 노부부가 봄 공원에서 손잡고 산책하는 장면, 벚꽃, 시네마틱, 따뜻한 오후 햇살, 16:9'
+    },
+    {
+      num: 3,
+      scene: '테스트 3 - 가족과 식사',
+      prompt: '2026년 현재 한국, 70대 할머니가 가족들과 밝은 부엌에서 함께 식사하며 웃는 장면, 시네마틱, 따뜻한 조명, 16:9'
+    }
+  ];
+
+  const payload = {
+    flowPrompts: testPrompts,
+    flowChannel: '🧪 테스트 — 샘플 3장',
+    flowStyle: '시네마틱',
+    flowRatio: '16:9',
+  };
+
+  window.postMessage({ type: 'REEL_FLOW_SAVE', payload }, '*');
+
+  setTimeout(() => {
+    window.open('https://labs.google/fx/ko/tools/flow', '_blank');
+    toast('🧪 테스트 프롬프트 3개 전송! Flow에서 🗝 팝업 클릭 → ▶ 시작');
+  }, 300);
+}
+
+function sendToFlow() {
+  const items = document.querySelectorAll('.img-prompt-item');
+  if (!items.length) { alert('이미지 프롬프트를 먼저 생성해주세요'); return; }
+
+  const style = document.getElementById('flowStyle').value;
+  const ratio = document.getElementById('flowRatio').value;
+
+  const prompts = [];
+  items.forEach((item, i) => {
+    const scene = item.querySelector('.img-prompt-num')?.textContent || `장면 ${i+1}`;
+    const prompt = item.dataset.prompt || '';
+    if (prompt) {
+      prompts.push({
+        num: i + 1,
+        scene: item.dataset.scene || scene.replace(/^\d+\.\s*/, ''),
+        prompt: `${prompt} 스타일: ${style}, 비율: ${ratio}`
+      });
+    }
+  });
+
+  if (!prompts.length) { alert('프롬프트를 찾지 못했어요'); return; }
+
+  const payload = {
+    flowPrompts: prompts,
+    flowChannel: '든든백세 — ' + (selectedTopic || ''),
+    flowStyle: style,
+    flowRatio: ratio,
+  };
+
+  // 웹페이지 → content script로 postMessage 전달
+  // content script가 받아서 chrome.storage에 저장
+  window.postMessage({
+    type: 'REEL_FLOW_SAVE',
+    payload: payload
+  }, '*');
+
+  // Flow 탭 열기
+  setTimeout(() => {
+    window.open('https://labs.google/fx/ko/tools/flow', '_blank');
+    toast(`✅ ${prompts.length}개 프롬프트 저장! Flow 탭에서 🗝 확장 팝업 클릭 → ▶ 시작`);
+  }, 300);
+}
+
+async function genImgPrompts() {
+  document.getElementById('imgLoading').style.display='flex';
+  document.getElementById('imgArea').style.display='none';
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 영상용 AI 이미지 프롬프트 8장을 3가지 툴 버전으로 만들어주세요.
+
+주제: ${selectedTopic}
+대본 흐름: ${generatedScript.slice(0,400)}
+
+[공통 규칙]
+- 2026년 현재 한국 일상 배경
+- 인물: 60-70대 한국 어르신 (세련된 일상복, 촌스럽지 않게)
+- 8장은 영상 흐름 순서대로 (도입→본문→마무리)
+- 텍스트/자막 없이
+- 특정 병원명/의사명 없이
+
+[3가지 버전 프롬프트 규칙]
+gemini: 한국어로, 자세한 장면 묘사, 제미나이 이미지젠 최적화
+flow: 한국어로, 스타일 시네마틱, 비율 16:9, 핵심 키워드 위주
+grok: 영어로, Grok Aurora 최적화, cinematic hyperrealistic, 2026 Seoul Korea 포함
+
+[중요] JSON 값 안에 큰따옴표 절대 사용 금지. 작은따옴표나 다른 표현 사용.
+
+JSON만 출력 (8개):
+{"prompts":[{"num":1,"scene":"장면설명","gemini":"제미나이용프롬프트","flow":"Flow용프롬프트","grok":"Grok용프롬프트"}]}`, 6000);
+
+    // JSON 안전 파싱 — 큰따옴표 오류 방어
+    let data;
+    try {
+      data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    } catch(jsonErr) {
+      // JSON 깨진 경우 — 텍스트에서 추출 시도
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        // 프롬프트 값 안의 큰따옴표를 작은따옴표로 치환 후 재시도
+        const cleaned = match[0]
+          .replace(/:\s*"((?:[^"\\]|\\.)*)"/g, (m, val) => ': "' + val.replace(/"/g, "'") + '"');
+        data = JSON.parse(cleaned);
+      } else {
+        throw new Error('이미지 프롬프트 생성 오류 — 다시 시도해주세요');
+      }
+    }
+
+    renderImgGrid3('imgGrid', data.prompts);
+    document.getElementById('imgLoading').style.display='none';
+    document.getElementById('imgArea').style.display='block';
+  } catch(e) {
+    document.getElementById('imgLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span><br><button class="btn btn-outline" onclick="genImgPrompts()" style="margin-top:8px;font-size:12px;padding:6px 12px;">🔄 다시 시도</button>`;
+  }
+}
+
+function renderImgGrid3(gridId, prompts) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  prompts.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'img-prompt-item';
+    item.style.marginBottom = '14px';
+
+    const head = document.createElement('div');
+    head.className = 'img-prompt-head';
+    head.innerHTML = `<span class="img-prompt-num">${p.num || i+1}. ${p.scene || ''}</span>`;
+    item.appendChild(head);
+
+    const versions = [
+      {key:'gemini', label:'🔵 제미나이', color:'#1a1a3a'},
+      {key:'flow',   label:'🟢 Flow',    color:'#1a2a1a'},
+      {key:'grok',   label:'⚡ 그록',    color:'#2a1a2a'},
+    ];
+
+    versions.forEach(v => {
+      const vDiv = document.createElement('div');
+      vDiv.style.cssText = `background:${v.color};border:1px solid var(--border2);border-radius:6px;padding:10px;margin-top:6px;`;
+
+      const vHead = document.createElement('div');
+      vHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+
+      const vLabel = document.createElement('span');
+      vLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text3);';
+      vLabel.textContent = v.label;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn-copy';
+      copyBtn.textContent = '복사';
+
+      const textDiv = document.createElement('div');
+      textDiv.style.cssText = 'font-size:12px;color:var(--accent);font-family:monospace;line-height:1.6;white-space:pre-wrap;word-break:break-all;';
+      textDiv.textContent = p[v.key] || '';
+
+      copyBtn.addEventListener('click', () => copyText(textDiv.textContent, copyBtn));
+      vHead.appendChild(vLabel); vHead.appendChild(copyBtn);
+      vDiv.appendChild(vHead); vDiv.appendChild(textDiv);
+      item.appendChild(vDiv);
+    });
+
+    // Flow 자동화용 data 저장 (flow 버전 사용)
+    item.dataset.prompt = p.flow || p.gemini || '';
+    item.dataset.scene = p.scene || '';
+    grid.appendChild(item);
+  });
+}
+
+async function addImgPrompt() {
+  const scene = document.getElementById('extraScene').value.trim();
+  if (!scene) { alert('장면을 입력해주세요'); return; }
+  const grid = document.getElementById('imgGrid');
+  const loadDiv = document.createElement('div');
+  loadDiv.className='loading'; loadDiv.innerHTML='<div class="spinner"></div>추가 프롬프트 생성 중...';
+  grid.appendChild(loadDiv);
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브용 AI 이미지 프롬프트 1개 만들어주세요.
+
+장면: ${scene}
+주제: ${selectedTopic}
+
+규칙: present day 2026 South Korea, Hyperrealistic, cinematic, warm lighting, 60-70대 한국 어르신, 현대적 배경, --no vintage --no old-fashioned
+
+JSON만 출력: {"prompt":"영어 프롬프트"}`);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    loadDiv.remove();
+    const div = document.createElement('div');
+    div.className = 'img-prompt-item';
+    div.innerHTML = `
+      <div class="img-prompt-head">
+        <span class="img-prompt-num">추가. ${scene}</span>
+        <button class="btn-copy" onclick="copyText(${JSON.stringify(data.prompt)},this)">복사</button>
+      </div>
+      <div class="img-prompt-text">${data.prompt}</div>`;
+    grid.appendChild(div);
+    document.getElementById('extraScene').value = '';
+  } catch(e) {
+    loadDiv.textContent = '오류: ' + e.message;
+  }
+}
+
+// ===== STEP 5: META =====
+async function genMeta() {
+  document.getElementById('metaLoading').style.display='flex';
+  document.getElementById('metaArea').style.display='none';
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 메타데이터를 만들어주세요.
+
+주제: ${selectedTopic}
+썸네일: ${selectedThumb?.main} / ${selectedThumb?.sub}
+카테고리: ${workCat}
+
+JSON만 출력:
+{
+  "titles":["검색최적화형","클릭유도형","궁금증유발형"],
+  "description":"유튜브 설명글 (첫 2줄 핵심 키워드 포함, 영상 내용 요약, 구독CTA, 500자 이내)",
+  "hashtags":"#든든백세 #시니어건강 #노년건강 ... (30개 이상, 공백으로 구분)",
+  "hidden_tags":"숨은태그 (실제검색어 위주, 쉼표구분, 경쟁채널 포함:건강이최고야,노년내과,시니어tv,오늘도건강,실버건강TV,닥터조,의학채널비온뒤,건강365,이건강저건강, 반드시 500자 이내)"
+}`, 3000);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    // 제목 3개
+    document.getElementById('metaTitles').innerHTML = data.titles.map((t,i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;flex:1;margin-right:10px;">${['①','②','③'][i]} ${t}</span>
+        <button class="btn-copy" onclick="copyText(${JSON.stringify(t)},this)">복사</button>
+      </div>`).join('');
+
+    // 설명글
+    document.getElementById('metaDesc').textContent = data.description;
+    document.getElementById('descCount').textContent = data.description.length + '자';
+
+    // 해시태그
+    document.getElementById('metaHash').textContent = data.hashtags;
+
+    // 숨은태그 — 500자 엄수
+    let hidden = data.hidden_tags;
+    if (hidden.length > 500) hidden = hidden.slice(0,497) + '...';
+    hiddenTagCurrent = hidden;
+    document.getElementById('metaHidden').textContent = hidden;
+    document.getElementById('hiddenCount').textContent = hidden.length + '자 / 500자';
+
+    document.getElementById('metaLoading').style.display='none';
+    document.getElementById('metaArea').style.display='block';
+  } catch(e) {
+    document.getElementById('metaLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+async function addHiddenTags() {
+  const chars = parseInt(document.getElementById('addTagChars').value);
+  if (!chars || chars < 10) { alert('추가할 글자수를 입력해주세요 (최소 10자)'); return; }
+  const remaining = 500 - hiddenTagCurrent.length;
+  if (remaining <= 0) { alert('이미 500자가 꽉 찼어요!'); return; }
+  const addChars = Math.min(chars, remaining);
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 숨은태그를 ${addChars}자 추가로 만들어주세요.
+
+주제: ${selectedTopic}
+기존 태그: ${hiddenTagCurrent}
+
+규칙:
+- 기존 태그와 중복 없이
+- 실제 검색어 기반
+- 쉼표로 구분, 앞에 쉼표(,) 붙여서 시작
+- 정확히 ${addChars}자 이내
+
+추가 태그만 출력 (쉼표로 시작):`);
+
+    const addition = raw.trim();
+    let newHidden = hiddenTagCurrent + addition;
+    if (newHidden.length > 500) newHidden = newHidden.slice(0,500);
+    hiddenTagCurrent = newHidden;
+    document.getElementById('metaHidden').textContent = newHidden;
+    document.getElementById('hiddenCount').textContent = newHidden.length + '자 / 500자';
+    document.getElementById('addTagChars').value = '';
+    toast('태그 추가됨!');
+  } catch(e) { alert('오류: ' + e.message); }
+}
+
+// ===== STEP 6,7: SHORTS =====
+async function genShorts(num) {
+  const loadId = `shorts${num}Loading`;
+  const areaId = `shorts${num}Area`;
+  const prefix = `s${num}`;
+
+  document.getElementById(loadId).style.display='flex';
+  document.getElementById(areaId).style.display='none';
+
+  const angle = num === 1
+    ? '충격적인 수치나 통계를 전면에 내세우는 훅'
+    : '공감을 유발하는 실생활 장면으로 시작하는 훅';
+
+  try {
+    const raw = await callClaude(`든든백세 유튜브 숏츠 패키지를 만들어주세요.
+
+주제: ${selectedTopic}
+숏츠 번호: ${num}번 (${angle})
+
+[숏츠 대본 규칙]
+- 30초 분량 (200-250자)
+- 구조: 강력 후킹(5초) → 핵심 내용 압축(20초) → 궁금증 유발 → "자세한 내용은 왼쪽 아래 본영상에서 확인하세요"로 마무리
+- 말투: "어르신들" 호칭, 따뜻한 존댓말
+- 결말/해결책 절대 공개 금지 (궁금증만 극대화)
+- TTS 순수 텍스트만 (지시문 금지)
+
+JSON만 출력:
+{
+  "script":"숏츠 대본 전문",
+  "titles":["제목1","제목2","제목3"],
+  "description":"숏츠 설명 150자 이내",
+  "hashtags":"#shorts #든든백세 #시니어 ... (15개)",
+  "img_prompts":[
+    {"scene":"장면1 한글","prompt":"영어 프롬프트"},
+    {"scene":"장면2 한글","prompt":"영어 프롬프트"}
+  ]
+}`, 2000);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    document.getElementById(`${prefix}Script`).textContent = data.script;
+    document.getElementById(`${prefix}Titles`).innerHTML = data.titles.map((t,i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;flex:1;margin-right:10px;">${['①','②','③'][i]} ${t}</span>
+        <button class="btn-copy" onclick="copyText(${JSON.stringify(t)},this)">복사</button>
+      </div>`).join('');
+    document.getElementById(`${prefix}Meta`).textContent = data.description + '\n\n' + data.hashtags;
+    renderImgGrid(`${prefix}ImgGrid`, data.img_prompts.map((p,i) => ({num:i+1, scene:p.scene, prompt:p.prompt})));
+
+    document.getElementById(loadId).style.display='none';
+    document.getElementById(areaId).style.display='block';
+  } catch(e) {
+    document.getElementById(loadId).innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+// ===== STEP 8: DONE =====
+function showDone() {
+  const next = new Date(workDate);
+  next.setDate(next.getDate() + 2);
+  const days = [1,3,5];
+  while (!days.includes(next.getDay())) next.setDate(next.getDate()+1);
+  const dayNames=['일','월','화','수','목','금','토'];
+  document.getElementById('doneMsg').textContent =
+    `"${selectedTopic}" 콘텐츠 패키지 완성!\n다음 작업일: ${next.toLocaleDateString('ko-KR')} (${dayNames[next.getDay()]})`;
+}
+
+function goBack(fromStep) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  // step25(팩트입력)에서 뒤로 → step2(썸네일)
+  // step3(대본)에서 뒤로 → step25(팩트입력)
+  let prevStep;
+  if (fromStep === 25) prevStep = 2;
+  else if (fromStep === 3) prevStep = 25;
+  else prevStep = fromStep - 1;
+  currentStep = prevStep;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetAll() {
+  currentStep = 0; selectedTopic=''; selectedThumb=null; generatedScript='';
+  document.querySelectorAll('.content-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step0').classList.add('active');
+  renderStepBar(); initDate();
+}
+
+// ===== UTILS =====
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  }).catch(()=>{
+    const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';
+    document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
+    const o=btn.textContent;btn.textContent='복사됨 ✓';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+function copyEl(elId, btn) { copyText(document.getElementById(elId).textContent, btn); }
+function copyId(elId, btn) { copyText(document.getElementById(elId).textContent, btn); }
+
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
