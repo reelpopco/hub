@@ -1020,40 +1020,37 @@ function sendToFlow() {
   const prompts = [];
   items.forEach((item, i) => {
     const scene = item.querySelector('.img-prompt-num')?.textContent || `장면 ${i+1}`;
-    // Flow용 프롬프트 우선 사용
     const prompt = item.dataset.prompt || '';
     if (prompt) {
       prompts.push({
         num: i + 1,
         scene: item.dataset.scene || scene.replace(/^\d+\.\s*/, ''),
-        prompt: `${prompt}\n스타일: ${style}, 비율: ${ratio}`
+        prompt: `${prompt} 스타일: ${style}, 비율: ${ratio}`
       });
     }
   });
 
   if (!prompts.length) { alert('프롬프트를 찾지 못했어요'); return; }
 
-  // ① 크롬 확장 storage에 저장
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    chrome.storage.local.set({
-      flowPrompts: prompts,
-      flowChannel: '든든백세 — ' + (selectedTopic || ''),
-      flowStyle: style,
-      flowRatio: ratio,
-    }, () => {
-      // ② Flow 탭 열기
-      chrome.tabs.create({ url: 'https://labs.google/fx/ko/tools/flow' }, () => {
-        toast(`✅ ${prompts.length}개 프롬프트 전송! 확장 팝업에서 시작하세요.`);
-      });
-    });
-  } else {
-    // 확장 없을 때 — localStorage fallback
-    localStorage.setItem('flowPrompts', JSON.stringify(prompts));
-    localStorage.setItem('flowStyle', style);
-    localStorage.setItem('flowTitle', '든든백세');
+  const payload = {
+    flowPrompts: prompts,
+    flowChannel: '든든백세 — ' + (selectedTopic || ''),
+    flowStyle: style,
+    flowRatio: ratio,
+  };
+
+  // 웹페이지 → content script로 postMessage 전달
+  // content script가 받아서 chrome.storage에 저장
+  window.postMessage({
+    type: 'REEL_FLOW_SAVE',
+    payload: payload
+  }, '*');
+
+  // Flow 탭 열기
+  setTimeout(() => {
     window.open('https://labs.google/fx/ko/tools/flow', '_blank');
-    toast(`Flow 탭 열림! 확장 설치 후 자동화 가능해요.`);
-  }
+    toast(`✅ ${prompts.length}개 프롬프트 저장! Flow 탭에서 🗝 확장 팝업 클릭 → ▶ 시작`);
+  }, 300);
 }
 
 async function genImgPrompts() {
