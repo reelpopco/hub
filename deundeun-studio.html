@@ -192,6 +192,16 @@ textarea{resize:vertical;line-height:1.7;}
     <div id="topicLoading" class="loading"><div class="spinner"></div>Claude AI가 주제를 추천하는 중...</div>
     <div id="topicArea" style="display:none;">
       <div class="topic-grid" id="topicGrid"></div>
+
+      <!-- 직접 입력 -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">✏️ 직접 입력 (추천 주제 대신 사용)</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="topicDirect" placeholder="예: 노인 낙상 예방하는 5가지 방법" style="flex:1;">
+          <button class="btn btn-outline" onclick="applyDirectTopic()" style="white-space:nowrap;padding:8px 14px;">이 주제로</button>
+        </div>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-outline" onclick="loadTopics()">🔄 다시 추천</button>
         <button class="btn btn-primary" id="topicNextBtn" onclick="goStep(2)" disabled>이 주제로 진행 →</button>
@@ -251,44 +261,74 @@ textarea{resize:vertical;line-height:1.7;}
 
 <!-- STEP 3: 대본 생성 -->
 <div class="content-step" id="step3">
-  <button class="back-btn" onclick="goBack(3)">← 썸네일 다시 선택</button>
+  <button class="back-btn" onclick="goBack(3)">← 팩트 입력으로</button>
+
+  <!-- 전반부 -->
   <div class="card">
-    <div class="card-title">📝 대본 생성</div>
-    <div id="scriptLoading" class="loading"><div class="spinner"></div>Claude AI가 대본을 작성하는 중... (6,000자+ 기준, 1-2분 소요)</div>
-    <div id="scriptArea" style="display:none;">
-      <div class="script-box" id="scriptBox"></div>
-      <div class="char-count" id="charCount"></div>
-
-      <!-- 보완 지시 재생성 -->
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
-        <div class="sec-title" style="margin-bottom:8px;">✏️ 보완 후 재생성</div>
-        <textarea id="scriptFeedback" rows="3" placeholder="예: 도입부 후킹을 더 강하게 / 분량이 부족해요 6500자 이상으로 / 3번 항목을 더 구체적으로 / 실천 미션 추가해주세요..."></textarea>
-        <button class="btn btn-outline" onclick="regenWithFeedback()" style="margin-top:8px;width:100%;justify-content:center;">💬 이 내용 반영해서 재생성</button>
-      </div>
-
-      <!-- 부분 재생성 -->
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:10px;">
-        <div class="sec-title" style="margin-bottom:8px;">🔧 부분 재생성</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          <button class="btn btn-ghost" onclick="regenPart('도입부')">도입부만</button>
-          <button class="btn btn-ghost" onclick="regenPart('본문')">본문만</button>
-          <button class="btn btn-ghost" onclick="regenPart('엔딩')">엔딩만</button>
-        </div>
-        <div id="partResult" style="display:none;">
-          <div class="meta-label" style="margin-bottom:4px;" id="partLabel"></div>
-          <div class="script-box" id="partBox" style="max-height:240px;"></div>
-          <div class="btn-row">
-            <button class="btn-copy" onclick="copyEl('partBox',this)">복사</button>
-            <button class="btn btn-ghost" onclick="applyPart()">전체 대본에 적용</button>
-          </div>
-        </div>
-      </div>
-
+    <div class="card-title">📝 대본 전반부 <span style="font-size:11px;color:var(--text3);">① 편안함 → ② 욕망 → ③ 낯선세계 → ④ 탐색</span></div>
+    <div id="script1Loading" class="loading" style="display:none;"><div class="spinner"></div>전반부 작성 중... (1-2분)</div>
+    <div id="script1Area" style="display:none;">
+      <div class="script-box" id="script1Box"></div>
+      <div class="char-count" id="charCount1"></div>
       <div class="btn-row" style="margin-top:10px;">
-        <button class="btn-copy" onclick="copyEl('scriptBox', this)">대본 전체 복사</button>
-        <button class="btn btn-outline" onclick="regenScript()">🔄 처음부터 재생성</button>
-        <button class="btn btn-primary" onclick="goStep(4)">확인 완료 → 이미지 프롬프트</button>
+        <button class="btn-copy" onclick="copyEl('script1Box',this)">전반부 복사</button>
+        <button class="btn btn-outline" onclick="regenScript(1)">🔄 재생성</button>
       </div>
+    </div>
+    <button class="btn btn-primary" id="genScript1Btn" onclick="genScriptPart(1)" style="width:100%;justify-content:center;padding:12px;margin-top:4px;">
+      📝 전반부 생성
+    </button>
+  </div>
+
+  <!-- 후반부 -->
+  <div class="card" id="script2Card" style="opacity:.4;pointer-events:none;">
+    <div class="card-title">📝 대본 후반부 <span style="font-size:11px;color:var(--text3);">⑤ 발견 → ⑥ 대가 → ⑦ 귀환 → ⑧ 변화</span></div>
+    <div id="script2Loading" class="loading" style="display:none;"><div class="spinner"></div>후반부 작성 중... (1-2분)</div>
+    <div id="script2Area" style="display:none;">
+      <div class="script-box" id="script2Box"></div>
+      <div class="char-count" id="charCount2"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-copy" onclick="copyEl('script2Box',this)">후반부 복사</button>
+        <button class="btn btn-outline" onclick="regenScript(2)">🔄 재생성</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="genScript2Btn" onclick="genScriptPart(2)" style="width:100%;justify-content:center;padding:12px;margin-top:4px;">
+      📝 후반부 생성
+    </button>
+  </div>
+
+  <!-- 합치기 + 보완 -->
+  <div class="card" id="scriptMergeCard" style="display:none;">
+    <div class="card-title">📋 전체 대본</div>
+    <div class="script-box" id="scriptBox"></div>
+    <div class="char-count" id="charCount"></div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
+      <div class="sec-title" style="margin-bottom:8px;">✏️ 보완 후 재생성</div>
+      <textarea id="scriptFeedback" rows="3" placeholder="예: 도입부 후킹을 더 강하게 / 해결책 3번을 더 구체적으로 / 실천 미션 추가..."></textarea>
+      <button class="btn btn-outline" onclick="regenWithFeedback()" style="margin-top:8px;width:100%;justify-content:center;">💬 반영해서 재생성</button>
+    </div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:10px;">
+      <div class="sec-title" style="margin-bottom:8px;">🔧 부분 재생성</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn btn-ghost" onclick="regenPart('도입부')">도입부만</button>
+        <button class="btn btn-ghost" onclick="regenPart('본문')">본문만</button>
+        <button class="btn btn-ghost" onclick="regenPart('엔딩')">엔딩만</button>
+      </div>
+      <div id="partResult" style="display:none;">
+        <div class="meta-label" style="margin-bottom:4px;" id="partLabel"></div>
+        <div class="script-box" id="partBox" style="max-height:240px;"></div>
+        <div class="btn-row">
+          <button class="btn-copy" onclick="copyEl('partBox',this)">복사</button>
+          <button class="btn btn-ghost" onclick="applyPart()">전체 대본에 적용</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn-copy" onclick="copyEl('scriptBox',this)">대본 전체 복사</button>
+      <button class="btn btn-primary" onclick="goStep(4)">확인 완료 → 이미지 프롬프트</button>
     </div>
   </div>
 </div>
@@ -532,8 +572,8 @@ function goStep(n) {
   window.scrollTo({top:0,behavior:'smooth'});
   if (n===1) loadTopics();
   if (n===2) loadThumbs();
-  if (n===25) { /* 팩트 입력 단계 — 자동 실행 없음 */ }
-  if (n===3) genScript();
+  if (n===25) { /* 팩트 입력 단계 */ }
+  if (n===3) { /* 대본 직접 버튼으로 생성 */ }
   if (n===4) genImgPrompts();
   if (n===5) genMeta();
   if (n===6) genShorts(1);
@@ -580,6 +620,15 @@ async function callClaude(prompt, maxTokens=2000) {
 }
 
 // ===== STEP 1: TOPICS =====
+function applyDirectTopic() {
+  const val = document.getElementById('topicDirect').value.trim();
+  if (!val) { toast('주제를 입력해주세요'); return; }
+  selectedTopic = val;
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('topicNextBtn').disabled = false;
+  toast(`"${val}" 선택됐어요!`);
+}
+
 async function loadTopics() {
   document.getElementById('topicLoading').style.display='flex';
   document.getElementById('topicArea').style.display='none';
@@ -679,76 +728,166 @@ function selectThumb(i, main, sub) {
   document.getElementById('thumbNextBtn').disabled = false;
 }
 
-// ===== STEP 3: SCRIPT =====
-async function genScript() {
-  document.getElementById('scriptLoading').style.display='flex';
-  document.getElementById('scriptLoading').innerHTML='<div class="spinner"></div>Claude AI가 대본을 작성하는 중... (댄 하먼 8단계 구조, 1-2분 소요)';
-  document.getElementById('scriptArea').style.display='none';
+// ===== STEP 3: SCRIPT (전반부/후반부 분리) =====
+let script1 = '', script2 = '';
 
-  // 팩트 데이터 수집
+const INTRO_FORMULA = `[든든백세 도입부 공식 — 반드시 이 순서로]
+① 후킹 (공백제외 500자 이상):
+   - 계절감/시기 + 어르신들 공감 장면 묘사
+   - 문제 구체적으로 묘사 ("허리가 끊어질 것 같다", "새벽에 깨면 다시 못 잠든다")
+   - "그거 ~탓 아닙니다" 반전 + 충격 수치/사실
+   - "이 이야기 오늘 꼭 끝까지 들어주세요"
+② 인사 + 구독유도:
+   - "안녕하세요, 든든백세입니다"
+   - 오늘 영상으로 얻을 혜택 예고 ("오늘 이 영상 하나면 ~하실 수 있어요")
+   - 구독/좋아요 유도
+   - "자, 바로 시작할게요"`;
+
+function getFactPrompt() {
   const factData = document.getElementById('factData')?.value.trim() || '';
   const factSource = document.getElementById('factSource')?.value.trim() || '';
   const factMessage = document.getElementById('factMessage')?.value.trim() || '';
-  const hasFact = factData || factSource || factMessage;
+  if (!factData && !factSource && !factMessage) return '';
+  return `
+[참고 팩트 — 반드시 녹여낼 것, 단 특정 병원명/의사명/약품명 절대 언급 금지]
+팩트 사용 규칙:
+- "최근 연구에 따르면", "전문가들에 따르면", "한 대학병원 연구팀" 등 포괄적 표현 사용
+- 구체적 수치는 유지하되 출처 기관명은 "국내 연구팀", "보건당국" 등으로 대체
+${factData ? `핵심 팩트/통계:\n${factData}` : ''}
+${factSource ? `연구 배경:\n${factSource}` : ''}
+${factMessage ? `강조 메시지:\n${factMessage}` : ''}`;
+}
+
+async function genScriptPart(part) {
+  const factPrompt = getFactPrompt();
+  const loadingEl = document.getElementById(`script${part}Loading`);
+  const areaEl = document.getElementById(`script${part}Area`);
+  const boxEl = document.getElementById(`script${part}Box`);
+  const countEl = document.getElementById(`charCount${part}`);
+  const btnEl = document.getElementById(`genScript${part}Btn`);
+
+  loadingEl.style.display = 'flex';
+  areaEl.style.display = 'none';
+  btnEl.style.display = 'none';
 
   try {
-    const raw = await callClaude(`너는 시니어 건강/생활 정보 유튜브 채널 "든든백세"의 전문 대본 작가야.
-아래 조건에 맞는 유튜브 대본을 작성해줘.
+    let prompt = '';
+
+    if (part === 1) {
+      prompt = `너는 "든든백세" 유튜브 채널 전문 대본 작가야.
+오늘 대본의 전반부(①~④단계)를 작성해줘.
 
 [기본 정보]
 주제: ${selectedTopic}
 카테고리: ${workCat}
-썸네일 문구: ${selectedThumb?.main} / ${selectedThumb?.sub}
-${hasFact ? `
-[참고 팩트 — 반드시 이 내용을 대본에 녹여낼 것]
-${factData ? `핵심 팩트/통계:\n${factData}` : ''}
-${factSource ? `출처/연구:\n${factSource}` : ''}
-${factMessage ? `강조 메시지:\n${factMessage}` : ''}
-` : ''}
+썸네일: ${selectedThumb?.main} / ${selectedThumb?.sub}
+${factPrompt}
 
-[댄 하먼 8단계 서사 구조 적용 — 반드시 이 흐름으로]
+${INTRO_FORMULA}
 
-① 편안함 (You) — 어르신들의 일상적인 공감 장면 묘사. "맞아, 나 얘기네" 싶게.
-② 욕망 (Need) — 문제나 두려움 자극. "이걸 모르면 큰일난다" 긴장감.
-   ★ 여기서 자연스럽게 구독/좋아요 유도 멘트 삽입
-③ 낯선 세계 (Go) — 새로운 정보/해결책의 세계로 안내. "그런데 이런 방법이 있습니다."
-④ 탐색 (Search) — 구체적 원인, 메커니즘, 제도 작동 원리 낱낱이 분석.
-⑤ 발견 (Find) — 실질적 해결책, 꿀팁, 돌파구 제시. "바로 이겁니다!"
-⑥ 대가 (Take) — 주의사항, 함정, 부작용, 놓치기 쉬운 것들. 솔직하게.
-⑦ 귀환 (Return) — 오늘부터 바로 실천할 수 있는 구체적 행동 지침.
-⑧ 변화 (Change) — 이 영상을 본 뒤 달라진 어르신의 모습으로 마무리.
+[댄 하먼 전반부 — 반드시 이 순서]
+① 편안함 (You): 어르신들 일상 공감 장면 + 문제 묘사 (위 도입부 공식 적용)
+② 욕망 (Need): 충격 수치/사실로 긴장감 + "모르면 큰일난다" + 구독/좋아요 유도
+③ 낯선 세계 (Go): "그런데 이런 방법/사실이 있습니다" — 해결책 세계로 안내
+④ 탐색 (Search): 원인 메커니즘 깊이 분석 (왜 이런 일이 벌어지는가, 구체적으로)
 
-[말투/호칭 규칙]
-- 시청자 호칭: "어르신들" (반드시 이 호칭만)
-- 문체: 따뜻하고 친근한 존댓말 (~하십니다, ~하세요, ~거든요)
-- 금지: 딱딱한 강의체, 외래어 남발
-- 가족 호칭: 며느리, 아들, 딸, 손자/손녀, 남편/아내
+[규칙]
+- 공백 제외 5,000자 이상
+- 호칭: "어르신들" 고정
+- 말투: ~하십니다, ~하세요, ~거든요
+- 특정 병원명/의사명/약품명 절대 금지 → "최근 연구에 따르면", "전문가들에 따르면"으로
+- TTS 순수 텍스트만 (구분선, 헤더, 지시문 금지)
+- 후반부가 이어진다는 걸 고려해서 ④단계 끝에서 자연스럽게 마무리
 
-[필수 포함 요소]
-- 도입부: 공감 장면 → 충격 통계/사실 → "오늘 끝까지 보시면 ~하실 겁니다"
-- 인사: "든든백세입니다" + 오늘 주제 + 구독 유도
-- 본문: 이유 → 체크리스트 → 해결책 N가지 (충분한 설명+예시)
-- 엔딩: 핵심 요약 → 실천 미션 → 구독/좋아요/공유 CTA → "든든백세가 응원합니다"
+지금 바로 전반부 전문을 출력하세요.`;
 
-[분량/출력 규칙]
-- 공백 제외 반드시 6,500자 이상
-- TTS 바로 사용 가능한 순수 텍스트만
-- 구분선(---), 헤더(#), 지시문, 괄호 안 지시어 절대 금지
-- 수치/통계는 구체적으로
+    } else {
+      prompt = `너는 "든든백세" 유튜브 채널 전문 대본 작가야.
+아래 전반부에 이어서 후반부(⑤~⑧단계)를 작성해줘.
 
-지금 바로 대본 전문을 출력하세요.`, 8000);
+[전반부 내용 요약]
+주제: ${selectedTopic}
+전반부 마지막 부분: ${script1.slice(-300)}
+${factPrompt}
 
-    generatedScript = raw;
-    const charCount = raw.replace(/\s/g,'').length;
-    document.getElementById('scriptBox').textContent = raw;
-    const cc = document.getElementById('charCount');
-    cc.textContent = `공백제외 ${charCount.toLocaleString()}자`;
-    cc.className = 'char-count ' + (charCount >= 6000 ? 'ok' : 'ng');
+[댄 하먼 후반부 — 반드시 이 순서]
+⑤ 발견 (Find): 실질적 해결책 3~5가지 — 각각 충분한 설명 + 구체적 예시 포함
+⑥ 대가 (Take): 주의사항, 함정, 잘못 알려진 것들, 부작용 솔직하게
+⑦ 귀환 (Return): 오늘부터 바로 할 수 있는 실천 미션 (구체적 행동 지침)
+⑧ 변화 (Change): 이 영상 본 후 달라진 어르신 모습 + 엔딩
 
-    document.getElementById('scriptLoading').style.display='none';
-    document.getElementById('scriptArea').style.display='block';
+[엔딩 공식]
+- 핵심 요약 (3줄 이내)
+- "오늘의 실천 미션: ~"
+- 구독/좋아요/공유/댓글 CTA
+- "든든백세가 응원합니다"
+
+[규칙]
+- 공백 제외 5,000자 이상
+- 특정 병원명/의사명/약품명 절대 금지
+- TTS 순수 텍스트만
+- 전반부와 자연스럽게 이어지게
+
+지금 바로 후반부 전문을 출력하세요.`;
+    }
+
+    const raw = await callClaude(prompt, 8000);
+
+    if (part === 1) {
+      script1 = raw;
+      // 후반부 활성화
+      const card2 = document.getElementById('script2Card');
+      card2.style.opacity = '1';
+      card2.style.pointerEvents = 'auto';
+    } else {
+      script2 = raw;
+      // 전체 합치기
+      mergeScript();
+    }
+
+    boxEl.textContent = raw;
+    const cnt = raw.replace(/\s/g,'').length;
+    countEl.textContent = `공백제외 ${cnt.toLocaleString()}자`;
+    countEl.className = 'char-count ' + (cnt >= 4500 ? 'ok' : 'ng');
+
+    loadingEl.style.display = 'none';
+    areaEl.style.display = 'block';
+    btnEl.style.display = 'block';
+    btnEl.textContent = `🔄 ${part === 1 ? '전반부' : '후반부'} 재생성`;
+
   } catch(e) {
-    document.getElementById('scriptLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+    loadingEl.innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+    btnEl.style.display = 'block';
+  }
+}
+
+function mergeScript() {
+  generatedScript = script1 + '\n\n' + script2;
+  const box = document.getElementById('scriptBox');
+  const cc = document.getElementById('charCount');
+  const card = document.getElementById('scriptMergeCard');
+
+  box.textContent = generatedScript;
+  const cnt = generatedScript.replace(/\s/g,'').length;
+  cc.textContent = `공백제외 ${cnt.toLocaleString()}자 (전반부 + 후반부 합산)`;
+  cc.className = 'char-count ' + (cnt >= 9000 ? 'ok' : 'ng');
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+}
+
+async function regenScript(part) {
+  if (part) {
+    await genScriptPart(part);
+  } else {
+    script1 = ''; script2 = '';
+    document.getElementById('script1Area').style.display = 'none';
+    document.getElementById('script2Area').style.display = 'none';
+    document.getElementById('scriptMergeCard').style.display = 'none';
+    document.getElementById('script2Card').style.opacity = '0.4';
+    document.getElementById('script2Card').style.pointerEvents = 'none';
+    document.getElementById('genScript1Btn').textContent = '📝 전반부 생성';
+    document.getElementById('genScript2Btn').textContent = '📝 후반부 생성';
+    await genScriptPart(1);
   }
 }
 
@@ -880,13 +1019,13 @@ function sendToFlow() {
 
   const prompts = [];
   items.forEach((item, i) => {
-    const scene = item.querySelector('.img-scene-label')?.textContent || `장면 ${i+1}`;
-    const promptEl = item.querySelector('.img-prompt-text') || item.querySelector('[id^="imgp_"]');
-    const prompt = promptEl?.textContent || '';
+    const scene = item.querySelector('.img-prompt-num')?.textContent || `장면 ${i+1}`;
+    // Flow용 프롬프트 우선 사용
+    const prompt = item.dataset.prompt || '';
     if (prompt) {
       prompts.push({
         num: i + 1,
-        scene: scene.replace(/^\d+\.\s*/, ''),
+        scene: item.dataset.scene || scene.replace(/^\d+\.\s*/, ''),
         prompt: `${prompt}\n스타일: ${style}, 비율: ${ratio}`
       });
     }
@@ -922,24 +1061,28 @@ async function genImgPrompts() {
   document.getElementById('imgArea').style.display='none';
 
   try {
-    const raw = await callClaude(`든든백세 유튜브 영상용 AI 이미지 프롬프트 8개를 만들어주세요.
+    const raw = await callClaude(`든든백세 유튜브 영상용 AI 이미지 프롬프트 8장을 3가지 툴 버전으로 만들어주세요.
 
 주제: ${selectedTopic}
-대본 요약: ${generatedScript.slice(0,500)}
+대본 흐름: ${generatedScript.slice(0,400)}
 
-규칙:
-- 연도: present day 2026 South Korea 반드시 포함
-- 톤: Hyperrealistic, cinematic, warm lighting
-- 배경: 현대식 아파트, 공원, 병원, 마트 등 현대적 공간
-- 인물: 60-70대 한국 어르신 (촌스럽지 않게, 세련된 일상복)
+[공통 규칙]
+- 2026년 현재 한국 일상 배경
+- 인물: 60-70대 한국 어르신 (세련된 일상복, 촌스럽지 않게)
 - 8장은 영상 흐름 순서대로 (도입→본문→마무리)
-- 금지: vintage, old-fashioned, period costume, text overlay
+- 텍스트/자막 없이
+- 특정 병원명/의사명 없이
+
+[3가지 버전 프롬프트 규칙]
+gemini: 한국어로, 자세한 장면 묘사, "~인 장면" 형식, 제미나이 이미지젠 최적화
+flow: 한국어로, 다됩다윤 Flow 입력용, 스타일/비율 포함, 핵심 키워드 위주
+grok: 영어로, Grok Aurora 최적화, cinematic hyperrealistic, 2026 Seoul Korea 포함
 
 JSON만 출력:
-{"prompts":[{"num":1,"scene":"장면 설명 (한글)","prompt":"영어 프롬프트"}]}`);
+{"prompts":[{"num":1,"scene":"장면설명(한글)","gemini":"제미나이용 한국어 프롬프트","flow":"Flow용 한국어 프롬프트 (스타일: 시네마틱, 비율: 16:9)","grok":"Grok용 영어 프롬프트"}]}`, 3000);
 
     const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
-    renderImgGrid('imgGrid', data.prompts);
+    renderImgGrid3('imgGrid', data.prompts);
     document.getElementById('imgLoading').style.display='none';
     document.getElementById('imgArea').style.display='block';
   } catch(e) {
@@ -947,15 +1090,55 @@ JSON만 출력:
   }
 }
 
-function renderImgGrid(gridId, prompts) {
-  document.getElementById(gridId).innerHTML = prompts.map((p,i) => `
-    <div class="img-prompt-item">
-      <div class="img-prompt-head">
-        <span class="img-prompt-num">${p.num || i+1}. ${p.scene || ''}</span>
-        <button class="btn-copy" onclick="copyText(${JSON.stringify(p.prompt)},this)">복사</button>
-      </div>
-      <div class="img-prompt-text">${p.prompt}</div>
-    </div>`).join('');
+function renderImgGrid3(gridId, prompts) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  prompts.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'img-prompt-item';
+    item.style.marginBottom = '14px';
+
+    const head = document.createElement('div');
+    head.className = 'img-prompt-head';
+    head.innerHTML = `<span class="img-prompt-num">${p.num || i+1}. ${p.scene || ''}</span>`;
+    item.appendChild(head);
+
+    const versions = [
+      {key:'gemini', label:'🔵 제미나이', color:'#1a1a3a'},
+      {key:'flow',   label:'🟢 Flow',    color:'#1a2a1a'},
+      {key:'grok',   label:'⚡ 그록',    color:'#2a1a2a'},
+    ];
+
+    versions.forEach(v => {
+      const vDiv = document.createElement('div');
+      vDiv.style.cssText = `background:${v.color};border:1px solid var(--border2);border-radius:6px;padding:10px;margin-top:6px;`;
+
+      const vHead = document.createElement('div');
+      vHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+
+      const vLabel = document.createElement('span');
+      vLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text3);';
+      vLabel.textContent = v.label;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn-copy';
+      copyBtn.textContent = '복사';
+
+      const textDiv = document.createElement('div');
+      textDiv.style.cssText = 'font-size:12px;color:var(--accent);font-family:monospace;line-height:1.6;white-space:pre-wrap;word-break:break-all;';
+      textDiv.textContent = p[v.key] || '';
+
+      copyBtn.addEventListener('click', () => copyText(textDiv.textContent, copyBtn));
+      vHead.appendChild(vLabel); vHead.appendChild(copyBtn);
+      vDiv.appendChild(vHead); vDiv.appendChild(textDiv);
+      item.appendChild(vDiv);
+    });
+
+    // Flow 자동화용 data 저장 (flow 버전 사용)
+    item.dataset.prompt = p.flow || p.gemini || '';
+    item.dataset.scene = p.scene || '';
+    grid.appendChild(item);
+  });
 }
 
 async function addImgPrompt() {
