@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조선의 여인들 작업실</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0803; --bg2:#141008; --bg3:#1e1810; --border:#2a2010; --border2:#3a3018;
+  --text:#f0e8d8; --text2:#b8a878; --text3:#6a5838;
+  --gold:#c8a040; --gold2:#e8c060; --gold3:#f8e098;
+  --red:#c84040; --red2:#e06060;
+  --ink:#4a3828; --paper:#f5e8d0;
+  --green:#4caf7d; --blue:#5b9bd5;
+  --radius:10px; --radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 15% 15%,rgba(200,160,64,.07) 0%,transparent 55%),
+              radial-gradient(ellipse at 85% 85%,rgba(200,64,64,.04) 0%,transparent 55%);
+  pointer-events:none;z-index:0;
+}
+
+.site-header{border-bottom:1px solid var(--border2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,8,3,.96);backdrop-filter:blur(10px);z-index:100;}
+.site-logo{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;color:var(--gold2);letter-spacing:.05em;display:flex;align-items:center;gap:8px;}
+.api-badge{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);cursor:pointer;padding:6px 12px;border:1px solid var(--border2);border-radius:20px;background:transparent;font-family:inherit;transition:all .2s;}
+.api-badge:hover{border-color:var(--gold);color:var(--text);}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
+.api-dot.on{background:var(--green);}
+
+.main{max-width:860px;margin:0 auto;padding:24px 24px 80px;position:relative;z-index:1;}
+.step-bar{display:flex;align-items:center;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;}
+.step-item{display:flex;align-items:center;flex-shrink:0;}
+.step-wrap{display:flex;flex-direction:column;align-items:center;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);transition:all .2s;}
+.step-dot.active{background:var(--gold);border-color:var(--gold);color:#1a1000;}
+.step-dot.done{background:var(--green);border-color:var(--green);color:#fff;}
+.step-line{width:20px;height:1px;background:var(--border2);}
+.step-label{font-size:9px;color:var(--text3);margin-top:3px;white-space:nowrap;}
+
+.content-step{display:none;}
+.content-step.active{display:block;}
+.back-btn{background:transparent;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:6px 0;margin-bottom:12px;font-family:inherit;}
+.back-btn:hover{color:var(--text);}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+.card-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;margin-bottom:12px;color:var(--gold2);}
+.card-sub{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.7;}
+
+label.lbl{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;}
+input[type=text],input[type=number],input[type=date],textarea,select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .2s;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);}
+textarea{resize:vertical;line-height:1.7;}
+select option{background:var(--bg2);}
+.field{margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;cursor:pointer;border:1px solid transparent;font-weight:500;transition:all .15s;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;border-color:var(--gold);}
+.btn-primary:hover{background:linear-gradient(135deg,var(--gold2),var(--gold3));}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--text2);border-color:var(--border2);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border);font-size:12px;padding:5px 10px;border-radius:20px;}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+.btn-copy{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.btn-copy:hover{border-color:var(--gold);color:var(--gold);}
+.btn-copy.ok{border-color:var(--green);color:var(--green);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+.topic-grid{display:grid;gap:10px;margin-bottom:14px;}
+.topic-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .15s;}
+.topic-card:hover{border-color:var(--gold);}
+.topic-card.selected{border-color:var(--gold2);background:rgba(200,160,64,.08);}
+.topic-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.topic-hook{font-size:11px;color:var(--gold3);font-style:italic;margin-bottom:3px;}
+.topic-era{font-size:10px;color:var(--text3);}
+
+.char-card{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:16px;margin-bottom:12px;}
+.char-card-title{font-size:12px;color:var(--gold2);font-weight:600;margin-bottom:12px;letter-spacing:.03em;}
+
+/* 팩트 입력 배너 */
+.fact-banner{background:rgba(200,160,64,.06);border:1px solid rgba(200,160,64,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px;}
+
+/* 대본 */
+.script-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:2;color:var(--text2);white-space:pre-wrap;max-height:600px;overflow-y:auto;}
+.char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
+.char-count.ok{color:var(--green);}
+.char-count.ng{color:var(--red);}
+
+/* 이미지 프롬프트 */
+.img-prompt-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+.img-prompt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.img-prompt-scene{font-size:11px;color:var(--text3);}
+.img-prompt-text{font-size:12px;color:var(--gold);font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;}
+
+.meta-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;}
+.meta-text{font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;}
+.sec-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;margin-top:12px;}
+.sec-title:first-child{margin-top:0;}
+
+.loading{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:13px;padding:16px 0;}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.dan-haman-badge{background:rgba(200,160,64,.08);border:1px solid rgba(200,160,64,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.9;margin-bottom:14px;}
+
+.hidden-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;pointer-events:none;}
+
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}.main{padding:14px 12px 80px;}}
+</style>
+</head>
+<body>
+
+<!-- API MODAL -->
+<div id="apiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;width:400px;max-width:90vw;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:16px;color:var(--gold2);margin-bottom:16px;">🔑 API 키 설정</div>
+    <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px;">Claude API 키</label>
+    <input type="password" id="claudeKey" placeholder="sk-ant-api03-..." style="margin-bottom:12px;">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="saveKey()" style="flex:1;justify-content:center;">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1;justify-content:center;">취소</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="site-logo">⚔️ 조선의 여인들 작업실</div>
+  <button class="api-badge" onclick="openModal()">
+    <span class="api-dot" id="apiDot"></span>
+    <span id="apiStatus">API 설정</span>
+  </button>
+</header>
+
+<main class="main">
+<div class="step-bar" id="stepBar"></div>
+
+<!-- STEP 0: 날짜/카테고리 -->
+<div class="content-step active" id="step0">
+  <div class="card">
+    <div class="card-title">📅 오늘의 작업</div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">작업 날짜</label>
+        <input type="date" id="workDate">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">시대/카테고리</label>
+        <select id="catSelect">
+          <option value="조선초기">조선 초기 (태조~연산군)</option>
+          <option value="조선중기" selected>조선 중기 (중종~선조)</option>
+          <option value="조선후기">조선 후기 (광해군~정조)</option>
+          <option value="조선말기">조선 말기 (순조~고종)</option>
+          <option value="고려">고려 시대</option>
+          <option value="삼국">삼국/통일신라</option>
+          <option value="자유">시대 자유</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(1)" style="width:100%;justify-content:center;padding:12px;">주제 추천 받기 →</button>
+  </div>
+</div>
+
+<!-- STEP 1: 주제 추천 -->
+<div class="content-step" id="step1">
+  <button class="back-btn" onclick="goBack(1)">← 날짜 변경</button>
+  <div class="card">
+    <div class="card-title">💡 역사 주제 추천</div>
+    <div id="topicLoading" class="loading"><div class="spinner"></div>주제를 추천하는 중...</div>
+    <div id="topicArea" style="display:none;">
+      <div class="topic-grid" id="topicGrid"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="loadTopics()">🔄 다시 추천</button>
+        <button class="btn btn-primary" id="topicNextBtn" onclick="goStep(2)" disabled>이 주제로 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 팩트/참고자료 입력 -->
+<div class="content-step" id="step2">
+  <button class="back-btn" onclick="goBack(2)">← 주제 다시 선택</button>
+  <div class="card">
+    <div class="card-title">📋 팩트 · 참고자료 입력</div>
+    <div class="fact-banner">
+      💡 노트북LM에서 조사한 역사 팩트, 조선왕조실록 내용, 참고 자료를 붙여넣으세요.<br>
+      없으면 비워두고 진행 가능 — AI가 알고 있는 역사 지식으로 작성해요.<br>
+      <strong style="color:var(--gold);">팩트가 있을수록 정확하고 신뢰도 높은 대본이 나와요!</strong>
+    </div>
+    <div class="field">
+      <label class="lbl">핵심 역사 팩트 / 실록 기록 / 수치</label>
+      <textarea id="factData" rows="7" placeholder="예: 문정왕후는 명종이 12세에 즉위한 후 9년간 수렴청정 / 을사사화(1545년) - 윤원형의 소윤이 윤임의 대윤을 숙청 / 문정왕후 사망(1565년) 직후 정난정이 사약을 받음..."></textarea>
+    </div>
+    <div class="field">
+      <label class="lbl">주요 인물 관계 / 사건 배경</label>
+      <textarea id="factSource" rows="4" placeholder="예: 문정왕후(1501~1565) - 중종의 3번째 왕비 / 윤원형 - 문정왕후의 남동생, 소윤의 수장 / 정난정 - 윤원형의 첩, 서얼 출신..."></textarea>
+    </div>
+    <div class="field">
+      <label class="lbl">강조하고 싶은 메시지 / 현대적 해석 (선택)</label>
+      <textarea id="factMessage" rows="3" placeholder="예: 권력을 향한 한 여성의 야망이 어떻게 시대를 바꿨는가 / 21세기 대군부인과 연결되는 권력 구도..."></textarea>
+    </div>
+    <div class="dan-haman-badge">
+      🎭 <strong style="color:var(--gold);">댄 하먼 8단계 서사 구조</strong>로 대본이 구성돼요<br>
+      ① 편안함 → ② 욕망(구독유도) → ③ 낯선 세계 → ④ 탐색 → ⑤ 발견 → ⑥ 대가 → ⑦ 귀환 → ⑧ 변화
+    </div>
+    <button class="btn btn-primary" onclick="goStep(3)" style="width:100%;justify-content:center;padding:12px;">인물 설정 →</button>
+  </div>
+</div>
+
+<!-- STEP 3: 인물 설정 -->
+<div class="content-step" id="step3">
+  <button class="back-btn" onclick="goBack(3)">← 팩트 입력으로</button>
+  <div class="card">
+    <div class="card-title">👸 인물 설정</div>
+    <div class="card-sub">AI 초안을 생성하고 수정하세요. 이미지 생성 시 일관성 유지에 사용돼요.</div>
+    <div id="charLoading" class="loading" style="display:none;"><div class="spinner"></div>인물 설정 초안 생성 중...</div>
+
+    <div class="char-card">
+      <div class="char-card-title">🎭 주인공</div>
+      <div class="grid2">
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">이름</label>
+          <input type="text" id="charName" placeholder="예: 문정왕후, 장희빈">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">신분/직위</label>
+          <input type="text" id="charTitle" placeholder="예: 중종의 왕비, 후궁 숙원">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">생몰연도</label>
+          <input type="text" id="charYears" placeholder="예: 1501~1565 (64세)">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">출신/가문</label>
+          <input type="text" id="charFamily" placeholder="예: 파평 윤씨, 서얼 출신">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">외모/특징 (이미지 생성용)</label>
+        <input type="text" id="charAppearance" placeholder="예: 단아하고 권위 있는 40대 조선 여성, 왕비 예복">
+      </div>
+    </div>
+
+    <div class="char-card">
+      <div class="char-card-title">👥 주요 관계 인물</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">왕/남편</label>
+        <input type="text" id="charKing" placeholder="예: 중종 (재위 1506~1544), 명종 (12세 즉위)">
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">동맹/세력</label>
+        <input type="text" id="charAlliance" placeholder="예: 윤원형 (남동생), 소윤 세력">
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">적대/경쟁 세력</label>
+        <input type="text" id="charEnemy" placeholder="예: 대윤 (윤임), 경빈 박씨, 장경왕후 세력">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">기타 인물</label>
+        <input type="text" id="charOthers" placeholder="예: 정난정 (윤원형의 첩, 실질 권력 행사)">
+      </div>
+    </div>
+
+    <div class="char-card">
+      <div class="char-card-title">⚔️ 핵심 사건 / 반전 포인트</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">시작 사건</label>
+        <input type="text" id="eventStart" placeholder="예: 인종 갑작스러운 사망(1545), 12세 명종 즉위">
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">핵심 갈등/위기</label>
+        <input type="text" id="eventConflict" placeholder="예: 을사사화 — 대윤 윤임 일파 숙청, 수십 명 사사">
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">반전 포인트</label>
+        <input type="text" id="eventTwist" placeholder="예: 문정왕후 사망(1565) → 즉시 윤원형·정난정 몰락">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">역사적 의의 / 현대적 해석</label>
+        <input type="text" id="eventMeaning" placeholder="예: 조선 최장 수렴청정 22년, 여성 권력의 명암">
+      </div>
+    </div>
+
+    <div class="char-card">
+      <div class="char-card-title">🎨 Flow 이미지 설정</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label class="lbl">이미지 스타일</label>
+        <select id="imgStyle">
+          <option value="한국 웹툰">한국 웹툰</option>
+          <option value="시네마틱 (영화풍)">시네마틱 (영화풍)</option>
+          <option value="수채화">수채화</option>
+          <option value="수묵화">수묵화</option>
+          <option value="치비 (귀여운)">치비 (귀여운)</option>
+          <option value="일러스트">일러스트</option>
+          <option value="포토리얼 (실사)">포토리얼 (실사)</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">배경/시대 분위기</label>
+        <input type="text" id="imgBg" placeholder="예: 16세기 조선 궁궐, 창덕궁 내전, 봄 벚꽃...">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="genCharDraft()">✨ AI 초안 생성</button>
+      <button class="btn btn-primary" onclick="goStep(4)">대본 생성 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: 대본 생성 -->
+<div class="content-step" id="step4">
+  <button class="back-btn" onclick="goBack(4)">← 인물 설정으로</button>
+  <div class="card">
+    <div class="card-title">📖 대본 생성</div>
+    <div id="scriptLoading" class="loading"><div class="spinner"></div>Claude AI가 대본을 작성하는 중... (1만자 기준, 2-3분 소요)</div>
+    <div id="scriptArea" style="display:none;">
+      <div class="script-box" id="scriptBox"></div>
+      <div class="char-count" id="charCountEl"></div>
+
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
+        <div class="sec-title">✏️ 보완 후 재생성</div>
+        <textarea id="scriptFeedback" rows="3" placeholder="예: 도입부 훅을 더 강하게 / 문정왕후 감정 묘사를 더 깊게 / 을사사화 장면을 더 극적으로..."></textarea>
+        <button class="btn btn-outline" onclick="regenWithFeedback()" style="margin-top:8px;width:100%;justify-content:center;">💬 반영해서 재생성</button>
+      </div>
+
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:10px;">
+        <div class="sec-title">🔧 부분 재생성</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="btn btn-ghost" onclick="regenPart('도입부 훅')">도입부만</button>
+          <button class="btn btn-ghost" onclick="regenPart('역사 배경 설명')">배경 설명만</button>
+          <button class="btn btn-ghost" onclick="regenPart('핵심 갈등 장면')">갈등 장면만</button>
+          <button class="btn btn-ghost" onclick="regenPart('반전과 결말')">반전 결말만</button>
+          <button class="btn btn-ghost" onclick="regenPart('마무리 엔딩')">엔딩만</button>
+        </div>
+        <div id="partResult" style="display:none;">
+          <div class="sec-title" id="partLabel"></div>
+          <div class="script-box" id="partBox" style="max-height:200px;"></div>
+          <div class="btn-row">
+            <button class="btn-copy" onclick="copyEl('partBox',this)">복사</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-copy" id="scriptCopyBtn" style="padding:8px 16px;font-size:13px;">📋 대본 전체 복사</button>
+        <button class="btn btn-outline" onclick="genScript()">🔄 재생성</button>
+        <button class="btn btn-primary" onclick="goStep(5)">이미지 프롬프트 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: 이미지 프롬프트 (Flow용) -->
+<div class="content-step" id="step5">
+  <button class="back-btn" onclick="goBack(5)">← 대본으로</button>
+  <div class="card">
+    <div class="card-title">🖼 이미지 프롬프트 — Flow 연동용</div>
+    <div class="card-sub" id="imgStyleBadge"></div>
+    <div id="imgLoading" class="loading"><div class="spinner"></div>장면별 이미지 프롬프트 생성 중...</div>
+    <div id="imgArea" style="display:none;">
+      <div id="imgList"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="genImgPrompts()">🔄 이미지 프롬프트 재생성</button>
+        <button class="btn btn-primary" onclick="goStep(6)">메타데이터 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6: 메타데이터 -->
+<div class="content-step" id="step6">
+  <button class="back-btn" onclick="goBack(6)">← 이미지 프롬프트로</button>
+  <div class="card">
+    <div class="card-title">📋 메타데이터</div>
+    <div id="metaLoading" class="loading"><div class="spinner"></div>메타데이터 생성 중...</div>
+    <div id="metaArea" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- STEP 7: 숏츠 -->
+<div class="content-step" id="step7">
+  <button class="back-btn" onclick="goBack(7)">← 메타데이터로</button>
+  <div class="card">
+    <div class="card-title">⚡ 숏츠 대본 · 메타</div>
+    <div id="shortsLoading" class="loading"><div class="spinner"></div>숏츠 생성 중...</div>
+    <div id="shortsArea" style="display:none;"></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+let CLAUDE = localStorage.getItem('claude_api_key') || '';
+let currentStep = 0;
+let selectedTopic = '';
+let selectedCat = '';
+let generatedScript = '';
+
+const STEPS = ['날짜','주제','팩트','인물','대본','이미지','메타','숏츠'];
+
+updateApiStatus();
+renderStepBar();
+initDate();
+
+function initDate() {
+  document.getElementById('workDate').value = new Date().toISOString().slice(0,10);
+}
+
+function renderStepBar() {
+  const bar = document.getElementById('stepBar');
+  bar.innerHTML = STEPS.map((s,i) => `
+    <div class="step-item">
+      ${i>0?'<div class="step-line"></div>':''}
+      <div class="step-wrap">
+        <div class="step-dot ${i<currentStep?'done':i===currentStep?'active':''}">${i<currentStep?'✓':i+1}</div>
+        <div class="step-label">${s}</div>
+      </div>
+    </div>`).join('');
+}
+
+function goStep(n) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n===1) loadTopics();
+  if (n===4) genScript();
+  if (n===5) genImgPrompts();
+  if (n===6) genMeta();
+  if (n===7) genShorts();
+}
+
+function goBack(fromStep) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = fromStep - 1;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateApiStatus() {
+  const dot = document.getElementById('apiDot'), st = document.getElementById('apiStatus');
+  if (CLAUDE) { dot.className='api-dot on'; st.textContent='Claude 연결됨'; }
+  else { dot.className='api-dot'; st.textContent='API 설정'; }
+}
+function openModal() { document.getElementById('apiModal').style.display='flex'; document.getElementById('claudeKey').value=CLAUDE; }
+function closeModal() { document.getElementById('apiModal').style.display='none'; }
+function saveKey() {
+  const c=document.getElementById('claudeKey').value.trim();
+  if(c){CLAUDE=c;localStorage.setItem('claude_api_key',c);}
+  updateApiStatus();closeModal();toast('저장됐어요!');
+}
+
+async function callClaude(prompt, maxTokens=2000) {
+  if (!CLAUDE) { openModal(); throw new Error('API 키를 입력해주세요'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':CLAUDE,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(`API 오류 ${res.status}: ${e?.error?.message||''}`); }
+  return (await res.json()).content[0].text;
+}
+
+// ===== STEP 1: 주제 추천 =====
+async function loadTopics() {
+  selectedTopic=''; document.getElementById('topicNextBtn').disabled=true;
+  document.getElementById('topicLoading').style.display='flex';
+  document.getElementById('topicArea').style.display='none';
+  selectedCat = document.getElementById('catSelect').value;
+  try {
+    const raw = await callClaude(`조선의 여인들 유튜브 채널 역사 주제 5개 추천.
+채널: 조선 역사 속 여성 인물 스토리텔링 / 시대: ${selectedCat}
+조건: 21세기 대군부인·왕이남자 팬층 유입 가능, 권력/배신/반전 드라마틱 구도, 덜 알려진 인물 우선
+JSON만: {"topics":[{"title":"주제 제목","hook":"첫 문장 강한 훅","era":"시대","figure":"핵심 인물명"}]}`, 1000);
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderTopics(data.topics);
+  } catch(e) {
+    document.getElementById('topicLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderTopics(topics) {
+  document.getElementById('topicLoading').style.display='none';
+  document.getElementById('topicArea').style.display='block';
+  const grid=document.getElementById('topicGrid'); grid.innerHTML='';
+  topics.forEach(t => {
+    const card=document.createElement('div'); card.className='topic-card';
+    card.innerHTML=`<div class="topic-title">${t.title}</div><div class="topic-hook">"${t.hook}"</div><div class="topic-era">📅 ${t.era} · 👸 ${t.figure}</div>`;
+    card.addEventListener('click',()=>{
+      document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected'); selectedTopic=t.title;
+      document.getElementById('topicNextBtn').disabled=false;
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ===== STEP 3: 인물 설정 AI 초안 =====
+async function genCharDraft() {
+  document.getElementById('charLoading').style.display='flex';
+  const factData=document.getElementById('factData').value.trim();
+  try {
+    const raw = await callClaude(`조선의 여인들 채널 역사 주제 인물 설정 초안.
+주제: ${selectedTopic} / 시대: ${selectedCat}
+${factData?`팩트 자료:\n${factData}`:''}
+JSON만:
+{"name":"인물명","title":"신분/직위","years":"생몰연도","family":"출신/가문","appearance":"외모특징(이미지용)","king":"왕/남편","alliance":"동맹세력","enemy":"적대세력","others":"기타인물","eventStart":"시작사건","eventConflict":"핵심갈등","eventTwist":"반전포인트","eventMeaning":"역사적의의","imgBg":"배경분위기"}`, 1200);
+    const d=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('charName').value=d.name||'';
+    document.getElementById('charTitle').value=d.title||'';
+    document.getElementById('charYears').value=d.years||'';
+    document.getElementById('charFamily').value=d.family||'';
+    document.getElementById('charAppearance').value=d.appearance||'';
+    document.getElementById('charKing').value=d.king||'';
+    document.getElementById('charAlliance').value=d.alliance||'';
+    document.getElementById('charEnemy').value=d.enemy||'';
+    document.getElementById('charOthers').value=d.others||'';
+    document.getElementById('eventStart').value=d.eventStart||'';
+    document.getElementById('eventConflict').value=d.eventConflict||'';
+    document.getElementById('eventTwist').value=d.eventTwist||'';
+    document.getElementById('eventMeaning').value=d.eventMeaning||'';
+    document.getElementById('imgBg').value=d.imgBg||'';
+    toast('인물 초안 생성됐어요! 수정 후 대본 생성하세요.');
+  } catch(e) { toast('오류: '+e.message); }
+  document.getElementById('charLoading').style.display='none';
+}
+
+function getCharData() {
+  return {
+    name:document.getElementById('charName').value.trim()||'주인공',
+    title:document.getElementById('charTitle').value.trim(),
+    years:document.getElementById('charYears').value.trim(),
+    family:document.getElementById('charFamily').value.trim(),
+    appearance:document.getElementById('charAppearance').value.trim(),
+    king:document.getElementById('charKing').value.trim(),
+    alliance:document.getElementById('charAlliance').value.trim(),
+    enemy:document.getElementById('charEnemy').value.trim(),
+    others:document.getElementById('charOthers').value.trim(),
+    eventStart:document.getElementById('eventStart').value.trim(),
+    eventConflict:document.getElementById('eventConflict').value.trim(),
+    eventTwist:document.getElementById('eventTwist').value.trim(),
+    eventMeaning:document.getElementById('eventMeaning').value.trim(),
+    imgStyle:document.getElementById('imgStyle').value,
+    imgBg:document.getElementById('imgBg').value.trim(),
+  };
+}
+
+// ===== STEP 4: 대본 생성 =====
+async function genScript() {
+  document.getElementById('scriptLoading').style.display='flex';
+  document.getElementById('scriptLoading').innerHTML='<div class="spinner"></div>Claude AI가 대본을 작성하는 중... (댄 하먼 8단계, 1만자 기준, 2-3분 소요)';
+  document.getElementById('scriptArea').style.display='none';
+
+  const c=getCharData();
+  const factData=document.getElementById('factData').value.trim();
+  const factSource=document.getElementById('factSource').value.trim();
+  const factMessage=document.getElementById('factMessage').value.trim();
+
+  try {
+    const raw = await callClaude(`너는 "조선의 여인들" 유튜브 채널의 역사 스토리텔링 전문 대본 작가야.
+아래 역사 정보와 조건으로 완성도 높은 대본을 써줘.
+
+[역사 인물 정보]
+주인공: ${c.name} (${c.title}, ${c.years})
+출신/가문: ${c.family}
+왕/남편: ${c.king}
+동맹: ${c.alliance}
+적대세력: ${c.enemy}
+기타 인물: ${c.others}
+
+[핵심 사건]
+시작: ${c.eventStart}
+갈등: ${c.eventConflict}
+반전: ${c.eventTwist}
+역사적 의의: ${c.eventMeaning}
+
+주제: ${selectedTopic}
+시대: ${selectedCat}
+${factData?`\n[참고 팩트 — 반드시 활용]\n${factData}`:''}
+${factSource?`\n[인물 관계 자료]\n${factSource}`:''}
+${factMessage?`\n[강조 메시지]\n${factMessage}`:''}
+
+[댄 하먼 8단계 서사 구조 적용]
+
+① 편안함 (You) — 시청자가 이미 알고 있는 역사적 상식이나 드라마 장면으로 공감대 형성
+   "왕이남자/대군부인 보셨나요? 그 장면과 똑같은 일이 조선에서 실제로 있었습니다."
+
+② 욕망 (Need) — "이 여자가 어떻게 왕보다 강해졌는가?" 강한 궁금증 유발
+   ★ 자연스럽게 구독/좋아요 유도 멘트 삽입
+
+③ 낯선 세계 (Go) — 시청자가 잘 모르는 역사의 이면으로 안내
+   실록의 기록, 당시 정치 구도, 권력의 작동 방식
+
+④ 탐색 (Search) — 인물의 내면, 전략, 선택을 낱낱이 분석
+   왜 그런 결정을 했는가, 어떤 환경이 이 여자를 만들었는가
+
+⑤ 발견 (Find) — 핵심 사건/음모/반전의 실체 공개
+   역사 기록에 숨겨진 진실, 실록 사관의 평가
+
+⑥ 대가 (Take) — 권력의 대가, 피의 숙청, 배신, 역사의 냉혹한 심판
+   화려함 뒤의 비극, 가족을 잃은 대가
+
+⑦ 귀환 (Return) — 이 인물이 역사에서 어떻게 기억되는가
+   현대적 재해석, 21세기 대군부인과의 연결
+
+⑧ 변화 (Change) — 시청자가 역사를 보는 시각의 변화
+   "우리는 이 여자를 어떻게 봐야 하는가" 깊은 질문으로 마무리
+
+[형식]
+- 해설자 1인칭 나레이션 (TTS 적합한 순수 텍스트)
+- 불가피한 경우만 [중전] [왕] [신하] 등 대사 표시 (최소화)
+- 구분선(---), 헤더(#), 지시문 절대 금지
+- 공백 제외 10,000자 이상
+- 드라마틱하고 영화 같은 묘사로 몰입감 최대화`, 12000);
+
+    generatedScript=raw;
+    const cc=raw.replace(/\s/g,'').length;
+    document.getElementById('scriptBox').textContent=raw;
+    const el=document.getElementById('charCountEl');
+    el.textContent=`공백제외 ${cc.toLocaleString()}자`;
+    el.className='char-count '+(cc>=9000?'ok':'ng');
+    document.getElementById('scriptLoading').style.display='none';
+    document.getElementById('scriptArea').style.display='block';
+    document.getElementById('scriptCopyBtn').addEventListener('click',function(){copyText(generatedScript,this);});
+  } catch(e) {
+    document.getElementById('scriptLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+async function regenWithFeedback() {
+  const feedback=document.getElementById('scriptFeedback').value.trim();
+  if(!feedback){alert('보완할 내용을 입력해주세요');return;}
+  document.getElementById('scriptArea').style.display='none';
+  document.getElementById('scriptLoading').style.display='flex';
+  document.getElementById('scriptLoading').innerHTML='<div class="spinner"></div>보완 사항 반영해서 재생성 중...';
+  const c=getCharData();
+  try {
+    const raw=await callClaude(`아래 조선의 여인들 대본을 보완 지시를 반영해서 전체 다시 써줘.
+기존 대본: ${generatedScript}
+보완 지시: ${feedback}
+주인공: ${c.name} / 팩트 일관성 유지 / 공백 제외 10,000자 이상 / TTS 순수 텍스트만 / 전체 대본 출력:`, 12000);
+    generatedScript=raw;
+    document.getElementById('scriptBox').textContent=raw;
+    const cnt=raw.replace(/\s/g,'').length;
+    const el=document.getElementById('charCountEl');
+    el.textContent=`공백제외 ${cnt.toLocaleString()}자`;
+    el.className='char-count '+(cnt>=9000?'ok':'ng');
+    document.getElementById('scriptFeedback').value='';
+    document.getElementById('scriptLoading').style.display='none';
+    document.getElementById('scriptArea').style.display='block';
+  } catch(e) {
+    document.getElementById('scriptLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+async function regenPart(part) {
+  const c=getCharData();
+  document.getElementById('partResult').style.display='none';
+  document.getElementById('partLabel').textContent=`${part} 재생성 중...`;
+  document.getElementById('partResult').style.display='block';
+  document.getElementById('partBox').textContent='생성 중...';
+  try {
+    const raw=await callClaude(`아래 대본에서 "${part}" 부분만 다시 써줘.
+전체 대본: ${generatedScript}
+주인공: ${c.name} (${c.title}) / 팩트 일관성 유지 / TTS 순수 텍스트만 / "${part}" 해당 부분만 출력:`, 4000);
+    document.getElementById('partLabel').textContent=`✅ ${part} 재생성 완료`;
+    document.getElementById('partBox').textContent=raw;
+  } catch(e) {
+    document.getElementById('partBox').textContent='오류: '+e.message;
+  }
+}
+
+// ===== STEP 5: 이미지 프롬프트 =====
+async function genImgPrompts() {
+  document.getElementById('imgLoading').style.display='flex';
+  document.getElementById('imgArea').style.display='none';
+  const c=getCharData();
+  document.getElementById('imgStyleBadge').textContent=`스타일: ${c.imgStyle} · 배경: ${c.imgBg||'조선 궁궐'} · 16:9 가로형`;
+  try {
+    const raw=await callClaude(`조선의 여인들 유튜브 롱폼 영상용 AI 이미지 프롬프트 10장 (Flow 입력용).
+
+주제: ${selectedTopic}
+주인공: ${c.name} (${c.title}, ${c.appearance||'조선 여성'})
+스타일: ${c.imgStyle}
+배경: ${c.imgBg||'16세기 조선 궁궐'}
+핵심 사건: ${c.eventConflict}
+
+[규칙]
+- Flow 프로그램에 바로 붙여넣을 수 있는 한국어 프롬프트
+- 인물 묘사 일관성 유지 (${c.name} 특징 반영)
+- 비율: 16:9 가로형
+- 텍스트/자막 없이, 순수 장면만
+
+[10장 구성]
+1. 도입 훅 — 가장 극적인 장면 (갈등 정점)
+2. 오프닝 — 시대 배경, 궁궐 분위기
+3. 주인공 소개 — ${c.name} 첫 등장
+4. 권력 형성 — 세력 규합, 음모 시작
+5. 핵심 갈등1 — 적대 세력과의 대립
+6. 핵심 갈등2 — 위기의 절정
+7. 반전 순간 — ${c.eventTwist}
+8. 권력의 대가 — 비극/슬픔 장면
+9. 역사적 심판 — 몰락 또는 승리
+10. 마무리 — 역사 속으로 사라지는 장면
+
+JSON만: {"images":[{"num":1,"scene":"장면설명(한글)","prompt":"Flow용 한국어 프롬프트 (스타일, 인물특징, 배경, 비율 포함)"}]}`, 3500);
+
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderImgPrompts(data.images);
+  } catch(e) {
+    document.getElementById('imgLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderImgPrompts(images) {
+  document.getElementById('imgLoading').style.display='none';
+  document.getElementById('imgArea').style.display='block';
+  const list=document.getElementById('imgList'); list.innerHTML='';
+  images.forEach(img=>{
+    const item=document.createElement('div'); item.className='img-prompt-item';
+    const header=document.createElement('div'); header.className='img-prompt-header';
+    const scene=document.createElement('span'); scene.className='img-prompt-scene'; scene.textContent=`${img.num}. ${img.scene}`;
+    const btn=document.createElement('button'); btn.className='btn-copy'; btn.textContent='복사';
+    const promptDiv=document.createElement('div'); promptDiv.className='img-prompt-text'; promptDiv.textContent=img.prompt||'';
+    btn.addEventListener('click',()=>copyText(promptDiv.textContent,btn));
+    header.appendChild(scene); header.appendChild(btn);
+    item.appendChild(header); item.appendChild(promptDiv);
+    list.appendChild(item);
+  });
+}
+
+// ===== STEP 6: 메타데이터 =====
+async function genMeta() {
+  document.getElementById('metaLoading').style.display='flex';
+  document.getElementById('metaArea').style.display='none';
+  const c=getCharData();
+  try {
+    const raw=await callClaude(`조선의 여인들 유튜브 메타데이터 생성.
+주제: ${selectedTopic} / 주인공: ${c.name} (${c.title}) / 시대: ${selectedCat}
+대본 첫 줄: ${generatedScript.split('\n').slice(0,3).join(' ').slice(0,150)}
+
+[규칙]
+- 제목: 인물명+충격적 사실 or 반전 예고, 이모지 포함, 드라마 팬 유입 고려
+- 설명글: 역사 공감 도입 + 스포 없이 궁금증 유발 + 구독유도 + 핵심 샵태그 5개, 완성형
+- 숨은태그: 500자, 쉼표구분, 한글, 조선역사/여성/궁중/드라마연결 관련 실제검색어
+- 고정댓글: 역사 감상 댓글 유도 + 구독/좋아요
+
+JSON만: {"title":"제목(이모지,클릭유도,인물명포함)","description":"설명글(완성형,샵태그5개)","hidden_tags":"숨은태그(500자,쉼표,한글)","pinned_comment":"고정댓글"}`, 2500);
+
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderMeta(data);
+  } catch(e) {
+    document.getElementById('metaLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderMeta(data) {
+  document.getElementById('metaLoading').style.display='none';
+  const area=document.getElementById('metaArea'); area.style.display='block'; area.innerHTML='';
+  const fields=[{label:'제목',key:'title'},{label:'설명글',key:'description'},{label:'📌 고정댓글',key:'pinned_comment'}];
+  fields.forEach(f=>{
+    const wrap=document.createElement('div'); wrap.style.marginTop='10px';
+    const sec=document.createElement('div'); sec.className='sec-title'; sec.textContent=f.label;
+    const row=document.createElement('div'); row.className='meta-row';
+    const textEl=document.createElement('span'); textEl.className='meta-text'; textEl.textContent=data[f.key]||'';
+    const btn=document.createElement('button'); btn.className='btn-copy'; btn.textContent='복사';
+    btn.addEventListener('click',()=>copyText(textEl.textContent,btn));
+    row.appendChild(textEl); row.appendChild(btn); wrap.appendChild(sec); wrap.appendChild(row); area.appendChild(wrap);
+  });
+
+  // 숨은태그
+  const hw=document.createElement('div'); hw.style.marginTop='14px';
+  hw.innerHTML=`<div class="sec-title" style="margin-top:0;">숨은태그 <span style="font-size:10px;color:var(--text3);">(${(data.hidden_tags||'').length}자/500자)</span></div>
+    <div class="meta-row" style="margin-bottom:8px;"><span class="meta-text" id="htText"></span><button class="btn-copy" id="htCopy">복사</button></div>
+    <div class="hidden-box">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 점수 낮으면 추가 생성</div>
+      <div style="display:flex;gap:8px;">
+        <select id="htAddSel" style="width:auto;font-size:12px;padding:5px 8px;"><option value="100">+100자</option><option value="200">+200자</option><option value="300">+300자</option><option value="400">+400자</option></select>
+        <button class="btn btn-outline" id="htAddBtn" style="font-size:12px;padding:5px 12px;">추가 생성 →</button>
+      </div>
+      <div id="htAddResult" style="display:none;margin-top:8px;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--gold);line-height:1.7;white-space:pre-wrap;" id="htAddText"></div>
+        <div style="margin-top:4px;text-align:right;"><button class="btn-copy" id="htAddCopy">추가분만 복사</button></div>
+      </div>
+    </div>`;
+  area.appendChild(hw);
+  document.getElementById('htText').textContent=data.hidden_tags||'';
+  document.getElementById('htCopy').addEventListener('click',function(){copyText(document.getElementById('htText').textContent,this);});
+  document.getElementById('htAddBtn').addEventListener('click',async function(){
+    const chars=parseInt(document.getElementById('htAddSel').value);
+    this.disabled=true; this.textContent='생성 중...';
+    try{
+      const r=await callClaude(`조선의 여인들 유튜브 숨은태그 ${chars}자 추가. 기존 중복 없이. 주제:${selectedTopic} / 한글 쉼표구분 / 조선역사,여성,궁중,드라마 관련 / ${chars}자 내외:`,400);
+      document.getElementById('htAddText').textContent=r.trim();
+      document.getElementById('htAddResult').style.display='block';
+      document.getElementById('htAddCopy').addEventListener('click',function(){copyText(document.getElementById('htAddText').textContent,this);});
+    }catch(e){document.getElementById('htAddText').textContent='오류:'+e.message;document.getElementById('htAddResult').style.display='block';}
+    this.disabled=false; this.textContent='추가 생성 →';
+  });
+
+  const nextBtn=document.createElement('button'); nextBtn.className='btn btn-primary';
+  nextBtn.textContent='숏츠 대본 생성 →'; nextBtn.style.cssText='width:100%;justify-content:center;padding:12px;margin-top:14px;';
+  nextBtn.addEventListener('click',()=>goStep(7)); area.appendChild(nextBtn);
+}
+
+// ===== STEP 7: 숏츠 =====
+async function genShorts() {
+  document.getElementById('shortsLoading').style.display='flex';
+  document.getElementById('shortsArea').style.display='none';
+  const c=getCharData();
+  try {
+    const raw=await callClaude(`조선의 여인들 유튜브 숏츠 대본 + 메타데이터.
+주제: ${selectedTopic} / 주인공: ${c.name} (${c.title}) / 시대: ${selectedCat}
+대본 핵심 장면: ${generatedScript.slice(0,600)}
+
+[숏츠 대본 규칙]
+- 30-60초 (200-300자)
+- 본영상에서 가장 충격적/드라마틱한 장면 예고
+- 역사 궁금증 폭발하게
+- 마지막: "왼쪽 아래 본영상에서 확인하세요"
+
+JSON만: {"script":"숏츠대본","title":"숏츠제목(이모지,역사감성,클릭유도)","hook":"첫3초화면문구","description":"숏츠설명(150자이내)","hashtags":"#shorts #조선의여인들 포함 15개","hidden_tags":"숨은태그(500자,쉼표,한글)","pinned_comment":"고정댓글(본영상N분연속시청+구독유도)"}`, 2500);
+
+    const data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderShorts(data);
+  } catch(e) {
+    document.getElementById('shortsLoading').innerHTML=`<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderShorts(data) {
+  document.getElementById('shortsLoading').style.display='none';
+  const area=document.getElementById('shortsArea'); area.style.display='block'; area.innerHTML='';
+
+  const sCard=document.createElement('div'); sCard.className='card';
+  sCard.innerHTML='<div class="card-title">⚡ 숏츠 대본</div>';
+  const sBox=document.createElement('div'); sBox.className='script-box'; sBox.style.maxHeight='180px';
+  sBox.textContent=data.script||'';
+  const sCopy=document.createElement('button'); sCopy.className='btn-copy'; sCopy.style.marginTop='8px'; sCopy.textContent='대본 복사';
+  sCopy.addEventListener('click',()=>copyText(sBox.textContent,sCopy));
+  sCard.appendChild(sBox); sCard.appendChild(sCopy); area.appendChild(sCard);
+
+  const mCard=document.createElement('div'); mCard.className='card';
+  mCard.innerHTML='<div class="card-title">📋 숏츠 메타데이터</div>';
+  const fields=[{label:'제목',key:'title'},{label:'후킹 문구',key:'hook'},{label:'설명',key:'description'},{label:'해시태그',key:'hashtags'},{label:'📌 고정댓글',key:'pinned_comment'}];
+  fields.forEach(f=>{
+    const wrap=document.createElement('div'); wrap.style.marginTop='10px';
+    const sec=document.createElement('div'); sec.className='sec-title'; sec.textContent=f.label;
+    const row=document.createElement('div'); row.className='meta-row';
+    const textEl=document.createElement('span'); textEl.className='meta-text'; textEl.textContent=data[f.key]||'';
+    const btn=document.createElement('button'); btn.className='btn-copy'; btn.textContent='복사';
+    btn.addEventListener('click',()=>copyText(textEl.textContent,btn));
+    row.appendChild(textEl); row.appendChild(btn); wrap.appendChild(sec); wrap.appendChild(row); mCard.appendChild(wrap);
+  });
+
+  // 숏츠 숨은태그
+  const stWrap=document.createElement('div'); stWrap.style.marginTop='10px';
+  const stSec=document.createElement('div'); stSec.className='sec-title'; stSec.textContent=`숨은태그 (${(data.hidden_tags||'').length}자/500자)`;
+  const stRow=document.createElement('div'); stRow.className='meta-row'; stRow.style.marginBottom='8px';
+  const stText=document.createElement('span'); stText.className='meta-text'; stText.textContent=data.hidden_tags||'';
+  const stBtn=document.createElement('button'); stBtn.className='btn-copy'; stBtn.textContent='복사';
+  stBtn.addEventListener('click',()=>copyText(stText.textContent,stBtn));
+  stRow.appendChild(stText); stRow.appendChild(stBtn);
+  stWrap.appendChild(stSec); stWrap.appendChild(stRow); mCard.appendChild(stWrap);
+  area.appendChild(mCard);
+}
+
+function copyText(text,btn) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const o=btn.textContent;btn.textContent='복사됨 ✓';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+function copyEl(id,btn){const el=document.getElementById(id);if(el)copyText(el.textContent,btn);}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+</script>
+</body>
+</html>

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>은혜여사 작업실</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0a0c; --bg2:#1a1215; --bg3:#241820; --border:#2e1e28; --border2:#3d2535;
+  --text:#f0e8ec; --text2:#b89aaa; --text3:#6b4a5c;
+  --rose:#c4536a; --rose2:#e06a82; --rose3:#f5a0b5;
+  --gold:#c8a86e; --gold2:#e8c88e;
+  --green:#4caf7d; --blue:#5b9bd5; --red:#e57373;
+  --radius:10px; --radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 10% 20%,rgba(196,83,106,.05) 0%,transparent 50%),
+              radial-gradient(ellipse at 90% 80%,rgba(200,168,110,.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+/* HEADER */
+.site-header{border-bottom:1px solid var(--border2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(14,10,12,.95);backdrop-filter:blur(10px);z-index:100;}
+.site-logo{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;color:var(--rose2);letter-spacing:.02em;display:flex;align-items:center;gap:8px;}
+.api-badge{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);cursor:pointer;padding:6px 12px;border:1px solid var(--border2);border-radius:20px;background:transparent;font-family:inherit;transition:all .2s;}
+.api-badge:hover{border-color:var(--rose);color:var(--text);}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
+.api-dot.on{background:var(--green);}
+
+/* STEP BAR */
+.main{max-width:860px;margin:0 auto;padding:24px 24px 80px;position:relative;z-index:1;}
+.step-bar{display:flex;align-items:center;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;gap:0;}
+.step-item{display:flex;align-items:center;flex-shrink:0;}
+.step-wrap{display:flex;flex-direction:column;align-items:center;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);transition:all .2s;}
+.step-dot.active{background:var(--rose);border-color:var(--rose);color:#fff;}
+.step-dot.done{background:var(--green);border-color:var(--green);color:#fff;}
+.step-line{width:20px;height:1px;background:var(--border2);}
+.step-label{font-size:9px;color:var(--text3);margin-top:3px;white-space:nowrap;}
+
+/* CONTENT STEP */
+.content-step{display:none;}
+.content-step.active{display:block;}
+.back-btn{background:transparent;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:6px 0;margin-bottom:12px;font-family:inherit;display:flex;align-items:center;gap:4px;}
+.back-btn:hover{color:var(--text);}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+.card-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text);}
+.card-sub{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.7;}
+
+/* FORM */
+label.lbl{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:9px 11px;color:var(--text);
+  font-size:13px;font-family:inherit;transition:border-color .2s;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--rose);}
+textarea{resize:vertical;line-height:1.7;}
+select option{background:var(--bg2);}
+.field{margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;cursor:pointer;border:1px solid transparent;font-weight:500;transition:all .15s;}
+.btn-primary{background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;border-color:var(--rose);}
+.btn-primary:hover{background:linear-gradient(135deg,var(--rose2),var(--rose3));color:#1a0010;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--text2);border-color:var(--border2);}
+.btn-outline:hover{border-color:var(--rose);color:var(--rose);}
+.btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border);font-size:12px;padding:5px 10px;border-radius:20px;}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+.btn-copy{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.btn-copy:hover{border-color:var(--rose);color:var(--rose);}
+.btn-copy.ok{border-color:var(--green);color:var(--green);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* TOPIC GRID */
+.topic-grid{display:grid;gap:10px;margin-bottom:14px;}
+.topic-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .15s;}
+.topic-card:hover{border-color:var(--rose);}
+.topic-card.selected{border-color:var(--rose2);background:rgba(196,83,106,.08);}
+.topic-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.topic-hook{font-size:11px;color:var(--rose3);font-style:italic;margin-bottom:3px;}
+.topic-cat{font-size:10px;color:var(--text3);}
+
+/* 인물 설정 카드 */
+.char-card{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:16px;margin-bottom:12px;}
+.char-card-title{font-size:12px;color:var(--rose2);font-weight:600;margin-bottom:12px;letter-spacing:.03em;}
+.age-calc{background:rgba(196,83,106,.08);border:1px solid rgba(196,83,106,.2);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--rose3);margin-top:8px;line-height:1.7;}
+.number-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;}
+
+/* SCRIPT */
+.script-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:2;color:var(--text2);white-space:pre-wrap;max-height:600px;overflow-y:auto;}
+.char-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;}
+.char-count.ok{color:var(--green);}
+.char-count.ng{color:var(--red);}
+
+/* META */
+.meta-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;}
+.meta-text{font-size:13px;color:var(--text2);line-height:1.8;flex:1;white-space:pre-wrap;}
+.sec-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;margin-top:12px;}
+.sec-title:first-child{margin-top:0;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:13px;padding:16px 0;}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--rose);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* 사연 참조 하이라이트 */
+.ref-banner{background:rgba(196,83,106,.06);border:1px solid rgba(196,83,106,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;pointer-events:none;}
+
+/* 숨은태그 섹션 */
+.hidden-tag-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px;}
+
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr;}.main{padding:14px 12px 80px;}}
+</style>
+</head>
+<body>
+
+<!-- API MODAL -->
+<div id="apiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;width:400px;max-width:90vw;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:16px;color:var(--rose2);margin-bottom:16px;">🔑 API 키 설정</div>
+    <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px;">Claude API 키</label>
+    <input type="password" id="claudeKey" placeholder="sk-ant-api03-..." style="margin-bottom:12px;">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="saveKey()" style="flex:1;justify-content:center;">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1;justify-content:center;">취소</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="site-logo">🌹 은혜여사의 인생상담소 작업실</div>
+  <button class="api-badge" onclick="openModal()">
+    <span class="api-dot" id="apiDot"></span>
+    <span id="apiStatus">API 설정</span>
+  </button>
+</header>
+
+<main class="main">
+<div class="step-bar" id="stepBar"></div>
+
+<!-- STEP 0: 날짜/카테고리 -->
+<div class="content-step active" id="step0">
+  <div class="card">
+    <div class="card-title">📅 오늘의 작업</div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">작업 날짜</label>
+        <input type="date" id="workDate">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="lbl">사연 카테고리</label>
+        <select id="catSelect">
+          <option value="황혼육아">황혼 육아 배신</option>
+          <option value="며느리갈등">며느리 갈등</option>
+          <option value="재산배신">재산 배신</option>
+          <option value="재혼사기">재혼 / 노인 사기</option>
+          <option value="노후배신">자식에게 배신</option>
+          <option value="시어머니">시어머니 이야기</option>
+          <option value="부부갈등">부부 갈등 / 이혼</option>
+          <option value="형제갈등">형제 재산 다툼</option>
+          <option value="통쾌반전">통쾌한 반전 복수</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(1)" style="width:100%;justify-content:center;padding:12px;">주제 추천 받기 →</button>
+  </div>
+</div>
+
+<!-- STEP 1: 주제 추천 -->
+<div class="content-step" id="step1">
+  <button class="back-btn" onclick="goBack(1)">← 날짜 변경</button>
+  <div class="card">
+    <div class="card-title">💡 사연 주제 추천</div>
+    <div id="topicLoading" class="loading"><div class="spinner"></div>주제를 추천하는 중...</div>
+    <div id="topicArea" style="display:none;">
+      <div class="topic-grid" id="topicGrid"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="loadTopics()">🔄 다시 추천</button>
+        <button class="btn btn-primary" id="topicNextBtn" onclick="goStep(2)" disabled>이 주제로 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 사연 레퍼런스 -->
+<div class="content-step" id="step2">
+  <button class="back-btn" onclick="goBack(2)">← 주제 다시 선택</button>
+  <div class="card">
+    <div class="card-title">📝 사연 레퍼런스 입력</div>
+    <div class="ref-banner">
+      💡 실제 제보 사연, 경쟁채널 분석 내용, 참고 줄거리를 붙여넣으세요.<br>
+      없으면 비워두고 진행해도 돼요 — AI가 주제에 맞게 창작해요.
+    </div>
+    <div class="field">
+      <label class="lbl">사연 줄거리 / 참고 내용 (선택)</label>
+      <textarea id="storyRef" rows="7" placeholder="예: 70대 할머니가 아들 내외 황혼육아 2년 하다 며느리의 뒷담화를 우연히 듣고 파업 선언... 베이비시터 비용 청구하는 반전...&#10;&#10;또는 경쟁채널에서 본 인기 소재, 제보 사연 요약 등"></textarea>
+    </div>
+    <div class="field">
+      <label class="lbl">핵심 감정 키워드 (선택)</label>
+      <input type="text" id="emotionKey" placeholder="예: 배신감, 서러움, 통쾌한 반전, 사이다 복수...">
+    </div>
+    <button class="btn btn-primary" onclick="goStep(3)" style="width:100%;justify-content:center;padding:12px;">인물 설정으로 →</button>
+  </div>
+</div>
+
+<!-- STEP 3: 인물 설정 -->
+<div class="content-step" id="step3">
+  <button class="back-btn" onclick="goBack(3)">← 사연 레퍼런스</button>
+  <div class="card">
+    <div class="card-title">👤 인물 설정</div>
+    <div class="card-sub">AI가 초안을 잡아드려요. 맞지 않는 부분은 직접 수정하세요.</div>
+    <div id="charLoading" class="loading" style="display:none;"><div class="spinner"></div>인물 설정 초안 생성 중...</div>
+    <div id="charArea">
+
+      <!-- 주인공 -->
+      <div class="char-card">
+        <div class="char-card-title">🎭 주인공 (1인칭 나레이터)</div>
+        <div class="grid2">
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">이름</label>
+            <input type="text" id="charName" placeholder="예: 이정숙">
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">현재 나이</label>
+            <input type="number" id="charAge" placeholder="예: 73" oninput="calcAge()">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">직업/신분</label>
+            <input type="text" id="charJob" placeholder="예: 전업주부, 전직 교사...">
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">거주지</label>
+            <input type="text" id="charLocation" placeholder="예: 경기도 수원, 서울 노원구...">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">사건 시점 (N년 전 / N개월 전)</label>
+          <input type="text" id="eventTime" placeholder="예: 3년 전, 6개월 전" oninput="calcAge()">
+        </div>
+        <div class="age-calc" id="ageCalcResult" style="display:none;"></div>
+      </div>
+
+      <!-- 가족관계 -->
+      <div class="char-card">
+        <div class="char-card-title">👨‍👩‍👧 가족 관계</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">배우자</label>
+          <input type="text" id="charSpouse" placeholder="예: 사망 (3년 전 간암), 이혼, 이름-나이-직업">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">자녀</label>
+          <input type="text" id="charChildren" placeholder="예: 아들 1명 (이준석, 45세, 직장인), 딸 1명 (이미진, 42세)">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">며느리/사위</label>
+          <input type="text" id="charInlaw" placeholder="예: 며느리 김지연 (40세, 회사원, 맞벌이)">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="lbl">손주 / 기타 인물</label>
+          <input type="text" id="charOthers" placeholder="예: 손녀 이유나 (3세), 친구 박순자 (70세)">
+        </div>
+      </div>
+
+      <!-- 핵심 수치/재산 -->
+      <div class="char-card">
+        <div class="char-card-title">💰 핵심 수치 · 재산 (대본 내내 일관성 유지)</div>
+        <div class="grid2">
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">주요 재산/금액</label>
+            <input type="text" id="charMoney" placeholder="예: 퇴직금+보험금 2억 3천, 전세 5천">
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label class="lbl">황혼육아 기간</label>
+            <input type="text" id="charPeriod" placeholder="예: 2년, 3년 6개월">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="lbl">기타 핵심 수치</label>
+          <input type="text" id="charNumbers" placeholder="예: 베이비시터 월 300만원, 통근 왕복 2시간, 지하철 3번 환승">
+        </div>
+      </div>
+
+      <!-- 기타 설정 -->
+      <div class="char-card">
+        <div class="char-card-title">🎨 기타 설정</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">주인공 특기/취미 (복선용)</label>
+          <input type="text" id="charHobby" placeholder="예: 수채화, 서예, 등산, 노래...">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="lbl">반전 포인트</label>
+          <input type="text" id="charTwist" placeholder="예: 홈캠으로 뒷담화 목격, 녹음 증거, 사위가 몰래 수사...">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="lbl">결말/통쾌한 복수</label>
+          <input type="text" id="charEnding" placeholder="예: 파업 선언+도어락 변경, 1억 청구, 차단...">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="genCharDraft()">✨ AI 인물 초안 생성</button>
+        <button class="btn btn-primary" onclick="goStep(4)" style="padding:9px 24px;">대본 생성 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: 대본 생성 -->
+<div class="content-step" id="step4">
+  <button class="back-btn" onclick="goBack(4)">← 인물 설정으로</button>
+  <div class="card">
+    <div class="card-title">📖 대본 생성</div>
+    <div id="scriptLoading" class="loading"><div class="spinner"></div>Claude AI가 대본을 작성하는 중... (1만자 기준, 2-3분 소요)</div>
+    <div id="scriptArea" style="display:none;">
+      <div class="script-box" id="scriptBox"></div>
+      <div class="char-count" id="charCountEl"></div>
+
+      <!-- 보완 재생성 -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:14px;">
+        <div class="sec-title">✏️ 보완 후 재생성</div>
+        <textarea id="scriptFeedback" rows="3" placeholder="예: 반전 장면을 더 극적으로 / 도입부 훅을 더 강하게 / 며느리 대사 추가 / 결말을 더 통쾌하게..."></textarea>
+        <button class="btn btn-outline" onclick="regenWithFeedback()" style="margin-top:8px;width:100%;justify-content:center;">💬 반영해서 재생성</button>
+      </div>
+
+      <!-- 부분 재생성 -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:10px;">
+        <div class="sec-title">🔧 부분 재생성</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="btn btn-ghost" onclick="regenPart('은혜여사 도입부')">도입부만</button>
+          <button class="btn btn-ghost" onclick="regenPart('사연 본문')">본문만</button>
+          <button class="btn btn-ghost" onclick="regenPart('반전/결말')">반전 결말만</button>
+          <button class="btn btn-ghost" onclick="regenPart('은혜여사 엔딩')">엔딩만</button>
+        </div>
+        <div id="partResult" style="display:none;">
+          <div class="sec-title" id="partLabel"></div>
+          <div class="script-box" id="partBox" style="max-height:200px;"></div>
+          <div class="btn-row">
+            <button class="btn-copy" onclick="copyEl('partBox',this)">복사</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-copy" id="scriptCopyBtn" style="padding:8px 16px;font-size:13px;">📋 대본 전체 복사</button>
+        <button class="btn btn-outline" onclick="genScript()">🔄 처음부터 재생성</button>
+        <button class="btn btn-primary" onclick="goStep(5)">메타데이터 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: 메타데이터 -->
+<div class="content-step" id="step5">
+  <button class="back-btn" onclick="goBack(5)">← 대본으로</button>
+  <div class="card">
+    <div class="card-title">📋 메타데이터</div>
+    <div id="metaLoading" class="loading"><div class="spinner"></div>메타데이터 생성 중...</div>
+    <div id="metaArea" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- STEP 6: 숏츠 -->
+<div class="content-step" id="step6">
+  <button class="back-btn" onclick="goBack(6)">← 메타데이터로</button>
+  <div class="card">
+    <div class="card-title">⚡ 숏츠 대본 · 메타</div>
+    <div id="shortsLoading" class="loading"><div class="spinner"></div>숏츠 생성 중...</div>
+    <div id="shortsArea" style="display:none;"></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===== STATE =====
+let CLAUDE = localStorage.getItem('claude_api_key') || '';
+let currentStep = 0;
+let selectedTopic = '';
+let selectedCat = '';
+let charData = {};
+let generatedScript = '';
+
+const STEPS = ['날짜','주제','레퍼런스','인물설정','대본','메타','숏츠'];
+
+// ===== INIT =====
+updateApiStatus();
+renderStepBar();
+initDate();
+
+function initDate() {
+  const today = new Date();
+  document.getElementById('workDate').value = today.toISOString().slice(0,10);
+}
+
+function renderStepBar() {
+  const bar = document.getElementById('stepBar');
+  bar.innerHTML = STEPS.map((s,i) => `
+    <div class="step-item">
+      ${i>0?'<div class="step-line"></div>':''}
+      <div class="step-wrap">
+        <div class="step-dot ${i<currentStep?'done':i===currentStep?'active':''}">${i<currentStep?'✓':i+1}</div>
+        <div class="step-label">${s}</div>
+      </div>
+    </div>`).join('');
+}
+
+function goStep(n) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n===1) loadTopics();
+  if (n===4) genScript();
+  if (n===5) genMeta();
+  if (n===6) genShorts();
+}
+
+function goBack(fromStep) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  currentStep = fromStep - 1;
+  document.getElementById('step'+currentStep).classList.add('active');
+  renderStepBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== API =====
+function updateApiStatus() {
+  const dot = document.getElementById('apiDot');
+  const st = document.getElementById('apiStatus');
+  if (CLAUDE) { dot.className='api-dot on'; st.textContent='Claude 연결됨'; }
+  else { dot.className='api-dot'; st.textContent='API 설정'; }
+}
+function openModal() {
+  document.getElementById('apiModal').style.display='flex';
+  document.getElementById('claudeKey').value = CLAUDE;
+}
+function closeModal() { document.getElementById('apiModal').style.display='none'; }
+function saveKey() {
+  const c = document.getElementById('claudeKey').value.trim();
+  if (c) { CLAUDE=c; localStorage.setItem('claude_api_key',c); }
+  updateApiStatus(); closeModal(); toast('저장됐어요!');
+}
+
+async function callClaude(prompt, maxTokens=2000) {
+  if (!CLAUDE) { openModal(); throw new Error('API 키를 입력해주세요'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':CLAUDE,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(`API 오류 ${res.status}: ${e?.error?.message||''}`); }
+  return (await res.json()).content[0].text;
+}
+
+// ===== STEP 1: 주제 추천 =====
+async function loadTopics() {
+  selectedTopic = '';
+  document.getElementById('topicNextBtn').disabled = true;
+  document.getElementById('topicLoading').style.display = 'flex';
+  document.getElementById('topicArea').style.display = 'none';
+  const cat = document.getElementById('catSelect').value;
+  selectedCat = cat;
+  try {
+    const raw = await callClaude(`은혜여사의인생상담소 유튜브 채널 사연 주제 5개 추천.
+채널: 시니어 여성 공감 사연 채널 / 카테고리: ${cat}
+조건: 60-80대 여성이 "내 이야기"라고 느낄 주제, 반전+통쾌한 결말 가능, 사랑과전쟁 스타일
+JSON만: {"topics":[{"title":"주제 한 줄","hook":"도입부 첫 문장 (충격적인 훅)","category":"${cat}","emotion":"핵심 감정 키워드"}]}`, 1000);
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderTopics(data.topics);
+  } catch(e) {
+    document.getElementById('topicLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderTopics(topics) {
+  document.getElementById('topicLoading').style.display = 'none';
+  document.getElementById('topicArea').style.display = 'block';
+  const grid = document.getElementById('topicGrid');
+  grid.innerHTML = '';
+  topics.forEach((t,i) => {
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.innerHTML = `
+      <div class="topic-title">${t.title}</div>
+      <div class="topic-hook">"${t.hook}"</div>
+      <div class="topic-cat">${t.category} · ${t.emotion}</div>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedTopic = t.title;
+      document.getElementById('topicNextBtn').disabled = false;
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ===== 나이 자동 계산 =====
+function calcAge() {
+  const age = parseInt(document.getElementById('charAge').value);
+  const eventTime = document.getElementById('eventTime').value.trim();
+  const result = document.getElementById('ageCalcResult');
+  if (!age || !eventTime) { result.style.display='none'; return; }
+
+  // 년 추출
+  const yearMatch = eventTime.match(/(\d+)\s*년/);
+  const monthMatch = eventTime.match(/(\d+)\s*개월/);
+  let yearsAgo = yearMatch ? parseInt(yearMatch[1]) : 0;
+  if (monthMatch && !yearMatch) yearsAgo = Math.floor(parseInt(monthMatch[1])/12);
+  const pastAge = age - yearsAgo;
+  const currentYear = new Date().getFullYear();
+  const birthYear = currentYear - age;
+
+  result.style.display = 'block';
+  result.innerHTML = `📅 현재 ${age}세 → 사건 당시 ${pastAge}세 (${birthYear}년생, ${eventTime} 전)`;
+}
+
+// ===== STEP 3: 인물 설정 AI 초안 =====
+async function genCharDraft() {
+  const charArea = document.getElementById('charArea');
+  document.getElementById('charLoading').style.display = 'flex';
+
+  const storyRef = document.getElementById('storyRef').value.trim();
+  const emotion = document.getElementById('emotionKey').value.trim();
+
+  try {
+    const raw = await callClaude(`은혜여사의인생상담소 사연 주인공 인물 설정 초안.
+주제: ${selectedTopic}
+카테고리: ${selectedCat}
+${storyRef ? `사연 레퍼런스: ${storyRef}` : ''}
+${emotion ? `핵심 감정: ${emotion}` : ''}
+
+[규칙]
+- 이름: 한국 여성 이름 (60-80대 느낌, 너무 흔하지 않게)
+- 나이: 65-80세 사이 (구체적으로)
+- 인물들이 현실적으로 연결되게
+- 금액/수치는 구체적이고 현실적으로
+- 반전 포인트가 극적으로
+
+JSON만:
+{"name":"이름","age":73,"birthYear":1952,"job":"직업/신분","location":"거주지","eventTime":"3년 전","pastAge":70,"spouse":"배우자 상황","children":"자녀 정보","inlaw":"며느리/사위","others":"손주/기타","money":"핵심 재산/금액","period":"기간","numbers":"기타 수치","hobby":"취미/특기","twist":"반전 포인트","ending":"결말/복수"}`, 1200);
+
+    const d = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    // 폼에 자동 입력
+    document.getElementById('charName').value = d.name || '';
+    document.getElementById('charAge').value = d.age || '';
+    document.getElementById('charJob').value = d.job || '';
+    document.getElementById('charLocation').value = d.location || '';
+    document.getElementById('eventTime').value = d.eventTime || '';
+    document.getElementById('charSpouse').value = d.spouse || '';
+    document.getElementById('charChildren').value = d.children || '';
+    document.getElementById('charInlaw').value = d.inlaw || '';
+    document.getElementById('charOthers').value = d.others || '';
+    document.getElementById('charMoney').value = d.money || '';
+    document.getElementById('charPeriod').value = d.period || '';
+    document.getElementById('charNumbers').value = d.numbers || '';
+    document.getElementById('charHobby').value = d.hobby || '';
+    document.getElementById('charTwist').value = d.twist || '';
+    document.getElementById('charEnding').value = d.ending || '';
+    calcAge();
+    toast('인물 초안 생성됐어요! 수정 후 대본 생성하세요.');
+  } catch(e) {
+    toast('오류: ' + e.message);
+  }
+  document.getElementById('charLoading').style.display = 'none';
+}
+
+function getCharData() {
+  return {
+    name: document.getElementById('charName').value.trim() || '이정숙',
+    age: document.getElementById('charAge').value || '73',
+    job: document.getElementById('charJob').value.trim(),
+    location: document.getElementById('charLocation').value.trim(),
+    eventTime: document.getElementById('eventTime').value.trim(),
+    spouse: document.getElementById('charSpouse').value.trim(),
+    children: document.getElementById('charChildren').value.trim(),
+    inlaw: document.getElementById('charInlaw').value.trim(),
+    others: document.getElementById('charOthers').value.trim(),
+    money: document.getElementById('charMoney').value.trim(),
+    period: document.getElementById('charPeriod').value.trim(),
+    numbers: document.getElementById('charNumbers').value.trim(),
+    hobby: document.getElementById('charHobby').value.trim(),
+    twist: document.getElementById('charTwist').value.trim(),
+    ending: document.getElementById('charEnding').value.trim(),
+  };
+}
+
+// ===== STEP 4: 대본 생성 =====
+async function genScript() {
+  document.getElementById('scriptLoading').style.display = 'flex';
+  document.getElementById('scriptLoading').innerHTML = '<div class="spinner"></div>Claude AI가 대본을 작성하는 중... (1만자 기준, 2-3분 소요)';
+  document.getElementById('scriptArea').style.display = 'none';
+
+  const c = getCharData();
+  const storyRef = document.getElementById('storyRef').value.trim();
+  const emotion = document.getElementById('emotionKey').value.trim();
+
+  const FIXED_ENDING = `지금까지 인생상담소 은혜여사였습니다. 감사합니다.`;
+
+  try {
+    const raw = await callClaude(`너는 "은혜여사의인생상담소" 유튜브 채널 전문 대본 작가야.
+아래 인물 설정과 조건을 바탕으로 완성도 높은 대본을 써줘.
+
+[인물 설정 — 전체 대본에서 반드시 일관성 유지]
+주인공: ${c.name} (현재 ${c.age}세${c.eventTime ? `, 사건 당시: ${c.eventTime} 전` : ''})
+직업/신분: ${c.job || '전업주부'}
+거주지: ${c.location || ''}
+배우자: ${c.spouse || ''}
+자녀: ${c.children || ''}
+며느리/사위: ${c.inlaw || ''}
+기타 인물: ${c.others || ''}
+핵심 재산/금액: ${c.money || ''} ← 이 수치는 절대 변하지 않음
+기간/시점: ${c.period || ''}
+기타 수치: ${c.numbers || ''}
+취미/특기: ${c.hobby || ''}
+반전 포인트: ${c.twist || ''}
+결말/복수: ${c.ending || ''}
+
+주제: ${selectedTopic}
+카테고리: ${selectedCat}
+${storyRef ? `사연 레퍼런스:\n${storyRef}` : ''}
+${emotion ? `핵심 감정: ${emotion}` : ''}
+
+[대본 구조 — 반드시 이 형식으로]
+
+[은혜여사] (도입부 — 강한 훅으로 시작)
+- 첫 문장: 시청자의 심장을 쥐어잡는 충격적인 한 줄 (주인공 목소리로 시작하거나, 상황 묘사)
+- 은혜여사 채널 소개 + 오늘 사연 예고
+- 반드시 구독/좋아요 유도 멘트 포함
+- 분량: 400-500자
+
+[${c.name}] (사연 본문 — 1인칭 나레이션, 약 8,000자 이상)
+- 사랑과전쟁 스타일: 감정 묘사 극적으로, 생생한 대화와 장면 묘사
+- 불가피한 경우만 [아들]/[며느리]/[친구] 등 대사 표시 (최소화)
+- 기승전결 + 반전 구조
+  · 기: 평범했던 일상, 인물 소개
+  · 승: 갈등의 시작과 점점 심해지는 상황
+  · 전: 결정적 반전 포인트 (${c.twist || '충격적 사실 발견'})
+  · 결: 통쾌한 행동과 복수 (${c.ending || '당당한 결말'})
+- 독자가 중간에 멈출 수 없을 정도의 몰입감
+- 수치/금액/날짜 일관성 철저히 유지
+
+[은혜여사] (엔딩)
+- 사연 총평 + 공감 메시지
+- 시청자에게 위로와 용기 전달
+- 구독/좋아요/댓글 CTA
+- "${FIXED_ENDING}"으로 마무리
+- 분량: 300-400자
+
+[출력 규칙]
+- [은혜여사], [${c.name}], [아들], [며느리] 등 화자 표시 포함
+- TTS에 바로 사용 가능한 순수 텍스트
+- 구분선(---), 헤더(#), 지시문 절대 금지
+- 괄호 안 지시어 금지 ((BGM) 등)
+- 총 공백 제외 10,000자 이상`, 12000);
+
+    generatedScript = raw;
+    const charCount = raw.replace(/\s/g,'').length;
+    document.getElementById('scriptBox').textContent = raw;
+    const cc = document.getElementById('charCountEl');
+    cc.textContent = `공백제외 ${charCount.toLocaleString()}자`;
+    cc.className = 'char-count ' + (charCount >= 9000 ? 'ok' : 'ng');
+    document.getElementById('scriptLoading').style.display = 'none';
+    document.getElementById('scriptArea').style.display = 'block';
+
+    // 복사 버튼 이벤트
+    document.getElementById('scriptCopyBtn').addEventListener('click', function() {
+      copyText(generatedScript, this);
+    });
+  } catch(e) {
+    document.getElementById('scriptLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+async function regenWithFeedback() {
+  const feedback = document.getElementById('scriptFeedback').value.trim();
+  if (!feedback) { alert('보완할 내용을 입력해주세요'); return; }
+  document.getElementById('scriptArea').style.display = 'none';
+  document.getElementById('scriptLoading').style.display = 'flex';
+  document.getElementById('scriptLoading').innerHTML = '<div class="spinner"></div>보완 사항 반영해서 재생성 중...';
+  const c = getCharData();
+  try {
+    const raw = await callClaude(`아래 은혜여사 대본을 보완 지시를 반영해서 전체 다시 써줘.
+
+기존 대본:
+${generatedScript}
+
+보완 지시: ${feedback}
+
+[반드시 준수]
+- 공백 제외 10,000자 이상
+- [은혜여사] 도입/엔딩, [${c.name}] 본문 구조 유지
+- 수치/금액 일관성 유지 (${c.money})
+- TTS 순수 텍스트만 (구분선, 헤더, 지시문 금지)
+- 보완 지시 내용 반드시 반영
+
+전체 대본 출력:`, 12000);
+    generatedScript = raw;
+    document.getElementById('scriptBox').textContent = raw;
+    const cnt = raw.replace(/\s/g,'').length;
+    const cc = document.getElementById('charCountEl');
+    cc.textContent = `공백제외 ${cnt.toLocaleString()}자`;
+    cc.className = 'char-count '+(cnt>=9000?'ok':'ng');
+    document.getElementById('scriptFeedback').value = '';
+    document.getElementById('scriptLoading').style.display = 'none';
+    document.getElementById('scriptArea').style.display = 'block';
+  } catch(e) {
+    document.getElementById('scriptLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+async function regenPart(part) {
+  const c = getCharData();
+  document.getElementById('partResult').style.display = 'none';
+  document.getElementById('partLabel').textContent = `${part} 재생성 중...`;
+  document.getElementById('partResult').style.display = 'block';
+  document.getElementById('partBox').textContent = '생성 중...';
+  try {
+    const raw = await callClaude(`아래 은혜여사 대본에서 "${part}" 부분만 다시 써줘.
+
+전체 대본:
+${generatedScript}
+
+주인공: ${c.name} (${c.age}세) / 핵심 수치: ${c.money}
+
+[규칙]
+- "${part}"에 해당하는 부분만 출력
+- 기존보다 더 강렬하고 몰입감 있게
+- 수치/금액 일관성 유지
+- TTS 순수 텍스트만`, 4000);
+    document.getElementById('partLabel').textContent = `✅ ${part} 재생성 완료`;
+    document.getElementById('partBox').textContent = raw;
+  } catch(e) {
+    document.getElementById('partBox').textContent = '오류: ' + e.message;
+  }
+}
+
+// ===== STEP 5: 메타데이터 =====
+async function genMeta() {
+  document.getElementById('metaLoading').style.display = 'flex';
+  document.getElementById('metaArea').style.display = 'none';
+  const c = getCharData();
+  try {
+    const raw = await callClaude(`은혜여사의인생상담소 유튜브 메타데이터 생성.
+
+주제: ${selectedTopic}
+카테고리: ${selectedCat}
+주인공: ${c.name} (${c.age}세)
+대본 첫 줄: ${generatedScript.split('\n').slice(0,3).join(' ').slice(0,100)}
+
+[규칙]
+- 제목: 충격적 첫 문장형 or 반전 예고형, 이모지 포함, 50자 이내
+- 설명글: 공감 도입 + 사연 예고(스포 없이) + 구독유도 + 핵심 샵태그 5개, 완성형
+- 숨은태그: 500자, 쉼표구분, 한글, 시어머니/황혼육아/며느리갈등/사이다사연 관련 실제검색어
+- 고정댓글: 공감 댓글 유도 + 구독/좋아요 (주인공 이름 언급 금지)
+
+JSON만:
+{"title":"제목(이모지포함,클릭유도)","description":"유튜브설명글(완성형,샵태그5개포함)","hidden_tags":"숨은태그(500자,쉼표,한글)","pinned_comment":"고정댓글(공감유도+구독좋아요)"}`, 2500);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderMeta(data);
+  } catch(e) {
+    document.getElementById('metaLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderMeta(data) {
+  document.getElementById('metaLoading').style.display = 'none';
+  const area = document.getElementById('metaArea');
+  area.style.display = 'block';
+  area.innerHTML = '';
+
+  const fields = [
+    {label:'제목', key:'title'},
+    {label:'설명글', key:'description'},
+    {label:'📌 고정댓글', key:'pinned_comment'},
+  ];
+  fields.forEach(f => {
+    const wrap = document.createElement('div'); wrap.style.marginTop = '10px';
+    const sec = document.createElement('div'); sec.className = 'sec-title'; sec.textContent = f.label;
+    const row = document.createElement('div'); row.className = 'meta-row';
+    const textEl = document.createElement('span'); textEl.className = 'meta-text'; textEl.textContent = data[f.key]||'';
+    const btn = document.createElement('button'); btn.className = 'btn-copy'; btn.textContent = '복사';
+    btn.addEventListener('click', ()=>copyText(textEl.textContent, btn));
+    row.appendChild(textEl); row.appendChild(btn);
+    wrap.appendChild(sec); wrap.appendChild(row);
+    area.appendChild(wrap);
+  });
+
+  // 숨은태그 + 추가생성
+  const hw = document.createElement('div'); hw.style.marginTop = '14px';
+  hw.innerHTML = `
+    <div class="sec-title" style="margin-top:0;">숨은태그 <span style="font-size:10px;color:var(--text3);" id="htCount">(${(data.hidden_tags||'').length}자/500자)</span></div>
+    <div class="meta-row" style="margin-bottom:8px;"><span class="meta-text" id="htText"></span><button class="btn-copy" id="htCopy">복사</button></div>
+    <div class="hidden-tag-box">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 점수 낮으면 추가 생성</div>
+      <div style="display:flex;gap:8px;">
+        <select id="htAddSel" style="width:auto;font-size:12px;padding:5px 8px;">
+          <option value="100">+100자</option><option value="200">+200자</option>
+          <option value="300">+300자</option><option value="400">+400자</option>
+        </select>
+        <button class="btn btn-outline" id="htAddBtn" style="font-size:12px;padding:5px 12px;">추가 생성 →</button>
+      </div>
+      <div id="htAddResult" style="display:none;margin-top:8px;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--rose3);line-height:1.7;white-space:pre-wrap;" id="htAddText"></div>
+        <div style="margin-top:4px;text-align:right;"><button class="btn-copy" id="htAddCopy">추가분만 복사</button></div>
+      </div>
+    </div>`;
+  area.appendChild(hw);
+  document.getElementById('htText').textContent = data.hidden_tags||'';
+  document.getElementById('htCopy').addEventListener('click', function(){ copyText(document.getElementById('htText').textContent, this); });
+  document.getElementById('htAddBtn').addEventListener('click', async function(){
+    const chars = parseInt(document.getElementById('htAddSel').value);
+    this.disabled=true; this.textContent='생성 중...';
+    try {
+      const r = await callClaude(`은혜여사 유튜브 숨은태그 ${chars}자 추가. 기존 중복 없이. 주제: ${selectedTopic} / 한글 쉼표구분 / 시어머니,황혼육아,며느리,사이다,인생상담,노인 관련 실제검색어 / ${chars}자 내외:`, 400);
+      const addText = document.getElementById('htAddText');
+      addText.textContent = r.trim();
+      document.getElementById('htAddResult').style.display='block';
+      document.getElementById('htAddCopy').addEventListener('click', function(){ copyText(addText.textContent, this); });
+    } catch(e){ document.getElementById('htAddText').textContent='오류: '+e.message; document.getElementById('htAddResult').style.display='block'; }
+    this.disabled=false; this.textContent='추가 생성 →';
+  });
+
+  // 다음 버튼
+  const nextWrap = document.createElement('div'); nextWrap.style.marginTop='14px';
+  const nextBtn = document.createElement('button'); nextBtn.className='btn btn-primary';
+  nextBtn.textContent='숏츠 대본 생성 →'; nextBtn.style.cssText='width:100%;justify-content:center;padding:12px;';
+  nextBtn.addEventListener('click', ()=>goStep(6));
+  nextWrap.appendChild(nextBtn); area.appendChild(nextWrap);
+}
+
+// ===== STEP 6: 숏츠 =====
+async function genShorts() {
+  document.getElementById('shortsLoading').style.display = 'flex';
+  document.getElementById('shortsArea').style.display = 'none';
+  const c = getCharData();
+  try {
+    const raw = await callClaude(`은혜여사의인생상담소 유튜브 숏츠 대본 + 메타데이터.
+
+주제: ${selectedTopic}
+주인공: ${c.name} (${c.age}세)
+카테고리: ${selectedCat}
+전체 대본 첫 부분: ${generatedScript.slice(0,500)}
+
+[숏츠 대본 규칙]
+- 30-60초 분량 (200-300자)
+- 본영상의 가장 충격적인 장면/대사 예고
+- 궁금증 유발로 본영상 유도
+- [은혜여사] / [${c.name}] 화자 구분
+- 마지막: "왼쪽 아래 본영상에서 확인하세요"
+
+JSON만:
+{"script":"숏츠대본(화자구분포함)","title":"숏츠제목(이모지,클릭유도)","hook":"첫3초화면문구","description":"숏츠설명(150자이내)","hashtags":"#shorts #은혜여사 포함 15개","hidden_tags":"숨은태그(500자,쉼표,한글)","pinned_comment":"고정댓글(본영상N분연속시청+구독유도)"}`, 2500);
+
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderShorts(data, c);
+  } catch(e) {
+    document.getElementById('shortsLoading').innerHTML = `<span style="color:var(--red)">오류: ${e.message}</span>`;
+  }
+}
+
+function renderShorts(data, c) {
+  document.getElementById('shortsLoading').style.display = 'none';
+  const area = document.getElementById('shortsArea');
+  area.style.display = 'block';
+  area.innerHTML = '';
+
+  // 숏츠 대본
+  const scriptCard = document.createElement('div'); scriptCard.className = 'card';
+  scriptCard.innerHTML = '<div class="card-title">⚡ 숏츠 대본</div>';
+  const scriptBox = document.createElement('div'); scriptBox.className = 'script-box'; scriptBox.style.maxHeight='200px';
+  scriptBox.textContent = data.script||'';
+  const copyBtn = document.createElement('button'); copyBtn.className = 'btn-copy'; copyBtn.style.marginTop='8px'; copyBtn.textContent = '대본 복사';
+  copyBtn.addEventListener('click', ()=>copyText(scriptBox.textContent, copyBtn));
+  scriptCard.appendChild(scriptBox); scriptCard.appendChild(copyBtn);
+  area.appendChild(scriptCard);
+
+  // 메타 필드
+  const metaCard = document.createElement('div'); metaCard.className = 'card';
+  metaCard.innerHTML = '<div class="card-title">📋 숏츠 메타데이터</div>';
+  const fields = [{label:'제목',key:'title'},{label:'후킹 문구',key:'hook'},{label:'설명',key:'description'},{label:'해시태그',key:'hashtags'},{label:'📌 고정댓글',key:'pinned_comment'}];
+  fields.forEach(f=>{
+    const wrap=document.createElement('div');wrap.style.marginTop='10px';
+    const sec=document.createElement('div');sec.className='sec-title';sec.textContent=f.label;
+    const row=document.createElement('div');row.className='meta-row';
+    const textEl=document.createElement('span');textEl.className='meta-text';textEl.textContent=data[f.key]||'';
+    const btn=document.createElement('button');btn.className='btn-copy';btn.textContent='복사';
+    btn.addEventListener('click',()=>copyText(textEl.textContent,btn));
+    row.appendChild(textEl);row.appendChild(btn);wrap.appendChild(sec);wrap.appendChild(row);metaCard.appendChild(wrap);
+  });
+
+  // 숨은태그
+  const htWrap=document.createElement('div');htWrap.style.marginTop='10px';
+  const htSec=document.createElement('div');htSec.className='sec-title';htSec.textContent=`숨은태그 (${(data.hidden_tags||'').length}자/500자)`;
+  const htRow=document.createElement('div');htRow.className='meta-row';htRow.style.marginBottom='8px';
+  const htText=document.createElement('span');htText.className='meta-text';htText.textContent=data.hidden_tags||'';
+  const htBtn=document.createElement('button');htBtn.className='btn-copy';htBtn.textContent='복사';
+  htBtn.addEventListener('click',()=>copyText(htText.textContent,htBtn));
+  htRow.appendChild(htText);htRow.appendChild(htBtn);
+  htWrap.appendChild(htSec);htWrap.appendChild(htRow);
+  metaCard.appendChild(htWrap);
+
+  // 숨은태그 추가생성
+  const addBox=document.createElement('div');addBox.className='hidden-tag-box';
+  addBox.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">📊 점수 낮으면 추가 생성</div>
+    <div style="display:flex;gap:8px;">
+      <select id="sAddSel" style="width:auto;font-size:12px;padding:5px 8px;"><option value="100">+100자</option><option value="200">+200자</option><option value="300">+300자</option></select>
+      <button class="btn btn-outline" id="sAddBtn" style="font-size:12px;padding:5px 12px;">추가 생성 →</button>
+    </div>
+    <div id="sAddResult" style="display:none;margin-top:8px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--rose3);line-height:1.7;white-space:pre-wrap;" id="sAddText"></div>
+      <div style="margin-top:4px;text-align:right;"><button class="btn-copy" id="sAddCopy">추가분만 복사</button></div>
+    </div>`;
+  metaCard.appendChild(addBox);
+  area.appendChild(metaCard);
+
+  document.getElementById('sAddBtn').addEventListener('click', async function(){
+    const chars=parseInt(document.getElementById('sAddSel').value);
+    this.disabled=true;this.textContent='생성 중...';
+    try{
+      const r=await callClaude(`은혜여사 숏츠 숨은태그 ${chars}자 추가. 기존 중복 없이. 주제:${selectedTopic} / 한글 쉼표구분 / ${chars}자 내외:`,400);
+      const at=document.getElementById('sAddText');at.textContent=r.trim();
+      document.getElementById('sAddResult').style.display='block';
+      document.getElementById('sAddCopy').addEventListener('click',function(){copyText(at.textContent,this);});
+    }catch(e){document.getElementById('sAddText').textContent='오류:'+e.message;document.getElementById('sAddResult').style.display='block';}
+    this.disabled=false;this.textContent='추가 생성 →';
+  });
+}
+
+// ===== UTILS =====
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const o=btn.textContent; btn.textContent='복사됨 ✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const o=btn.textContent;btn.textContent='복사됨 ✓';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},2000);
+  });
+}
+
+function copyEl(id, btn) {
+  const el = document.getElementById(id);
+  if (el) copyText(el.textContent, btn);
+}
+
+function toast(msg) {
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+</script>
+</body>
+</html>
